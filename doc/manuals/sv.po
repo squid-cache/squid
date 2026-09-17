@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2017-05-29 22:50+1200\n"
-"PO-Revision-Date: 2025-11-22 15:30+0100\n"
+"PO-Revision-Date: 2026-09-14 00:00+0200\n"
 "Last-Translator: Daniel Nylander <github@danielnylander.se>\n"
 "Language-Team: Swedish <sv@li.org>\n"
 "Language: sv\n"
@@ -47,7 +47,9 @@ msgstr "NAMN"
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:5
 msgid "ext_ad_group_acl.exe - Squid external ACL helper to check Windows users group membership."
-msgstr "ext_ad_group_acl.exe – Squids externa ACL-hjälpmedel för att kontrollera Windows-användares gruppmedlemskap."
+msgstr ""
+"ext_ad_group_acl.exe – Squids externa ACL-hjälpprogram för kontroll av "
+"Windows-användares gruppmedlemskap."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:7
@@ -119,18 +121,26 @@ msgstr "BESKRIVNING"
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:17
 msgid "B<ext_ad_group_acl.exe> is an installed binary in Squid for Windows builds."
-msgstr "B<ext_ad_group_acl.exe> är en installerad binärfil i Squid för Windows-versioner."
+msgstr ""
+"B<ext_ad_group_acl.exe> är ett program som installeras med Squid-versioner "
+"för Windows."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:20
 msgid "This helper must be used in with an authentication scheme (typically Basic, NTLM or Negotiate) based on Windows Active Directory domain users."
-msgstr "Denna hjälpfunktion måste användas tillsammans med ett autentiseringsschema (vanligtvis Basic, NTLM eller Negotiate) baserat på Windows Active Directory-domänanvändare."
+msgstr ""
+"Detta hjälpprogram måste användas tillsammans med ett autentiseringsschema "
+"(vanligtvis Basic, NTLM eller Negotiate) baserat på domänanvändare i Windows"
+" Active Directory."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:24
 #: src/acl/external/LM_group/ext_lm_group_acl.8:24
 msgid "It reads from the standard input the domain username and a list of groups and tries to match each against the groups membership of the specified username."
-msgstr "Den läser in domänens användarnamn och en lista över grupper från standardinmatningen och försöker matcha varje grupp med gruppmedlemskapet för det angivna användarnamnet."
+msgstr ""
+"Det läser ett domänanvändarnamn och en lista över grupper från "
+"standardinmatningen och försöker matcha varje grupp mot den angivna "
+"användarens gruppmedlemskap."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:26
@@ -140,22 +150,31 @@ msgstr "Två körlägen finns tillgängliga:"
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:30
 msgid "B<- Local mode:> membership is checked against machine's local groups, cannot be used when running on a Domain Controller."
-msgstr "B<- Local mode:> -medlemskap kontrolleras mot maskinens lokala grupper och kan inte användas när det körs på en domänkontrollant."
+msgstr ""
+"B<- Lokalt läge:> medlemskapet kontrolleras mot datorns lokala grupper. "
+"Detta läge kan inte användas på en domänkontrollant."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:35
 msgid "B<- Active Directory Global mode:> membership is checked against the whole Active Directory Forest of the machine where Squid is running."
-msgstr "B<- Active Directory Global mode:> -medlemskapet kontrolleras mot hela Active Directory-skogen på den maskin där Squid körs."
+msgstr ""
+"B<- Globalt Active Directory-läge:> medlemskapet kontrolleras mot hela "
+"Active Directory-skogen för datorn där Squid körs."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:39
 msgid "The minimal Windows version needed to run B<ext_ad_group_acl.exe> is a Windows 2000 SP4 member of an Active Directory Domain."
-msgstr "Den minsta Windows-version som krävs för att köra B<ext_ad_group_acl.exe> är Windows 2000 SP4 som medlem i en Active Directory-domän."
+msgstr ""
+"För att köra B<ext_ad_group_acl.exe> krävs minst Windows 2000 SP4 på en "
+"dator som är medlem i en Active Directory-domän."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:48
 msgid "When running in Active Directory Global mode, all types of Active Directory security groups are supported: B<Domain Global> , B<Domain Local> from user's domain, B<Universal> and Active Directory group nesting is fully supported."
-msgstr "När du kör i Active Directory Global-läge stöds alla typer av Active Directory-säkerhetsgrupper: B<Domain Global>, B<Domain Local> från användarens domän, B<Universal> och Active Directory-gruppnestning stöds fullt ut."
+msgstr ""
+"I globalt Active Directory-läge stöds alla typer av säkerhetsgrupper i "
+"Active Directory: B<Domain Global>, B<Domain Local> från användarens domän "
+"och B<Universal>. Nästlade Active Directory-grupper stöds också fullt ut."
 
 #. type: SH
 #: src/acl/external/AD_group/ext_ad_group_acl.8:49
@@ -201,12 +220,12 @@ msgstr "Skriv felsökningsinformation till stderr."
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:62
 msgid "Specify the default user's B<domain>"
-msgstr "Ange standardanvändarens B<domän>"
+msgstr "Ange den B<domän> som ska användas som standard för användare"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:66
 msgid "Start helper in Active Directory Global mode."
-msgstr "Starta hjälpprogrammet i Active Directory Global-läge."
+msgstr "Starta hjälpprogrammet i globalt Active Directory-läge."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:70
@@ -218,7 +237,7 @@ msgstr "Starta hjälpprogrammet i Active Directory Global-läge."
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:38
 #: src/security/cert_generators/file/security_file_certgen.8.in:68
 msgid "Display the binary help and command line syntax info using stderr."
-msgstr "Visa binär hjälp och kommandoradssyntaxinformation med stderr."
+msgstr "Visa programmets hjälp och kommandoradssyntax på stderr."
 
 #. type: SH
 #: src/acl/external/AD_group/ext_ad_group_acl.8:71
@@ -249,7 +268,8 @@ msgstr "KONFIGURATION"
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:75
 msgid "When running in Active Directory Global mode, the AD Group can be specified using the following syntax:"
-msgstr "När du kör i Active Directory Global-läge kan AD-gruppen anges med följande syntax:"
+msgstr ""
+"I globalt Active Directory-läge kan AD-gruppen anges med följande syntax:"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:78
@@ -264,7 +284,7 @@ msgstr "B<2. Fullständigt NT4-gruppnamn>"
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:84
 msgid "B<3. Active Directory Canonical name>"
-msgstr "B<3. Active Directory-kanoniskt namn>"
+msgstr "B<3. Kanoniskt Active Directory-namn>"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:87
@@ -284,22 +304,29 @@ msgstr "I föregående exempel får alla validerade AD-användare som är medlem
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:133
 msgid "Groups with spaces in name, for example B<Domain Users> , must be quoted and the acl data ( B<Domain Users> ) must be placed into a separate file included by specifying B</path/to/file .> The previous example will be:"
-msgstr "Grupper med mellanslag i namnet, till exempel B<Domänanvändare>, måste anges inom citationstecken och acl-data ( B<Domänanvändare> ) måste placeras i en separat fil som inkluderas genom att ange B</path/to/file .> Det föregående exemplet blir:"
+msgstr ""
+"Grupper med mellanslag i namnet, till exempel B<Domain Users>, måste anges "
+"inom citationstecken och ACL-data (B<Domain Users>) måste placeras i en "
+"separat fil som inkluderas genom att ange B</path/to/file>. Det föregående "
+"exemplet blir:"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:137
 msgid "and the DomainUsers files will contain only the following line:"
-msgstr "och DomainUsers-filerna kommer endast att innehålla följande rad:"
+msgstr "och DomainUsers-filerna ska endast innehålla följande rad:"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:139
 msgid "Domain Users"
-msgstr "Domänanvändare"
+msgstr "Domain Users"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:146
 msgid "B<NOTE 1:> When running in Active Directory Global mode, for better performance, all Domain Controllers of the Active Directory forest should be configured as Global Catalog."
-msgstr "B<OBSERVERA 1:> När du kör i Active Directory Global-läge bör alla domänkontrollanter i Active Directory-skogen konfigureras som global katalog för bättre prestanda."
+msgstr ""
+"B<OBSERVERA 1:> I globalt Active Directory-läge bör alla domänkontrollanter "
+"i Active Directory-skogen konfigureras som globala katalogservrar för bättre"
+" prestanda."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:152
@@ -309,12 +336,16 @@ msgstr "B<OBSERVERA 2:> När du kör i lokalt läge är standardjämförelsen av
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:157
 msgid "It is possible to enable case insensitive group name comparison ( B<-c> ), but on some non-English locales, the results can be unexpected."
-msgstr "Det är möjligt att aktivera jämförelse av gruppnamn utan hänsyn till versaler och gemener (B<-c> ), men på vissa icke-engelska språk kan resultaten bli oväntade."
+msgstr ""
+"Det går att aktivera skiftlägesokänslig jämförelse av gruppnamn (B<-c>), men"
+" med vissa icke-engelska lokalinställningar kan resultaten bli oväntade."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:165
 msgid "B<NOTE 3:> Native WIN32 NTLM and Basic helpers must be used without the B<-A> and B<-D> switches."
-msgstr "B<OBSERVERA 3:> Native WIN32 NTLM och Basic helpers måste användas utan B<-A> - och B<-D> -switcharna."
+msgstr ""
+"B<OBSERVERA 3:> De inbyggda WIN32-hjälpprogrammen för NTLM och Basic måste "
+"användas utan flaggorna B<-A> och B<-D>."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:169
@@ -338,7 +369,11 @@ msgstr "Jag rekommenderar starkt att B<ext_ad_group_acl.exe> testas innan det an
 #: src/acl/external/AD_group/ext_ad_group_acl.8:188
 #: src/acl/external/LM_group/ext_lm_group_acl.8:131
 msgid "To test it, run it from the command line. Enter username and group pairs separated by a space (username must entered with URL-encoded I<domain%5Cusername> syntax). Press B<ENTER> to get an B<OK> or B<ERR> message."
-msgstr "För att testa det, kör det från kommandoraden. Ange användarnamn och grupppar separerade med ett mellanslag (användarnamnet måste anges med URL-kodad I<domain%5Cusername> -syntax). Tryck på B<ENTER> för att få ett B<OK> eller B<ERR> -meddelande."
+msgstr ""
+"För att testa programmet kör du det från kommandoraden. Ange ett "
+"användarnamn och en grupp separerade med ett mellanslag (användarnamnet "
+"måste anges med den URL-kodade syntaxen I<domain%5Cusername>). Tryck på "
+"B<ENTER> för att få ett B<OK>- eller B<ERR>-meddelande."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:192
@@ -352,7 +387,7 @@ msgstr "Se till att B<CTRL+D> fungerar på samma sätt som en vagnretur."
 #: src/acl/external/AD_group/ext_ad_group_acl.8:211
 #: src/acl/external/LM_group/ext_lm_group_acl.8:139
 msgid "Make sure pressing B<CTRL+C> aborts the program."
-msgstr "Se till att programmet avbryts genom att trycka på B<CTRL+C>."
+msgstr "Kontrollera att B<CTRL+C> avbryter programmet."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:203
@@ -360,19 +395,25 @@ msgstr "Se till att programmet avbryts genom att trycka på B<CTRL+C>."
 #: src/acl/external/LM_group/ext_lm_group_acl.8:146
 #: src/auth/basic/SSPI/basic_sspi_auth.8:104
 msgid "Test that entering no details does not result in an B<OK> or B<ERR> message."
-msgstr "Testa att det inte visas något meddelande om B<OK> eller B<ERR> om du inte anger några uppgifter."
+msgstr ""
+"Kontrollera att inget B<OK>- eller B<ERR>-meddelande visas om du inte anger "
+"några uppgifter."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:222
 #: src/acl/external/LM_group/ext_lm_group_acl.8:150
 msgid "Test that entering an invalid username and group results in an B<ERR> message."
-msgstr "Testa att ett ogiltigt användarnamn och en ogiltig grupp resulterar i ett B<ERR> -meddelande."
+msgstr ""
+"Testa att ett ogiltigt användarnamn och en ogiltig grupp resulterar i ett "
+"B<ERR>-meddelande."
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:226
 #: src/acl/external/LM_group/ext_lm_group_acl.8:154
 msgid "Test that entering an valid username and group results in an B<OK> message."
-msgstr "Testa att ett giltigt användarnamn och en giltig grupp resulterar i ett B<OK> -meddelande."
+msgstr ""
+"Testa att ett giltigt användarnamn och en giltig grupp resulterar i ett "
+"B<OK>-meddelande."
 
 #. type: SH
 #: src/acl/external/AD_group/ext_ad_group_acl.8:227
@@ -600,7 +641,8 @@ msgstr "FRÅGOR"
 #: src/squid.8.in:256 tools/cachemgr.cgi.8.in:66 tools/purge/purge.1:272
 #: tools/squidclient/squidclient.1:248
 msgid "Questions on the usage of this program can be sent to the I<Squid Users mailing list>"
-msgstr "Frågor om användningen av detta program kan skickas till I<Squid Users mailing list>"
+msgstr ""
+"Frågor om hur programmet används kan skickas till I<sändlistan Squid Users>"
 
 #. type: SH
 #: src/acl/external/AD_group/ext_ad_group_acl.8:255
@@ -678,7 +720,7 @@ msgstr "Felrapporter måste skrivas på engelska. Se http://wiki.squid-cache.org
 #: src/squid.8.in:263 tools/cachemgr.cgi.8.in:72 tools/purge/purge.1:278
 #: tools/squidclient/squidclient.1:254
 msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
-msgstr "Rapportera buggar eller buggfixar med hjälp av http://bugs.squid-cache.org/"
+msgstr "Rapportera fel eller felrättningar via http://bugs.squid-cache.org/"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:263
@@ -704,7 +746,9 @@ msgstr "Rapportera buggar eller buggfixar med hjälp av http://bugs.squid-cache.
 #: src/squid.8.in:266 tools/cachemgr.cgi.8.in:75 tools/purge/purge.1:281
 #: tools/squidclient/squidclient.1:257
 msgid "Report serious security bugs to I<Squid Bugs E<lt>squid-bugs@squid-cache.orgE<gt>>"
-msgstr "Rapportera allvarliga säkerhetsfel till I&lt;Squid Bugs E<lt>squid-bugs@squid-cache.orgE<gt>&gt"
+msgstr ""
+"Rapportera allvarliga säkerhetsfel till I<Squid Bugs E<lt>squid-bugs@squid-"
+"cache.orgE<gt>>"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:266
@@ -730,7 +774,7 @@ msgstr "Rapportera allvarliga säkerhetsfel till I&lt;Squid Bugs E<lt>squid-bugs
 #: src/squid.8.in:269 tools/cachemgr.cgi.8.in:78 tools/purge/purge.1:284
 #: tools/squidclient/squidclient.1:260
 msgid "Report ideas for new improvements to the I<Squid Developers mailing list>"
-msgstr "Rapportera idéer för nya förbättringar av I<Squid Developers mailing list>"
+msgstr "Skicka förbättringsförslag till I<sändlistan Squid Developers>"
 
 #. type: SH
 #: src/acl/external/AD_group/ext_ad_group_acl.8:268
@@ -782,7 +826,7 @@ msgstr "SE ÄVEN"
 #: src/security/cert_generators/file/security_file_certgen.8.in:182
 #: src/squid.8.in:281
 msgid "The Squid FAQ wiki"
-msgstr "Squid FAQ-wiki"
+msgstr "Squids wiki med vanliga frågor"
 
 #. type: Plain text
 #: src/acl/external/AD_group/ext_ad_group_acl.8:276
@@ -812,7 +856,9 @@ msgstr "Konfigurationshandboken för Squid"
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:5
 msgid "ext_edirectory_userip_acl - Squid eDirectory IP Lookup Helper"
-msgstr "ext_edirectory_userip_acl – Squid eDirectory IP-uppslagshjälp"
+msgstr ""
+"ext_edirectory_userip_acl – Squids hjälpprogram för IP-uppslagning i "
+"eDirectory"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:15
@@ -833,7 +879,7 @@ msgstr "port"
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:19
 msgid "LDAP version"
-msgstr "LDAP version"
+msgstr "LDAP-version"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:21
@@ -859,7 +905,7 @@ msgstr "bindpass"
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:29
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:14
 msgid "filter"
-msgstr "filtrera"
+msgstr "filter"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:34
@@ -869,32 +915,36 @@ msgstr "B<ext_edirectory_userip_acl> är en installerad binärfil."
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:38
 msgid "This program has been written in order to solve the problems associated with running the Perl B<squid_ip_lookup.pl> as a squid external helper."
-msgstr "Detta program har skrivits för att lösa problemen i samband med att köra Perl B<squid_ip_lookup.pl> som en extern hjälpprogram för squid."
+msgstr ""
+"Detta program har skrivits för att lösa problemen med att köra Perl-skriptet"
+" B<squid_ip_lookup.pl> som ett externt hjälpprogram för Squid."
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:41
 msgid "The limitations of the Perl script involved memory/cpu utilization, speed, the lack of eDirectory 8.8 support, and IPv6 support."
-msgstr "Begränsningarna i Perl-skriptet gällde minnes-/processoranvändning, hastighet, bristande stöd för eDirectory 8.8 och IPv6-stöd."
+msgstr ""
+"Perl-skriptets begränsningar gällde minnes- och processoranvändning, "
+"hastighet samt avsaknad av stöd för eDirectory 8.8 och IPv6."
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:46
 msgid "Force Addresses to be in IPv4 (0.0.0.0 format)."
-msgstr "Tvinga adresser att vara i IPv4 (format 0.0.0.0)."
+msgstr "Tvinga adresser att använda IPv4 (formatet 0.0.0.0)."
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:50
 msgid "Force Addresses to be in IPv6 (:: format)."
-msgstr "Tvinga adresser att vara i IPv6 (::-format)."
+msgstr "Tvinga adresser att använda IPv6 (formatet ::)."
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:57
 msgid "Specify B<base> DN. For example; B<o=ORG>"
-msgstr "Ange B<bas> -DN. Till exempel: B<o=ORG>"
+msgstr "Ange B<bas-DN>. Till exempel: B<o=ORG>"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:66
 msgid "Specify binding DN. For example; B<cn=squid,o=ORG>"
-msgstr "Ange bindande DN. Till exempel: B<cn=squid,o=ORG>"
+msgstr "Ange DN för LDAP-bindningen. Till exempel: B<cn=squid,o=ORG>"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:71
@@ -924,44 +974,46 @@ msgstr "Använd beständiga anslutningar."
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:100
 msgid "Timeout factor for persistent connections. Set to B<0> for never timeout. Default is B<60> seconds."
-msgstr "Timeout-faktor för beständiga anslutningar. Ställ in på B<0> för att aldrig ha timeout. Standard är B<60> sekunder."
+msgstr ""
+"Tidsgräns för beständiga anslutningar. Ange B<0> för att aldrig låta dem "
+"löpa ut. Standardvärdet är B<60> sekunder."
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:105
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:173
 msgid "search scope. Defaults to B<sub>"
-msgstr "sökområde. Standardinställning är B<sub>"
+msgstr "Sökomfång. Standardvärdet är B<sub>"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:108
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:176
 #: src/auth/basic/LDAP/basic_ldap_auth.8:128
 msgid "B<base> object only,"
-msgstr "Endast B<bas>-objekt,"
+msgstr "Endast basobjektet (B<base>),"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:111
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:179
 #: src/auth/basic/LDAP/basic_ldap_auth.8:131
 msgid "B<one> level below the base object or"
-msgstr "B<en> nivå under basobjektet eller"
+msgstr "en nivå under basobjektet (B<one>) eller"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:114
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:182
 #: src/auth/basic/LDAP/basic_ldap_auth.8:134
 msgid "B<sub>tree below the base object"
-msgstr "B<sub>-träd under basobjektet"
+msgstr "hela underträdet under basobjektet (B<sub>)"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:121
 msgid "Set userid B<attribute .> Default is B<cn>"
-msgstr "Ställ in användar-ID B<attribute .> Standard är B<cn>"
+msgstr "Ange B<attribute> för användar-ID. Standardvärdet är B<cn>"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:126
 msgid "Set LDAP B<version>"
-msgstr "Ställ in LDAP B<version>"
+msgstr "Ange LDAP-B<version>"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:130
@@ -971,7 +1023,7 @@ msgstr "Visa versionsinformation och avsluta."
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:135
 msgid "Specify binding B<password>"
-msgstr "Ange bindning B<password>"
+msgstr "Ange lösenord (B<password>) för LDAP-bindningen"
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:139
@@ -981,7 +1033,11 @@ msgstr "Aktivera TLS-säkerhet."
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:160
 msgid "In this example, the B<Internet_Allowed> and B<Internet_Denied> are Groups that users may be used to control internet access, which can also be stacked against other ACL's.  Use of the groups is optional, unless the '-G' option has been passed.  Please note that you need to specify the full LDAP object for this, as shown above."
-msgstr "I det här exemplet är grupperna B<Internet_Allowed> och B<Internet_Denied> som användare kan använda för att kontrollera internetåtkomst, vilket också kan staplas mot andra ACL:er. Användningen av grupperna är valfri, såvida inte flaggan '-G' har angetts. Observera att du måste ange hela LDAP-objektet för detta, som visas ovan."
+msgstr ""
+"I det här exemplet kan grupperna B<Internet_Allowed> och B<Internet_Denied> "
+"användas för att styra internetåtkomst och kombineras med andra ACL:er. "
+"Grupperna är valfria om inte flaggan -G har angetts. Observera att du måste "
+"ange det fullständiga LDAP-objektet, som visas ovan."
 
 #. type: SH
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:161
@@ -1006,22 +1062,35 @@ msgstr "Det finns ett känt problem med Novells klient för Windows, som i stort
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:177
 msgid "I have also experienced an issue related to using NetWare 6.5 (SP6 and lower?) and connection licensing.  It appears that whenever a server runs low on connection licenses, that it I sometimes does not populate the networkAddress fields correctly."
-msgstr "Jag har också upplevt ett problem relaterat till användningen av NetWare 6.5 (SP6 och lägre?) och anslutningslicenser. Det verkar som att när en server har ont om anslutningslicenser, fyller den ibland inte i fälten för nätverksadress korrekt."
+msgstr ""
+"Jag har också stött på ett problem med NetWare 6.5 (SP6 och tidigare?) och "
+"anslutningslicenser. När en server har ont om anslutningslicenser verkar den"
+" ibland inte fylla i networkAddress-fälten korrekt."
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:184
 msgid "Majority of Proxy Authentication issues can be resolved by having the users' B<reboot> if their networkAddress is not correct, or using B<basic_ldap_auth> as a fallback.  Check ConsoleOne, etc to verify their networkAddress fields to troubleshoot."
-msgstr "De flesta problem med proxyautentisering kan lösas genom att användarna anger B<reboot> om deras networkAddress inte är korrekt, eller genom att använda B<basic_ldap_auth> som reserv.  Kontrollera ConsoleOne etc. för att verifiera deras networkAddress-fält och felsöka."
+msgstr ""
+"De flesta problem med proxyautentisering kan lösas genom att användarna "
+"B<startar om sina datorer> om deras networkAddress är felaktig, eller genom "
+"att använda B<basic_ldap_auth> som reservlösning. Kontrollera deras "
+"networkAddress-fält i ConsoleOne eller liknande verktyg vid felsökning."
 
 #. type: Plain text
 #: src/acl/external/eDirectory_userip/ext_edirectory_userip_acl.8:218
 msgid "I B<STRONGLY RECOMMEND> using the latest version of the Novell Client in all situations B<before> seeking support! You may also need to make sure your servers have the latest service packs installed, and that your servers are properly synchronizing partitions."
-msgstr "I B<STRONGLY RECOMMEND> använd den senaste versionen av Novell Client i alla situationer B<before> sök support! Du kan också behöva se till att dina servrar har de senaste servicepaketen installerade och att dina servrar synkroniserar partitionerna korrekt."
+msgstr ""
+"Jag B<rekommenderar starkt> att du alltid använder den senaste versionen av "
+"Novell-klienten B<innan> du söker support! Du kan också behöva kontrollera "
+"att servrarna har de senaste servicepaketen installerade och att de "
+"synkroniserar partitionerna korrekt."
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:5
 msgid "ext_file_userip_acl - Restrict users to certain IP addresses, using a text file backend."
-msgstr "ext_file_userip_acl - Begränsa användare till vissa IP-adresser med hjälp av en textfil-backend."
+msgstr ""
+"ext_file_userip_acl – Begränsa användare till vissa IP-adresser med en "
+"textfil som datakälla."
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:7
@@ -1039,22 +1108,26 @@ msgstr "filnamn"
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:17
 msgid "B<ext_file_userip_acl> is an installed binary. An external helper for the Squid external acl scheme."
-msgstr "B<ext_file_userip_acl> är en installerad binärfil. Ett externt hjälpmedel för Squids externa ACL-schema."
+msgstr ""
+"B<ext_file_userip_acl> är ett installerat program. Det är ett hjälpprogram "
+"för Squids externa ACL-mekanism."
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:20
 msgid "It works by reading a pair composed by an IP address and an username on STDIN and matching it against a configuration file."
-msgstr "Det fungerar genom att läsa ett par bestående av en IP-adress och ett användarnamn på STDIN och matcha det mot en konfigurationsfil."
+msgstr ""
+"Det läser en IP-adress och ett användarnamn från STDIN och "
+"matchar paret mot en konfigurationsfil."
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:31
 msgid "Configuration B<file> to load."
-msgstr "Konfigurationens B<fil> a för att läsa in."
+msgstr "Konfigurationsfil (B<file>) att läsa in."
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:41
 msgid "The B<squid.conf> configuration for the external ACL should be:"
-msgstr "Konfigurationen B<squid.conf> för den externa ACL bör vara:"
+msgstr "Konfigurationen för den externa ACL:en i B<squid.conf> bör vara:"
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:49
@@ -1069,7 +1142,9 @@ msgstr "Konfigurationsfilens format är följande:"
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:60
 msgid "Where B<ip_addr> is a dotted quad format IP address, the B<netmask> must be in dotted quad format too."
-msgstr "Om B<ip_addr> är en IP-adress i punktseparerat fyrdelsformat måste B<netmask> också vara i punktseparerat fyrdelsformat."
+msgstr ""
+"Här är B<ip_addr> en IP-adress med fyra punktseparerade tal. B<netmask> "
+"måste också anges i det formatet."
 
 #. type: Plain text
 #: src/acl/external/file_userip/ext_file_userip_acl.8:66
@@ -1084,7 +1159,9 @@ msgstr "Det finns två andra direktiv, B<ALL> och B<NONE>, som betyder \"alla an
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:5
 msgid "ext_kerberos_ldap_group_acl - Squid LDAP external acl group helper for Kerberos or NTLM credentials."
-msgstr "ext_kerberos_ldap_group_acl – Squid LDAP extern acl-grupphjälpare för Kerberos- eller NTLM-autentiseringsuppgifter."
+msgstr ""
+"ext_kerberos_ldap_group_acl – Squids externa ACL-hjälpprogram för LDAP-"
+"gruppkontroll med Kerberos- eller NTLM-autentiseringsuppgifter."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:7
@@ -1094,22 +1171,44 @@ msgstr "Version 1.3.0sq"
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:24
 msgid "B<ext_kerberos_ldap_group_acl> is an installed binary and allows Squid to connect to a LDAP directory to authorize users via LDAP groups. Options are specified as parameters on the command line, while the username (e.g.  B<user> , B<user@REALM> , B<NDOMAIN\\user> ) to be checked against the LDAP directory are specified on subsequent lines of input to the helper, one username per line."
-msgstr "B<ext_kerberos_ldap_group_acl> är en installerad binärfil som gör det möjligt för Squid att ansluta till en LDAP-katalog för att auktorisera användare via LDAP-grupper. Alternativen anges som parametrar på kommandoraden, medan användarnamnet (t.ex.  B<användare>, B<user@REALM>, B<NDOMAIN\\user> ) som ska kontrolleras mot LDAP-katalogen anges på efterföljande rader i hjälpprogrammet, ett användarnamn per rad."
+msgstr ""
+"B<ext_kerberos_ldap_group_acl> är ett installerat program som låter Squid "
+"ansluta till en LDAP-katalog för att auktorisera användare via LDAP-grupper."
+" Flaggorna anges på kommandoraden. Användarnamnen (t.ex. B<user>, "
+"B<user@REALM>, B<NDOMAIN\\user>) som ska kontrolleras mot LDAP-katalogen "
+"anges på efterföljande inmatningsrader till hjälpprogrammet, ett "
+"användarnamn per rad."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:37
 msgid "B<ext_kerberos_ldap_group_acl> will determine the ldap server name from DNS SRV and/or A records or a local hosts file (e.g. for the Kerberos Realm B<SUSE.HOME> it will look for an SRV record B<_ldap._tcp.SUSE.HOME> and an A record B<SUSE.HOME> or a B<SUSE.HOME> hosts entry). If no domain information is available from the username the LDAP server will be determined through the command line options."
-msgstr "B<ext_kerberos_ldap_group_acl> bestämmer ldap-servernamnet från DNS SRV- och/eller A-poster eller en lokal värdfiler (t.ex. för Kerberos Realm B<SUSE.HOME> söker den efter en SRV-post B<_ldap._tcp.SUSE.HOME> och en A-post B<SUSE.HOME> eller en B<SUSE.HOME>-värdpost). Om ingen domäninformation finns tillgänglig från användarnamnet kommer LDAP-servern att bestämmas genom kommandoradsflaggor."
+msgstr ""
+"B<ext_kerberos_ldap_group_acl> fastställer LDAP-servernamnet från DNS-poster"
+" av typen SRV och/eller A eller från en lokal hosts-fil (för Kerberos-"
+"domänen B<SUSE.HOME> söker det till exempel efter SRV-posten "
+"B<_ldap._tcp.SUSE.HOME>, A-posten B<SUSE.HOME> eller en B<SUSE.HOME>-post i "
+"hosts-filen). Om användarnamnet saknar domäninformation används "
+"kommandoradsflaggorna för att välja LDAP-server."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:49
 msgid "B<ext_kerberos_ldap_group_acl> requires as a minimum the B<-g> , B<-t> or B<-T> option which provides the LDAP group name the user has to belong too. For Active Directory a recursive group lookup is implemented until a max depth specified by B<-m> depth. For other LDAP servers a RFC2307bis schema of groups is assumed."
-msgstr "B<ext_kerberos_ldap_group_acl> kräver minst flaggan B<-g>, B<-t> eller B<-T> som anger det LDAP-gruppnamn som användaren måste tillhöra. För Active Directory implementeras en rekursiv gruppsökning tills ett maximalt djup som anges av B<-m> djup. För andra LDAP-servrar antas ett RFC2307bis-schema för grupper."
+msgstr ""
+"B<ext_kerberos_ldap_group_acl> kräver minst en av flaggorna B<-g>, B<-t> "
+"eller B<-T> för att ange den LDAP-grupp som användaren måste tillhöra. För "
+"Active Directory görs en rekursiv gruppsökning upp till det maximala djup "
+"som anges med B<-m>. För andra LDAP-servrar förutsätts att grupperna följer "
+"RFC2307bis-schemat."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:62
 msgid "Different group names can be specified for different domains using a group@domain syntax.  As expected by the B<external_acl_type> construct of Squid, after specifying a username and group followed by a new line, this helper will produce either B<OK> or B<ERR> on the following line to show if the user is a member of the specified group."
-msgstr "Olika gruppnamn kan anges för olika domäner med hjälp av syntaxen group@domain.  Som förväntat av Squids B<external_acl_type> -konstruktion kommer denna hjälpfunktion, efter att ett användarnamn och en grupp har angetts följt av en ny rad, att generera antingen B<OK> eller B<ERR> på följande rad för att visa om användaren är medlem i den angivna gruppen."
+msgstr ""
+"Olika gruppnamn kan anges för olika domäner med syntaxen group@domain. "
+"Enligt Squids B<external_acl_type>-gränssnitt returnerar hjälpprogrammet "
+"antingen B<OK> eller B<ERR> på nästa rad efter att ha fått ett användarnamn "
+"och en grupp följda av en radbrytning. Svaret anger om användaren är medlem "
+"i den angivna gruppen."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:70
@@ -1146,7 +1245,9 @@ msgstr "Tillåt SSL utan certifikatverifiering."
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:87
 msgid "Default Kerberos domain to use for usernames which do not contain domain information (e.g. for users using basic authentication)."
-msgstr "Standarddomän för Kerberos som ska användas för användarnamn som inte innehåller domäninformation (t.ex. för användare som använder grundläggande autentisering)."
+msgstr ""
+"Kerberos-domän att använda som standard för användarnamn utan "
+"domäninformation (t.ex. för användare med Basic-autentisering)."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:92
@@ -1186,49 +1287,70 @@ msgstr "LDAP-serveradress i formatet ldap[s]://server:port"
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:117
 msgid "list of ldap servers of the form lserver|lserver@|lserver@Realm[:lserver@|lserver@Realm]"
-msgstr "lista över ldap-servrar i formatet lserver|lserver@|lserver@Realm[:lserver@|lserver@Realm]"
+msgstr ""
+"Lista över LDAP-servrar i formatet "
+"lserver|lserver@|lserver@Realm[:lserver@|lserver@Realm]"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:121
 msgid "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm[:Group@|Group@Realm]"
-msgstr "En lista över gruppnamn per Kerberos-domän i formatet Grupp|Grupp@|Grupp@Realm[:Grupp@|Grupp@Realm]"
+msgstr ""
+"En lista över gruppnamn per Kerberos-domän i formatet "
+"Group|Group@|Group@Realm[:Group@|Group@Realm]"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:126
 msgid "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm[:Group@|Group@Realm] where group is in UTF-8 hex format"
-msgstr "En lista över gruppnamn per Kerberos-domän i formatet Grupp|Grupp@|Grupp@Realm[:Grupp@|Grupp@Realm], där gruppen är i UTF-8-hexformat"
+msgstr ""
+"En lista över gruppnamn per Kerberos-domän i formatet "
+"Group|Group@|Group@Realm[:Group@|Group@Realm], där gruppnamnet anges som "
+"hexadecimalt kodad UTF-8"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:131
 msgid "A list of group name per Kerberos domain of the form Group|Group@|Group@Realm[:Group@|Group@Realm] where group and domain is in UTF-8 hex format"
-msgstr "En lista över gruppnamn per Kerberos-domän i formatet Grupp|Grupp@|Grupp@Realm[:Grupp@|Grupp@Realm], där grupp och domän är i UTF-8-hexformat"
+msgstr ""
+"En lista över gruppnamn per Kerberos-domän i formatet "
+"Group|Group@|Group@Realm[:Group@|Group@Realm], där grupp- och domännamn "
+"anges som hexadecimalt kodad UTF-8"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:138
 msgid "This helper is intended to be used as an B<external_acl_type> helper in B<squid.conf.>"
-msgstr "Denna hjälpfunktion är avsedd att användas som en B<external_acl_type>-hjälpfunktion i B<squid.conf.>"
+msgstr ""
+"Detta hjälpprogram är avsett att användas med B<external_acl_type> i "
+"B<squid.conf.>"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:153
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:62
 msgid "B<NOTE:> The following squid startup file modification may be required:"
-msgstr "B<OBSERVERA:> Följande ändring av squids startfil kan behövas:"
+msgstr "B<OBSERVERA:> Följande ändring i Squids startskript kan behövas:"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:157
 msgid "Add the following lines to the squid startup script to point squid to a keytab file which contains the HTTP/fqdn service principal for the default Kerberos domain. The fqdn must be the proxy name set in IE or firefox. You can not use an IP address."
-msgstr "Lägg till följande rader i startskriptet för Squid för att peka Squid mot en keytab-fil som innehåller HTTP/fqdn-tjänstprincipalen för standarddomänen Kerberos. Fqdn måste vara det proxynamn som är inställt i IE eller Firefox. Du kan inte använda en IP-adress."
+msgstr ""
+"Lägg till följande rader i Squids startskript för att ange en keytab-fil som"
+" innehåller tjänstprincipalen HTTP/fqdn för standarddomänen i Kerberos. fqdn"
+" måste vara det proxynamn som är inställt i IE eller Firefox. Du kan inte "
+"använda en IP-adress."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:168
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:74
 msgid "If you use a different Kerberos domain than the machine itself is in you can point squid to the separate Kerberos config file by setting the following environment variable in the startup script."
-msgstr "Om du använder en annan Kerberos-domän än den som maskinen själv tillhör kan du peka Squid till den separata Kerberos-konfigurationsfilen genom att ställa in följande miljövariabel i startskriptet."
+msgstr ""
+"Om du använder en annan Kerberos-domän än den som datorn tillhör kan du ange"
+" en separat Kerberos-konfigurationsfil för Squid genom att ställa in "
+"följande miljövariabel i startskriptet."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:178
 msgid "B<ext_kerberos_ldap_group_acl> will determine automagically the right ldap server. The following method is used:"
-msgstr "B<ext_kerberos_ldap_group_acl> kommer automatiskt att bestämma rätt ldap-server. Följande metod används:"
+msgstr ""
+"B<ext_kerberos_ldap_group_acl> väljer automatiskt rätt LDAP-server med "
+"följande metod:"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:183
@@ -1239,10 +1361,10 @@ msgid ""
 "   b) Query DNS for A record REALM\n"
 "   c) Use LDAP_URL if given\n"
 msgstr ""
-"1) För användare@REALM\n"
-"   a) Fråga DNS om SRV-post _ldap._tcp.REALM\n"
-"   b) Fråga DNS om A-post REALM\n"
-"   c) Använd LDAP_URL om angivet\n"
+"1) För user@REALM\n"
+"   a) Slå upp DNS-posten _ldap._tcp.REALM av typen SRV\n"
+"   b) Slå upp DNS-posten REALM av typen A\n"
+"   c) Använd LDAP_URL om den anges\n"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:187
@@ -1252,9 +1374,9 @@ msgid ""
 "   a) Use domain -D REALM and follow step 1)\n"
 "   b) Use LDAP_URL if given\n"
 msgstr ""
-"2) För användare\n"
-"   a) Använd domänen -D REALM och följ steg 1)\n"
-"   b) Använd LDAP_URL om det anges\n"
+"2) För user\n"
+"   a) Använd domänen från -D REALM och följ steg 1)\n"
+"   b) Använd LDAP_URL om den anges\n"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:189
@@ -1270,10 +1392,10 @@ msgid ""
 "   b) Use values given by -g option which contain a @ only e.g. -g GROUP1@:GROUP2@\n"
 "   c) Use values given by -g option which do not contain a realm e.g. -g GROUP1:GROUP2\n"
 msgstr ""
-"1) För användare@REALM\n"
-"   a) Använd värden som anges med flaggan -g och som innehåller @REALM, t.ex. -g GRUPP1@REALM:GRUPP2@REALM\n"
-"   b) Använd värden som anges med flaggan -g och som endast innehåller @, t.ex. -g GRUPP1@:GRUPP2@\n"
-"   c) Använd värden som anges av flaggan -g som inte innehåller ett realm, t.ex. -g GRUPP1:GRUPP2\n"
+"1) För user@REALM\n"
+"   a) Använd värden med @REALM från flaggan -g, t.ex. -g GROUP1@REALM:GROUP2@REALM\n"
+"   b) Använd värden med enbart @ från flaggan -g, t.ex. -g GROUP1@:GROUP2@\n"
+"   c) Använd värden utan domän från flaggan -g, t.ex. -g GROUP1:GROUP2\n"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:197
@@ -1282,8 +1404,8 @@ msgid ""
 "2) For user\n"
 "   a) Use values given by -g option which do not contain a realm e.g. -g GROUP1:GROUP2\n"
 msgstr ""
-"2) För användare\n"
-"   a) Använd värden som anges med flaggan -g som inte innehåller en realm, t.ex. -g GRUPP1:GRUPP2\n"
+"2) För user\n"
+"   a) Använd värden utan domän från flaggan -g, t.ex. -g GROUP1:GROUP2\n"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:200
@@ -1293,12 +1415,14 @@ msgid ""
 "   a) Use realm given by -N NDOMAIN@REALM and then use values given by -g option which contain a @REALM e.g. -g GROUP1@REALM:GROUP2@REALM\n"
 msgstr ""
 "3) För NDOMAIN\\euser\n"
-"  a) Använd realm som anges av -N NDOMAIN@REALM och använd sedan värden som anges av flaggan -g som innehåller ett @REALM, t.ex. -g GRUPP1@REALM:GRUPP2@REALM\n"
+"   a) Använd domänen från -N NDOMAIN@REALM och värden med @REALM från flaggan -g, t.ex. -g GROUP1@REALM:GROUP2@REALM\n"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:202
 msgid "To support Non-ASCII character use -t GROUP or -t GROUP@REALM instead of -g where GROUP is the hex UTF-8 representation e.g."
-msgstr "För att stödja icke-ASCII-tecken, använd -t GROUP eller -t GROUP@REALM istället för -g, där GROUP är hexadecimal UTF-8-representation, t.ex."
+msgstr ""
+"För att använda tecken utanför ASCII anger du -t GROUP eller -t GROUP@REALM "
+"i stället för -g, där GROUP är hexadecimalt kodad UTF-8, t.ex."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:204
@@ -1309,18 +1433,25 @@ msgstr "   -t 6d61726b7573 istället för -g markus\n"
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:206
 msgid "The REALM must still be based on the ASCII character set. If REALM contains also non ASCII characters use -T GROUP@REALM where GROUP and REALM are hex UTF-8 representation e.g."
-msgstr "REALM måste fortfarande baseras på ASCII-teckensatsen. Om REALM även innehåller icke-ASCII-tecken, använd -T GROUP@REALM där GROUP och REALM är hexadecimala UTF-8-representationer, t.ex."
+msgstr ""
+"REALM måste fortfarande använda ASCII-tecken. Om REALM också innehåller "
+"tecken utanför ASCII använder du -T GROUP@REALM, där GROUP och REALM är "
+"hexadecimalt kodad UTF-8, t.ex."
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:208
 #, no-wrap
 msgid "  -T 6d61726b7573@57494e3230303352322e484f4d45 instead of -g markus@WIN2003R2.HOME\n"
-msgstr "  -T 6d61726b7573@57494e3230303352322e484f4d45 istället för -gmarkus@WIN2003R2.HOME\n"
+msgstr ""
+"  -T 6d61726b7573@57494e3230303352322e484f4d45 i stället för -g "
+"markus@WIN2003R2.HOME\n"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:210
 msgid "For a translation of hex UTF-8 see for example http://www.utf8-chartable.de/unicode-utf8-table.pl"
-msgstr "För en översättning av hex UTF-8, se till exempel http://www.utf8-chartable.de/unicode-utf8-table.pl"
+msgstr ""
+"För omvandling till hexadecimalt kodad UTF-8, se till exempel "
+"http://www.utf8-chartable.de/unicode-utf8-table.pl"
 
 #. type: Plain text
 #: src/acl/external/kerberos_ldap_group/ext_kerberos_ldap_group_acl.8:216
@@ -1368,7 +1499,8 @@ msgstr "B<RFC2307bis> - En metod för att använda LDAP som nätverksinformation
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:5
 msgid "ext_ldap_group_acl - Squid LDAP external acl group helper"
-msgstr "ext_ldap_group_acl - Squid LDAP extern acl-grupphjälpare"
+msgstr ""
+"ext_ldap_group_acl – Squids externa ACL-hjälpprogram för LDAP-gruppkontroll"
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:7
@@ -1402,12 +1534,21 @@ msgstr "URI"
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:31
 msgid "B<ext_ldap_group_acl> allows Squid to connect to a LDAP directory to authorize users via LDAP groups.  LDAP options are specified as parameters on the command line, while the username(s) and group(s) to be checked against the LDAP directory are specified on subsequent lines of input to the helper, one username/group pair per line separated by a space."
-msgstr "B<ext_ldap_group_acl> gör det möjligt för Squid att ansluta till en LDAP-katalog för att auktorisera användare via LDAP-grupper. LDAP-flaggor anges som parametrar på kommandoraden, medan användarnamn och grupper som ska kontrolleras mot LDAP-katalogen anges på efterföljande rader i hjälpprogrammet, ett användarnamn/grupp-par per rad separerade med ett mellanslag."
+msgstr ""
+"B<ext_ldap_group_acl> låter Squid ansluta till en LDAP-katalog för att "
+"auktorisera användare via LDAP-grupper. LDAP-flaggorna anges på "
+"kommandoraden. Användarnamn och grupper som ska kontrolleras mot LDAP-"
+"katalogen anges på efterföljande inmatningsrader till hjälpprogrammet, ett "
+"användarnamn och en grupp per rad separerade med ett mellanslag."
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:42
 msgid "As expected by the B<external_acl_type> construct of Squid, after specifying a username and group followed by a new line, this helper will produce either B<OK> or B<ERR> on the following line to show if the user is a member of the specified group."
-msgstr "Som förväntat av Squids B<external_acl_type> -konstruktion kommer denna hjälpfunktion, efter att ett användarnamn och en grupp har angetts följt av en ny rad, att generera antingen B<OK> eller B<ERR> på följande rad för att visa om användaren är medlem i den angivna gruppen."
+msgstr ""
+"Enligt Squids B<external_acl_type>-gränssnitt returnerar hjälpprogrammet "
+"antingen B<OK> eller B<ERR> på nästa rad efter att ha fått ett användarnamn "
+"och en grupp följda av en radbrytning. Svaret anger om användaren är medlem "
+"i den angivna gruppen."
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:46
@@ -1417,12 +1558,14 @@ msgstr "Programmet fungerar genom att söka med ett sökfilter baserat på anvä
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:51
 msgid "When to dereference aliases. Defaults to 'never'"
-msgstr "När alias ska avrefereras. Standardinställningen är \"aldrig\""
+msgstr "När alias ska avrefereras. Standardvärdet är never"
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:60
 msgid "B<never> dereference aliases (default), B<always> dereference aliases, only during a B<search> or only to B<find> the base object"
-msgstr "B<never> dereference aliases (standard), B<always> dereference aliases, endast under en B<search> eller endast till B<find> basobjektet"
+msgstr ""
+"Avreferera aldrig alias (B<never>, standard), alltid (B<always>), endast vid"
+" sökning (B<search>) eller endast för att hitta basobjektet (B<find>)"
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:65
@@ -1447,7 +1590,9 @@ msgstr "Felsökningsläge där varje steg som tas rapporteras i detalj. Användb
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:85
 msgid "The DN and password to bind as while performing searches. Required if the LDAP directory does not allow anonymous searches."
-msgstr "DN och lösenord som ska bindas vid sökningar. Krävs om LDAP-katalogen inte tillåter anonyma sökningar."
+msgstr ""
+"DN och lösenord för LDAP-bindningen vid sökningar. Krävs om LDAP-katalogen "
+"inte tillåter anonyma sökningar."
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:91
@@ -1458,13 +1603,18 @@ msgstr "Eftersom lösenordet måste skrivas ut i klartext i din Squid-konfigurat
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:96
 #: src/auth/basic/LDAP/basic_ldap_auth.8:150
 msgid "The DN and the name of a file containing the password to bind as while performing searches."
-msgstr "DN och namnet på en fil som innehåller lösenordet som ska bindas vid sökningar."
+msgstr ""
+"DN för LDAP-bindningen vid sökningar samt namnet på en fil som innehåller "
+"lösenordet."
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:101
 #: src/auth/basic/LDAP/basic_ldap_auth.8:155
 msgid "Less insecure version of the former parameter pair with two advantages: The password does not occur in the process listing, and the password is not being compromised if someone gets the squid configuration file without getting the secretfile."
-msgstr "Mindre osäker version av det tidigare parameterparet med två fördelar: Lösenordet visas inte i processlistan och lösenordet komprometteras inte om någon får tag på squid-konfigurationsfilen utan att få tag på secretfile."
+msgstr ""
+"Säkrare variant av det föregående parameterparet med två fördelar: "
+"lösenordet syns inte i processlistan och röjs inte om någon får tag på "
+"Squids konfigurationsfil utan att också få tag på lösenordsfilen."
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:105
@@ -1485,7 +1635,10 @@ msgstr "LDAP-sökfilter som används för att söka efter matchande användare i
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:139
 msgid "Specifies that the first query argument sent to the helper by Squid is a extension to the basedn and will be temporarily added in front of the global basedn for this query."
-msgstr "Anger att det första frågeargumentet som skickas till hjälpprogrammet av Squid är en förlängning av bas-DN och kommer att läggas tillfälligt framför den globala bas-DN för denna fråga."
+msgstr ""
+"Anger att det första frågeargumentet som Squid skickar till hjälpprogrammet "
+"är ett tillägg till bas-DN. Tillägget placeras tillfälligt framför det "
+"globala bas-DN-värdet för denna fråga."
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:143
@@ -1500,7 +1653,7 @@ msgstr "Ange LDAP-servern som ska anslutas till med en LDAP-URI (kräver OpenLDA
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:151
 msgid "Strip Kerberos Realm component from user names (@ separated)"
-msgstr "Ta bort Kerberos Realm-komponenten från användarnamn (separerade med @)"
+msgstr "Ta bort Kerberos-domänen från användarnamn (separerad med @)"
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:156
@@ -1510,7 +1663,12 @@ msgstr "Ange en alternativ TCP-port där LDAP-servern lyssnar om den inte är st
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:164
 msgid "Use a persistent LDAP connection. Normally the LDAP connection is only open while verifying a users group membership to preserve resources at the LDAP server. This option causes the LDAP connection to be kept open, allowing it to be reused for further user validations. Recommended for larger installations."
-msgstr "Använd en permanent LDAP-anslutning. Normalt är LDAP-anslutningen endast öppen medan användarens gruppmedlemskap verifieras för att spara resurser på LDAP-servern. Den här flaggan gör att LDAP-anslutningen hålls öppen, så att den kan återanvändas för ytterligare användarvalideringar. Rekommenderas för större installationer."
+msgstr ""
+"Använd en beständig LDAP-anslutning. Normalt är LDAP-anslutningen endast "
+"öppen medan användarens gruppmedlemskap verifieras för att spara resurser på"
+" LDAP-servern. Den här flaggan gör att LDAP-anslutningen hålls öppen, så att"
+" den kan återanvändas för ytterligare användarvalideringar. Rekommenderas "
+"för större installationer."
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:168
@@ -1533,7 +1691,10 @@ msgstr "Ange tidsgräns för LDAP-sökningar"
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:198
 msgid "LDAP attribute used to construct the user DN from the user name and base dn without needing to search for the user.  A maximum of 16 occurrences of B<%s> are supported."
-msgstr "LDAP-attribut som används för att konstruera användarens DN från användarnamnet och bas-dn utan att behöva söka efter användaren. Maximalt 16 förekomster av B<%s> stöds."
+msgstr ""
+"LDAP-attribut som används för att konstruera användarens DN från "
+"användarnamnet och bas-DN utan att behöva söka efter användaren. Maximalt 16"
+" förekomster av B<%s> stöds."
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:204
@@ -1550,7 +1711,9 @@ msgstr "Använd TLS-kryptering"
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:214
 msgid "This helper is intended to be used as an B<external_acl_type> helper in B<squid.conf .>"
-msgstr "Denna hjälpfunktion är avsedd att användas som en B<external_acl_type>-hjälpfunktion i B<squid.conf .>"
+msgstr ""
+"Detta hjälpprogram är avsett att användas med B<external_acl_type> i "
+"B<squid.conf .>"
 
 #. type: Plain text
 #: src/acl/external/LDAP_group/ext_ldap_group_acl.8:229
@@ -1575,7 +1738,9 @@ msgstr "Din favoritdokumentation om LDAP"
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:5
 msgid "ext_lm_group_acl - Squid external ACL helper to check Windows users group membership."
-msgstr "ext_lm_group_acl – Squids externa ACL-hjälpmedel för att kontrollera Windows-användares gruppmedlemskap."
+msgstr ""
+"ext_lm_group_acl – Squids externa ACL-hjälpprogram för kontroll av Windows-"
+"användares gruppmedlemskap."
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:7
@@ -1586,12 +1751,17 @@ msgstr "Version 1.22"
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:17
 msgid "B<ext_lm_group_acl> is an installed binary in Squid for Windows builds."
-msgstr "B<ext_lm_group_acl> är en installerad binärfil i Squid för Windows-versioner."
+msgstr ""
+"B<ext_lm_group_acl> är ett program som installeras med Squid-versioner för "
+"Windows."
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:20
 msgid "This helper must be used in with an authentication scheme (typically Basic or NTLM) based on Windows NT/2000 domain users (LM mode)."
-msgstr "Denna hjälpfunktion måste användas med ett autentiseringsschema (vanligtvis Basic eller NTLM) baserat på Windows NT/2000-domänanvändare (LM-läge)."
+msgstr ""
+"Detta hjälpprogram måste användas tillsammans med ett autentiseringsschema "
+"(vanligtvis Basic eller NTLM) baserat på domänanvändare i Windows NT/2000 "
+"(LM-läge)."
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:29
@@ -1601,12 +1771,12 @@ msgstr "Använd jämförelse utan hänsyn till versaler och gemener."
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:37
 msgid "Specify the default user's domain."
-msgstr "Ange standardanvändarens domän."
+msgstr "Ange den domän som ska användas som standard för användare."
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:41
 msgid "Start helper in Domain Global Group mode."
-msgstr "Starta hjälpfunktionen i Domain Global Group-läge."
+msgstr "Starta hjälpprogrammet i läget för globala domängrupper."
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:49
@@ -1616,12 +1786,18 @@ msgstr "Använd ENDAST PDC för gruppvalidering."
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:75
 msgid "In the previous example all validated NT users member of GProxyUsers Global domain group or member of LProxyUsers machine local group are allowed to use the cache."
-msgstr "I föregående exempel får alla validerade NT-användare som är medlemmar i den globala domängruppen GProxyUsers eller medlemmar i den lokala maskinkonfigurationsgruppen LProxyUsers använda cachen."
+msgstr ""
+"I föregående exempel får alla validerade NT-användare som är medlemmar i den"
+" globala domängruppen GProxyUsers eller datorns lokala grupp LProxyUsers "
+"använda cachen."
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:83
 msgid "Groups with spaces in name, for example B<Domain Users> , must be quoted and the acl data ( B<Domain Users> ) must be placed into a separate file included by specifying B</path/to/file>"
-msgstr "Grupper med mellanslag i namnet, till exempel B<Domänanvändare>, måste anges inom citationstecken och acl-data ( B<Domänanvändare> ) måste placeras i en separat fil som inkluderas genom att ange B</path/to/file>"
+msgstr ""
+"Grupper med mellanslag i namnet, till exempel B<Domain Users>, måste anges "
+"inom citationstecken och ACL-data (B<Domain Users>) måste placeras i en "
+"separat fil som inkluderas genom att ange B</path/to/file>"
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:85
@@ -1636,17 +1812,23 @@ msgstr "Filen B<DomainUsers.txt> kommer endast att innehålla följande rad:"
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:94
 msgid "B<Domain Users>"
-msgstr "B<Domänanvändare>"
+msgstr "B<Domain Users>"
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:103
 msgid "B<NOTE:> The standard group name comparison is case sensitive, so group name must be specified with same case as in the NT/2000 Domain.  It's possible to enable case insensitive group name comparison ( B<-c> ), but on some not-english locales, the results can be unexpected."
-msgstr "B<OBSERVERA:> Standardjämförelsen av gruppnamn är skiftlägeskänslig, så gruppnamnet måste anges med samma skiftläge som i NT/2000-domänen.  Det är möjligt att aktivera skiftlägesokänslig jämförelse av gruppnamn ( B<-c> ), men i vissa icke-engelska lokaliseringar kan resultaten bli oväntade."
+msgstr ""
+"B<OBSERVERA:> Gruppnamn jämförs normalt skiftlägeskänsligt och måste därför "
+"anges med samma skiftläge som i NT/2000-domänen. Det går att aktivera "
+"skiftlägesokänslig jämförelse (B<-c>), men med vissa icke-engelska "
+"lokalinställningar kan resultaten bli oväntade."
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:111
 msgid "B<NOTE:> Native WIN32 NTLM and Basic Helpers must be used without the B<-A> and B<-D> switches."
-msgstr "B<OBSERVERA:> Native WIN32 NTLM och Basic Helpers måste användas utan växlarna B<-A> och B<-D>."
+msgstr ""
+"B<OBSERVERA:> De inbyggda WIN32-hjälpprogrammen för NTLM och Basic måste "
+"användas utan flaggorna B<-A> och B<-D>."
 
 #. type: Plain text
 #: src/acl/external/LM_group/ext_lm_group_acl.8:113
@@ -1671,7 +1853,8 @@ msgstr "Baserat delvis på tidigare arbete i B<check_group> av"
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:5
 msgid "ext_session_acl - Squid session tracking external acl helper."
-msgstr "ext_session_acl – Squid-sessionens spårning av extern ACL-hjälp."
+msgstr ""
+"ext_session_acl – Squids externa ACL-hjälpprogram för sessionsspårning."
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:7
@@ -1683,7 +1866,7 @@ msgstr "Version 1.2"
 #: src/auth/basic/RADIUS/basic_radius_auth.8:22
 #: tools/squidclient/squidclient.1:32
 msgid "timeout"
-msgstr "timeout"
+msgstr "tidsgräns"
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:14
@@ -1693,42 +1876,72 @@ msgstr "databas"
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:31
 msgid "B<ext_session_acl> maintains a concept of sessions by monitoring requests and timing out sessions. The timeout is based either on idle use ( B<-t> ) or a fixed period of time ( B<-T> ). The former is suitable for displaying terms and conditions to a user; the latter is suitable for the display of advertisements or other notices (both as a splash page - see config examples in the wiki online). The session helper can also be used to force users to re-authenticate if the B<%LOGIN> and B<-a> are both used."
-msgstr "B<ext_session_acl> upprätthåller ett sessionskoncept genom att övervaka förfrågningar och tidsbegränsa sessioner. Tidsbegränsningen baseras antingen på inaktiv användning ( B<-t> ) eller en fast tidsperiod ( B<-T> ). Det förstnämnda är lämpligt för att visa villkor för en användare; det senare är lämpligt för visning av annonser eller andra meddelanden (båda som en startsida – se konfigurationsexempel i wiki online). Session helper kan också användas för att tvinga användare att autentisera sig på nytt om både B<%LOGIN> och B<-a> används."
+msgstr ""
+"B<ext_session_acl> hanterar sessioner genom att övervaka begäranden och låta"
+" sessionerna löpa ut. Tidsgränsen baseras antingen på inaktivitet (B<-t>) "
+"eller på en fast tidsperiod (B<-T>). Det första alternativet passar för att "
+"visa användarvillkor, det andra för att visa annonser eller andra "
+"meddelanden. Båda visas som en introduktionssida; se konfigurationsexemplen "
+"i wikin. Sessionshjälpprogrammet kan också tvinga användare att autentisera "
+"sig på nytt om både B<%LOGIN> och B<-a> används."
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:36
 msgid "Idle timeout for any session. The default if not specified (set to 3600 seconds)."
-msgstr "Idle timeout för alla sessioner. Standardinställningen om inget annat anges (inställd på 3600 sekunder)."
+msgstr ""
+"Tidsgräns för inaktivitet i en session. Detta är standardläget om inget "
+"annat anges (3600 sekunder)."
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:49
 msgid "Fixed timeout for any session. This will end the session after the timeout regardless of a user's activity. If used with B<active> mode, this will terminate the user's session after B<timeout> , after which another B<LOGIN> will be required.  B<LOGOUT> will reset the session and timeout."
-msgstr "Fast tidsgräns för alla sessioner. Detta avslutar sessionen efter tidsgränsen oavsett användarens aktivitet. Om detta används tillsammans med B<active> -läget avslutas användarens session efter B<tidsgräns>, varefter ytterligare en B<LOGIN> krävs.  B<LOGOUT> återställer sessionen och tidsgränsen."
+msgstr ""
+"Fast tidsgräns för en session. Sessionen avslutas när tiden har gått ut, "
+"oavsett användarens aktivitet. I B<aktivt> läge avslutas användarens session"
+" efter angiven B<tidsgräns>, varefter en ny B<LOGIN> krävs. B<LOGOUT> "
+"återställer sessionen och tidsgränsen."
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:62
 msgid "B<Path> to persistent database. If a file is specified then that single file is used as the database. If a path is specified, a Berkeley DB database environment is created within the directory. The advantage of the latter is better database support between multiple instances of the session helper. Using multiple instances of the session helper with a single database file will cause synchronization problems between processes.  If this option is not specified the session details will be kept in memory only and all sessions will reset each time Squid restarts its helpers (Squid restart or rotation of logs)."
-msgstr "B<Path> till permanent databas. Om en fil anges används den filen som databas. Om en sökväg anges skapas en Berkeley DBdatabasmiljö i katalogen. Fördelen med det senare är bättre databasstöd mellan flera instanser av sessionshjälparen. Att använda flera instanser av sessionshjälparen med en enda databasfil kommer att orsaka synkroniseringsproblem mellan processerna.  Om denna flagga inte anges kommer sessionsinformationen endast att sparas i minnet och alla sessioner kommer att återställas varje gång Squid startar om sina hjälparprogram (Squid startar om eller roterar loggarna)."
+msgstr ""
+"B<Sökväg> till en beständig databas. Om en fil anges används den filen som "
+"databas. Om en katalog anges skapas en databasmiljö för Berkeley DB i "
+"katalogen. Det senare ger bättre databasstöd när flera instanser av "
+"sessionshjälpprogrammet används. Flera instanser som delar en enda "
+"databasfil orsakar synkroniseringsproblem mellan processerna. Om flaggan "
+"inte anges sparas sessionsinformationen endast i minnet. Alla sessioner "
+"återställs då när Squid startar om sina hjälpprogram, vid omstart av Squid "
+"eller loggrotation."
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:72
 msgid "Active mode. In this mode sessions are started by evaluating an acl with the argument B<LOGIN> , or terminated by the argument B<LOGOUT .> Without this flag the helper automatically starts the session after the first request."
-msgstr "Aktivt läge. I detta läge startas sessioner genom att utvärdera en acl med argumentet B<LOGIN>, eller avslutas med argumentet B<LOGOUT .> Utan denna flagga startar hjälpprogrammet automatiskt sessionen efter den första begäran."
+msgstr ""
+"Aktivt läge. Sessioner startas genom att utvärdera en ACL med argumentet "
+"B<LOGIN> och avslutas med argumentet B<LOGOUT>. Utan denna flagga startar "
+"hjälpprogrammet automatiskt sessionen efter den första begäran."
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:79
 msgid "The B<ext_session_acl> helper is a concurrent helper; therefore, the concurrency= option B<must> be specified in the configuration."
-msgstr "B<ext_session_acl> -hjälparen är en samtidig hjälpare; därför B<måste> flaggan concurrency= anges i konfigurationen."
+msgstr ""
+"B<ext_session_acl> kan hantera flera samtidiga begäranden. Därför B<måste> "
+"alternativet concurrency= anges i konfigurationen."
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:81
 msgid "Passive session configuration example using the default automatic mode"
-msgstr "Exempel på passiv sessionskonfiguration med standardläget automatiskt"
+msgstr ""
+"Exempel på passiv sessionskonfiguration med det automatiska standardläget"
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:94
 msgid "Then set up B<http://your.server.example.com/bannerpage> to display a session startup page and then redirect the user back to the requested URL given in the url query parameter."
-msgstr "Ställ sedan in B<http://ditt.server.exempel.se/bannerpage> så att en startsida för sessionen visas och omdirigera sedan användaren tillbaka till den begärda URL:en som anges i URL-frågeparametern."
+msgstr ""
+"Ställ sedan in B<http://your.server.example.com/bannerpage> så att den visar"
+" en startsida för sessionen och därefter omdirigerar användaren tillbaka "
+"till den begärda URL:en som anges i frågeparametern url."
 
 #. type: Plain text
 #: src/acl/external/session/ext_session_acl.8:97
@@ -1740,32 +1953,46 @@ msgstr "Detta program och denna dokumentation har skrivits av"
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:5
 msgid "ext_time_quota_acl - Squid time quota external acl helper."
-msgstr "ext_time_quota_acl – Extern ACL-hjälpfunktion för Squid-tidskvot."
+msgstr "ext_time_quota_acl – Squids externa ACL-hjälpprogram för tidskvoter."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:16
 msgid "B<ext_time_quota_acl> allows an administrator to define time budgets for the users of squid to limit the time using squid."
-msgstr "B<ext_time_quota_acl> gör det möjligt för en administratör att definiera tidsbudgetar för användare av squid för att begränsa tiden som squid används."
+msgstr ""
+"B<ext_time_quota_acl> låter administratören ange tidsbudgetar för att "
+"begränsa hur länge användarna får använda Squid."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:21
 msgid "This is useful for corporate lunch time allocations, wifi portal pay-per-minute installations or for parental control of children. The administrator can define a time budget (e.g. 1 hour per day) which is enforced through this helper."
-msgstr "Detta är användbart för företags lunchraster, wifi-portaler med minutbaserad betalning eller för föräldrakontroll av barn. Administratören kan definiera en tidsbudget (t.ex. 1 timme per dag) som verkställs genom detta hjälpmedel."
+msgstr ""
+"Detta är användbart för att begränsa internetanvändning till lunchraster på "
+"företag, för wifi-portaler med minutbetalning eller för föräldrakontroll. "
+"Administratören kan ange en tidsbudget (t.ex. en timme per dag) som "
+"upprätthålls av hjälpprogrammet."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:29
 msgid "B<Filename> of persistent database. This defaults to ext_time_quota.db in Squids state directory."
-msgstr "B<Filenamn> för permanent databas. Standardvärdet är ext_time_quota.db i Squids tillståndskatalog."
+msgstr ""
+"B<Filnamn> för en beständig databas. Standardvärdet är ext_time_quota.db i "
+"Squids tillståndskatalog."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:36
 msgid "B<Pauselen> is given in seconds and defines the period between two requests to be treated as part of the same session.  Pauses shorter than this value will be counted against the quota, longer ones ignored.  Default is 300 seconds (5 minutes)."
-msgstr "B<Pauselen> anges i sekunder och definierar tidsperioden mellan två förfrågningar som ska behandlas som en del av samma session.  Pauser som är kortare än detta värde räknas in i kvoten, medan längre pauser ignoreras.  Standardvärdet är 300 sekunder (5 minuter)."
+msgstr ""
+"B<Pauselen> anges i sekunder och definierar tidsperioden mellan två "
+"begäranden som ska behandlas som en del av samma session.  Pauser som är "
+"kortare än detta värde räknas in i kvoten, medan längre pauser ignoreras.  "
+"Standardvärdet är 300 sekunder (5 minuter)."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:42
 msgid "B<Filename> where all logging and debugging information will be written. If none is given, then stderr will be used and the logging will go to Squids main cache.log."
-msgstr "B<Filenamn> där all logg- och felsökningsinformation kommer att skrivas. Om inget anges kommer stderr att användas och loggningen kommer att gå till Squids huvudcache.log."
+msgstr ""
+"B<Filnamn> för all logg- och felsökningsinformation. Om inget anges används "
+"stderr och loggningen hamnar i Squids huvudlogg cache.log."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:46
@@ -1790,7 +2017,7 @@ msgstr "Användarnas tidskvoter definieras i en textfil som vanligtvis finns i /
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:66
 msgid "# user budget / period"
-msgstr "# användarbudget / period"
+msgstr "# användare budget / period"
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:77
@@ -1800,12 +2027,19 @@ msgstr "John har en tidsbudget på 8 timmar varje dag, littlejoe får bara 1 tim
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:81
 msgid "You can use \"s\" for seconds, \"m\" for minutes, \"h\" for hours, \"d\" for days and \"w\" for weeks. Numerical values can be given as integer values or with a fraction. E.g. \"0.5h\" means 30 minutes."
-msgstr "Du kan använda \"s\" för sekunder, \"m\" för minuter, \"h\" för timmar, \"d\" för dagar och \"w\" för veckor. Numeriska värden kan anges som heltal eller med en bråkdel. Exempelvis betyder \"0,5h\" 30 minuter."
+msgstr ""
+"Du kan använda \"s\" för sekunder, \"m\" för minuter, \"h\" för timmar, "
+"\"d\" för dagar och \"w\" för veckor. Värden kan anges som heltal eller "
+"decimaltal med punkt som decimaltecken. Exempelvis betyder \"0.5h\" 30 "
+"minuter."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:87
 msgid "This helper is configured in B<squid.conf> using the B<external_acl_type> directive then access controls which use it to allow or deny."
-msgstr "Denna hjälpfunktion konfigureras i B<squid.conf> med hjälp av direktivet B<external_acl_type> och sedan åtkomstkontroller som använder den för att tillåta eller neka åtkomst."
+msgstr ""
+"Hjälpprogrammet konfigureras i B<squid.conf> med direktivet "
+"B<external_acl_type>. Därefter används det i åtkomstkontroller som tillåter "
+"eller nekar åtkomst."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:90
@@ -1830,7 +2064,10 @@ msgstr "I det här exemplet bör Squid efter omstart endast tillåta åtkomst f�
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:122
 msgid "In this example we use separate B<users> access control and B<noquota> ACL in order to keep the username and password prompt and the quota-exceeded messages separated."
-msgstr "I det här exemplet använder vi separata B<users> -åtkomstkontroll och B<noquota> -ACL för att hålla användarnamn och lösenordsfrågor samt meddelanden om överskridna kvoter åtskilda."
+msgstr ""
+"I det här exemplet används separata åtkomstkontroller med B<users> och "
+"B<noquota> för att skilja frågorna om användarnamn och lösenord från "
+"meddelandena om överskriden tidskvot."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:142
@@ -1846,12 +2083,19 @@ msgstr "BEGRÄNSNINGAR"
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:148
 msgid "This helper only controls access to the Internet through HTTP. It does not control other protocols, like VOIP, ICQ, IRC, FTP, IMAP, SMTP or SSH."
-msgstr "Denna hjälpfunktion kontrollerar endast åtkomst till Internet via HTTP. Den kontrollerar inte andra protokoll, såsom VOIP, ICQ, IRC, FTP, IMAP, SMTP eller SSH."
+msgstr ""
+"Detta hjälpprogram styr endast internetåtkomst via HTTP. Det styr inte andra"
+" protokoll som VOIP, ICQ, IRC, FTP, IMAP, SMTP eller SSH."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:156
 msgid "Desktop browsers are typically able to deal with authentication to HTTP proxies like B<squid .> But more and more different programs and devices (smartphones, games on mobile devices, ...) are using the Internet over HTTP. These devices are often not able to work through an authenticating proxy.  Means other than %LOGIN authentication are required to authorize these devices and software."
-msgstr "Stationära webbläsare kan vanligtvis hantera autentisering till HTTP-proxyservrar som B<squid .> Men allt fler olika program och enheter (smartphones, spel på mobila enheter, ...) använder internet via HTTP. Dessa enheter kan ofta inte fungera via en autentiserande proxyserver. Andra metoder än %LOGIN-autentisering krävs för att auktorisera dessa enheter och program."
+msgstr ""
+"Webbläsare på datorer kan vanligtvis autentisera sig mot HTTP-proxyservrar "
+"som B<squid .> Allt fler andra program och enheter (smarttelefoner, "
+"mobilspel m.m.) använder dock internet via HTTP. Dessa kan ofta inte fungera"
+" genom en proxy som kräver autentisering. Därför behövs andra metoder än "
+"%LOGIN-autentisering för att auktorisera dessa enheter och program."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:161
@@ -1862,22 +2106,35 @@ msgstr "En mer allmän kontroll av internetåtkomst kan vara en captive portal-l
 #: src/acl/external/time_quota/ext_time_quota_acl.8:162
 #, no-wrap
 msgid "IMPLEMENTATION"
-msgstr "GENOMFÖRANDE"
+msgstr "IMPLEMENTATION"
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:170
 msgid "When the helper is called it will be asked if the current user is allowed to access squid. The helper will reduce the remaining time budget of this user and return B<OK> if there is budget left. Otherwise it will return B<ERR .>"
-msgstr "När hjälpfunktionen anropas kommer den att fråga om den aktuella användaren har behörighet att använda squid. Hjälpfunktionen kommer att minska den återstående tidbudgeten för denna användare och returnera B<OK> om det finns budget kvar. Annars kommer den att returnera B<ERR .>"
+msgstr ""
+"När hjälpprogrammet anropas får det en fråga om den aktuella användaren har "
+"tillåtelse att använda Squid. Det minskar användarens återstående tidsbudget"
+" och returnerar B<OK> om det finns tid kvar. Annars returnerar det B<ERR>."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:183
 msgid "The B<ttl=N> parameter in B<squid.conf> determines how often the helper will be called, the example config uses a 1 minute TTL.  The interaction is that Squid will only call the helper on new requests B<if> there has been more than TTL seconds passed since last check.  This handling creates an amount of slippage outside the quota by whatever amount is configured.  TTL can be set as short as desired, down to and including zero.  Though values of 1 or more are recommended due to a quota resolution of one second."
-msgstr "Parametern B<ttl=N> i B<squid.conf> bestämmer hur ofta hjälpfunktionen ska anropas. I konfigurationen i exemplet används en TTL på 1 minut.  Interaktionen innebär att Squid endast anropar hjälpfunktionen vid nya förfrågningar B<if> om mer än TTL sekunder har gått sedan senaste kontrollen.  Denna hantering skapar en viss avvikelse utanför kvoten med det belopp som har konfigurerats.  TTL kan ställas in så kort som önskas, ner till och inklusive noll.  Värden på 1 eller mer rekommenderas dock på grund av en kvotupplösning på en sekund."
+msgstr ""
+"Parametern B<ttl=N> i B<squid.conf> anger hur ofta hjälpprogrammet får "
+"anropas. Exemplet använder en TTL på en minut. Squid anropar hjälpprogrammet"
+" vid en ny begäran endast B<om> mer än TTL sekunder har gått sedan den "
+"senaste kontrollen. Därför kan kvoten överskridas med upp till det "
+"konfigurerade tidsintervallet. TTL kan sättas så lågt som önskas, även till "
+"noll. Värden på minst en sekund rekommenderas dock eftersom kvotens "
+"upplösning är en sekund."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:188
 msgid "If the configured time period (e.g. \"1w\" for babymary) is over, the time budget will be restored to the configured value thus allowing the user to access squid with a fresh budget."
-msgstr "Om den konfigurerade tidsperioden (t.ex. \"1w\" för babymary) har löpt ut återställs tidsbudgeten till det konfigurerade värdet, vilket gör att användaren kan komma åt squid med en ny budget."
+msgstr ""
+"När den konfigurerade tidsperioden (t.ex. \"1w\" för babymary) har löpt ut "
+"återställs tidsbudgeten till det konfigurerade värdet. Användaren kan då "
+"använda Squid med en ny tidsbudget."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:200
@@ -1893,22 +2150,29 @@ msgstr "YTTERLIGARE IDÉER"
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:204
 msgid "The following ideas could further improve this helper. Maybe someone wants to help? Any support or feedback is welcome!"
-msgstr "Följande idéer skulle kunna förbättra denna hjälpfunktion ytterligare. Kanske någon vill hjälpa till? All support och feedback är välkommen!"
+msgstr ""
+"Följande idéer skulle kunna förbättra hjälpprogrammet ytterligare. Kanske "
+"vill någon hjälpa till? All hjälp och återkoppling är välkommen!"
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:209
 msgid "There should be a way for a user to see their configured and remaining time budget. This could be realized by implementing a web page accessing the database of the helper showing the corresponding data. One of the problems to be solved is user authentication."
-msgstr "Det bör finnas ett sätt för användaren att se sin konfigurerade och återstående tidsbudget. Detta kan realiseras genom att implementera en webbsida som har åtkomst till hjälparens databas och visar motsvarande data. Ett av problemen som måste lösas är användarautentisering."
+msgstr ""
+"Användaren bör kunna se sin konfigurerade och återstående tidsbudget. Det "
+"kan lösas med en webbsida som läser hjälpprogrammets databas och visar "
+"uppgifterna. Användarautentisering är ett av problemen som behöver lösas."
 
 #. type: Plain text
 #: src/acl/external/time_quota/ext_time_quota_acl.8:212
 msgid "We could always return \"OK\" and use the module simply as an Internet usage tracker showing who has stayed how long in the WWW."
-msgstr "Vi kan alltid returnera \"OK\" och använda modulen helt enkelt som en spårare av internetanvändning som visar vem som har varit hur länge på WWW."
+msgstr ""
+"Vi kan alltid returnera \"OK\" och bara använda modulen för att registrera "
+"vem som har använt webben och hur länge."
 
 #. type: Plain text
 #: src/acl/external/unix_group/ext_unix_group_acl.8:5
 msgid "ext_unix_group_acl - Squid UNIX Group ACL helper"
-msgstr "ext_unix_group_acl - Squid UNIX Group ACL-hjälpmedel"
+msgstr "ext_unix_group_acl – Squids ACL-hjälpprogram för UNIX-grupper"
 
 #. type: Plain text
 #: src/acl/external/unix_group/ext_unix_group_acl.8:9
@@ -1934,17 +2198,25 @@ msgstr "Matcha också användarens primära grupp från B</etc/passwd>"
 #. type: Plain text
 #: src/acl/external/unix_group/ext_unix_group_acl.8:47
 msgid "This B<squid.conf> example defines two Squid acls.  I<usergroup1> matches users in I<group1> , and I<usergroup2> matches users in I<group2> or I<group3>"
-msgstr "Detta B<squid.conf> -exempel definierar två Squid-acls.  I<usergroup1> matchar användare i I<group1>, och I<usergroup2> matchar användare i I<group2> eller I<group3>"
+msgstr ""
+"Detta exempel för B<squid.conf> definierar två ACL:er i Squid. I<usergroup1>"
+" matchar användare i I<group1>, och I<usergroup2> matchar användare i "
+"I<group2> eller I<group3>"
 
 #. type: Plain text
 #: src/acl/external/unix_group/ext_unix_group_acl.8:59
 msgid "By default up to 11 groups can be matched in one acl (including commandline specified groups). This limit is defined by B<MAX_GROUPS> in the source code."
-msgstr "Som standard kan upp till 11 grupper matchas i en ACL (inklusive grupper som anges i kommandoraden). Denna gräns definieras av B<MAX_GRUPPER> i källkoden."
+msgstr ""
+"Som standard kan upp till 11 grupper matchas i en ACL (inklusive grupper som"
+" anges på kommandoraden). Gränsen definieras av B<MAX_GROUPS> i källkoden."
 
 #. type: Plain text
 #: src/acl/external/unix_group/ext_unix_group_acl.8:65
 msgid "Does not understand GID aliased groups sometimes used to work around groups size limitations. If you are using GID aliased groups then you must specify each alias by name."
-msgstr "Förstår inte GID-aliasgrupper som ibland används för att kringgå begränsningar av gruppstorlek. Om du använder GID-aliasgrupper måste du ange varje alias med namn."
+msgstr ""
+"Hanterar inte GID-aliasgrupper, som ibland används för att kringgå "
+"begränsningar av gruppstorlek. Om du använder sådana grupper måste varje "
+"alias anges med namn."
 
 #. type: Plain text
 #: src/acl/external/unix_group/ext_unix_group_acl.8:104
@@ -1954,7 +2226,9 @@ msgstr "Dessutom kan buggar eller buggfixar rapporteras till"
 #. type: Plain text
 #: src/auth/basic/getpwnam/basic_getpwnam_auth.8:5
 msgid "basic_getpwnam_auth - Local Users auth helper for Squid"
-msgstr "basic_getpwnam_auth - Autentiseringshjälp för lokala användare för Squid"
+msgstr ""
+"basic_getpwnam_auth – Squids hjälpprogram för autentisering av lokala "
+"användare"
 
 #. type: Plain text
 #: src/auth/basic/getpwnam/basic_getpwnam_auth.8:13
@@ -1984,28 +2258,38 @@ msgstr "- Tillåter autentisering via nsswitch.conf"
 #. type: Plain text
 #: src/auth/basic/getpwnam/basic_getpwnam_auth.8:29
 msgid "- Can handle NIS(+) requests"
-msgstr "- Kan hantera NIS(+)-förfrågningar"
+msgstr "- Kan hantera NIS(+)-begäranden"
 
 #. type: Plain text
 #: src/auth/basic/getpwnam/basic_getpwnam_auth.8:32
 msgid "- Can handle LDAP requests"
-msgstr "- Kan hantera LDAP-förfrågningar"
+msgstr "- Kan hantera LDAP-begäranden"
 
 #. type: Plain text
 #: src/auth/basic/getpwnam/basic_getpwnam_auth.8:35
 msgid "- Can handle PAM requests"
-msgstr "- Kan hantera PAM-förfrågningar"
+msgstr "- Kan hantera PAM-begäranden"
 
 #. type: Plain text
 #: src/auth/basic/getpwnam/basic_getpwnam_auth.8:50
 msgid "When used for authenticating to local UNIX shadow password databases the program must be running as root or else it won't have sufficient permissions to access the user password database. Such use of this program is not recommended, but if you absolutely need to then make the program B<setuid> B<root>"
-msgstr "När programmet används för autentisering mot lokala UNIX-skuggparolldatabaser måste det köras som root, annars har det inte tillräckliga behörigheter för att komma åt användarparolldatabasen. Sådan användning av programmet rekommenderas inte, men om det är absolut nödvändigt måste du göra programmet B<setuid> B<root>"
+msgstr ""
+"Vid autentisering mot lokala UNIX-lösenordsdatabaser av typen shadow måste "
+"programmet köras som root för att ha tillräcklig behörighet att läsa "
+"lösenordsdatabasen. Sådan användning rekommenderas inte, men om det är "
+"absolut nödvändigt måste programmet göras B<setuid> B<root>"
 
 #. type: Plain text
 #: src/auth/basic/getpwnam/basic_getpwnam_auth.8:62
 #: src/auth/basic/PAM/basic_pam_auth.8:77
 msgid "Please note that in such configurations it is also strongly recommended that the program is moved into a directory where normal users cannot access it, as this mode of operation will allow any local user to brute-force other users passwords. Also note the program has not been fully audited and the author cannot be held responsible for any security issues due to such installations."
-msgstr "Observera att i sådana konfigurationer rekommenderas det också starkt att programmet flyttas till en katalog där vanliga användare inte har åtkomst till det, eftersom detta driftsätt gör det möjligt för alla lokala användare att brute-force-attackera andra användares lösenord. Observera också att programmet inte har granskats fullständigt och att författaren inte kan hållas ansvarig för eventuella säkerhetsproblem som uppstår till följd av sådana installationer."
+msgstr ""
+"I sådana konfigurationer rekommenderas det också starkt att programmet "
+"placeras i en katalog som vanliga användare inte kan komma åt. Annars kan "
+"alla lokala användare använda det för att försöka knäcka andra användares "
+"lösenord genom upprepade gissningar. Programmet har inte granskats "
+"fullständigt och författaren tar inget ansvar för säkerhetsproblem som "
+"uppstår vid sådana installationer."
 
 #. type: Plain text
 #: src/auth/basic/getpwnam/basic_getpwnam_auth.8:70
@@ -2015,7 +2299,7 @@ msgstr "Baserat på originalkod av"
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:5
 msgid "basic_ldap_auth - LDAP authentication helper for Squid"
-msgstr "basic_ldap_auth – LDAP-autentiseringshjälpmedel för Squid"
+msgstr "basic_ldap_auth – LDAP-autentiseringshjälpprogram för Squid"
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:10
@@ -2042,12 +2326,21 @@ msgstr "LDAP-sökfilter"
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:45
 msgid "B<basic_ldap_auth> allows Squid to connect to a LDAP directory to validate the user name and password of Basic HTTP authentication.  LDAP options are specified as parameters on the command line, while the username(s) and password(s) to be checked against the LDAP directory are specified on subsequent lines of input to the helper, one username/password pair per line separated by a space."
-msgstr "B<basic_ldap_auth> gör det möjligt för Squid att ansluta till en LDAP-katalog för att validera användarnamn och lösenord för Basic HTTP-autentisering.  LDAP-flaggor anges som parametrar på kommandoraden, medan användarnamn och lösenord som ska kontrolleras mot LDAP-katalogen anges på efterföljande rader i hjälpprogrammet, ett användarnamn/lösenordspar per rad separerade med ett mellanslag."
+msgstr ""
+"B<basic_ldap_auth> låter Squid ansluta till en LDAP-katalog för att validera"
+" användarnamn och lösenord vid HTTP Basic-autentisering. LDAP-flaggorna "
+"anges på kommandoraden. Användarnamn och lösenord som ska kontrolleras mot "
+"LDAP-katalogen anges på efterföljande inmatningsrader till hjälpprogrammet, "
+"ett par per rad separerat med ett mellanslag."
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:54
 msgid "As expected by the basic authentication construct of Squid, after specifying a username and password followed by a new line, this helper will produce either B<OK> or B<ERR> on the following line to show if the specified credentials are correct according to the LDAP directory."
-msgstr "Som förväntat av Squids grundläggande autentiseringskonstruktion kommer denna hjälpfunktion, efter att ett användarnamn och lösenord angetts följt av en ny rad, att generera antingen B<OK> eller B<ERR> på följande rad för att visa om de angivna autentiseringsuppgifterna är korrekta enligt LDAP-katalogen."
+msgstr ""
+"Enligt Squids gränssnitt för Basic-autentisering returnerar hjälpprogrammet "
+"antingen B<OK> eller B<ERR> på nästa rad efter att ha fått ett användarnamn "
+"och ett lösenord följda av en radbrytning. Svaret anger om "
+"autentiseringsuppgifterna stämmer enligt LDAP-katalogen."
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:59
@@ -2062,7 +2355,10 @@ msgstr "B<OBLIGATORISKT.> Anger den bas-DN under vilken användarna finns."
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:73
 msgid "LDAP search B<filter> to locate the user DN. Required if the users are in a hierarchy below the base DN, or if the login name is not what builds the user specific part of the users DN."
-msgstr "LDAP-sökning B<filter> för att hitta användarens DN. Krävs om användarna finns i en hierarki under bas-DN, eller om inloggningsnamnet inte är det som bildar den användarspecifika delen av användarens DN."
+msgstr ""
+"LDAP-sökB<filter> för att hitta användarens DN. Krävs om användarna finns i "
+"en hierarki under bas-DN eller om inloggningsnamnet inte används för att "
+"bilda den användarspecifika delen av användarens DN."
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:80
@@ -2097,7 +2393,9 @@ msgstr "Sökomfång vid sökning efter användar-DN som anges av flaggan B<-f>. 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:140
 msgid "The DN and password to bind as while performing searches. Required by the B<-f> flag if the directory does not allow anonymous searches."
-msgstr "DN och lösenord som ska bindas vid sökningar. Krävs av flaggan B<-f> om katalogen inte tillåter anonyma sökningar."
+msgstr ""
+"DN och lösenord för LDAP-bindningen vid sökningar. Krävs av flaggan B<-f> om"
+" katalogen inte tillåter anonyma sökningar."
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:145
@@ -2107,7 +2405,12 @@ msgstr "Eftersom lösenordet måste skrivas ut i klartext i din Squid-konfigurat
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:163
 msgid "Use a persistent LDAP connection. Normally the LDAP connection is only open while validating a username to preserve resources at the LDAP server. This option causes the LDAP connection to be kept open, allowing it to be reused for further user validations. Recommended for larger installations."
-msgstr "Använd en permanent LDAP-anslutning. Normalt är LDAP-anslutningen endast öppen under valideringen av ett användarnamn för att spara resurser på LDAP-servern. Denna flagga gör att LDAP-anslutningen hålls öppen, vilket gör att den kan återanvändas för ytterligare användarvalideringar. Rekommenderas för större installationer."
+msgstr ""
+"Använd en beständig LDAP-anslutning. Normalt är LDAP-anslutningen endast "
+"öppen under valideringen av ett användarnamn för att spara resurser på LDAP-"
+"servern. Denna flagga gör att LDAP-anslutningen hålls öppen, vilket gör att "
+"den kan återanvändas för ytterligare användarvalideringar. Rekommenderas för"
+" större installationer."
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:176
@@ -2122,12 +2425,16 @@ msgstr "när alias ska avrefereras. Standardvärdet är B<never>"
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:194
 msgid "B<never> dereference aliases (default), B<always> dereference aliases, only during a B<search> or only to B<find> the base object."
-msgstr "B<never> dereference aliases (standard), B<always> dereference aliases, endast under en B<search> eller endast till B<find> basobjektet."
+msgstr ""
+"Avreferera aldrig alias (B<never>, standard), alltid (B<always>), endast vid"
+" sökning (B<search>) eller endast för att hitta basobjektet (B<find>)."
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:199
 msgid "Specify the LDAP server to connect to by LDAP URI (requires OpenLDAP libraries).  Servers can also be specified last on the command line."
-msgstr "Ange LDAP-servern som ska anslutas till med LDAP URI (kräver OpenLDAP-bibliotek). Servrar kan också anges sist på kommandoraden."
+msgstr ""
+"Ange LDAP-servern med en LDAP-URI (kräver OpenLDAP-bibliotek). Servrar kan "
+"också anges sist på kommandoraden."
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:204
@@ -2172,7 +2479,11 @@ msgstr "Om användarattributet för användar-DN är B<cn> istället för B<uid>
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:284
 msgid "If you want to search for the user DN and your directory does not allow anonymous searches then you must also use the B<-D> and B<-w> flags to specify a user DN and password to log in as to perform the searches, as in the following complex Active Directory example"
-msgstr "Om du vill söka efter användarens DN och din katalog inte tillåter anonyma sökningar måste du också använda flaggorna B<-D> och B<-w> för att ange ett användarnamn och lösenord för att logga in och utföra sökningarna, som i följande komplexa Active Directory-exempel"
+msgstr ""
+"Om du vill söka efter användarens DN och katalogen inte tillåter anonyma "
+"sökningar måste du också använda flaggorna B<-D> och B<-w> för att ange ett "
+"användar-DN och lösenord för sökningarna, som i följande komplexa Active "
+"Directory-exempel"
 
 #. type: Plain text
 #: src/auth/basic/LDAP/basic_ldap_auth.8:297
@@ -2203,7 +2514,9 @@ msgstr "Din favoritdokumentation om LDAP."
 #. type: Plain text
 #: src/auth/basic/NCSA/basic_ncsa_auth.8:5
 msgid "basic_ncsa_auth - NCSA httpd-style password file authentication helper for Squid"
-msgstr "basic_ncsa_auth - NCSA httpd-stil lösenordsfil autentiseringshjälp för Squid"
+msgstr ""
+"basic_ncsa_auth – Squids autentiseringshjälpprogram för lösenordsfiler i "
+"NCSA httpd-format"
 
 #. type: Plain text
 #: src/auth/basic/NCSA/basic_ncsa_auth.8:9
@@ -2213,12 +2526,15 @@ msgstr "passwd-fil"
 #. type: Plain text
 #: src/auth/basic/NCSA/basic_ncsa_auth.8:14
 msgid "B<basic_ncsa_auth> allows Squid to read and authenticate user and password information from an NCSA/Apache httpd-style password file when using basic HTTP authentication."
-msgstr "B<basic_ncsa_auth> gör det möjligt för Squid att läsa och autentisera användar- och lösenordsinformation från en NCSA/Apache httpd-stil lösenordsfil när man använder grundläggande HTTP-autentisering."
+msgstr ""
+"B<basic_ncsa_auth> låter Squid läsa och verifiera användarnamn och lösenord "
+"från en lösenordsfil i NCSA/Apache httpd-format vid HTTP Basic-"
+"autentisering."
 
 #. type: Plain text
 #: src/auth/basic/NCSA/basic_ncsa_auth.8:17
 msgid "This password file can be manipulated using B<htpasswd.>"
-msgstr "Denna lösenordsfil kan manipuleras med hjälp av B<htpasswd.>"
+msgstr "Lösenordsfilen kan hanteras med B<htpasswd.>"
 
 #. type: Plain text
 #: src/auth/basic/NCSA/basic_ncsa_auth.8:30
@@ -2233,7 +2549,9 @@ msgstr "OBS: Blowfish- och SHA-algoritmer kräver systemspecifikt stöd."
 #. type: Plain text
 #: src/auth/basic/NCSA/basic_ncsa_auth.8:36
 msgid "The only parameter is the password file.  It must have permissions to be read by the user that Squid is running as."
-msgstr "Den enda parametern är lösenordsfilen. Den måste ha behörighet att läsas av den användare som Squid körs som."
+msgstr ""
+"Den enda parametern är lösenordsfilen. Filens behörigheter måste tillåta "
+"läsning för den användare som Squid körs som."
 
 #. type: Plain text
 #: src/auth/basic/NCSA/basic_ncsa_auth.8:44
@@ -2263,7 +2581,7 @@ msgstr "Du bör ha fått en kopia av GNU General Public License tillsammans med 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:5
 msgid "basic_pam_auth - PAM Basic authentication helper for Squid"
-msgstr "basic_pam_auth - PAM Basic-autentiseringshjälpmedel för Squid"
+msgstr "basic_pam_auth – PAM-hjälpprogram för Basic-autentisering i Squid"
 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:9
@@ -2278,7 +2596,10 @@ msgstr "TTL"
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:18
 msgid "B<basic_pam_auth> allows Squid to connect to a mostly any available PAM database to validate the user name and password of Basic HTTP authentication."
-msgstr "B<basic_pam_auth> gör det möjligt för Squid att ansluta till nästan alla tillgängliga PAM-databaser för att validera användarnamn och lösenord för Basic HTTP-autentisering."
+msgstr ""
+"B<basic_pam_auth> låter Squid ansluta till de flesta tillgängliga PAM-"
+"databaser för att validera användarnamn och lösenord vid HTTP Basic-"
+"autentisering."
 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:24
@@ -2288,17 +2609,26 @@ msgstr "Anger namnet på den PAM-tjänst som Squid använder, standardvärdet ä
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:33
 msgid "Enables persistent PAM connections where the connection to the PAM database is kept open and reused for new logins. The TTL specifies how long the connection will be kept open (in seconds).  Default is to not keep PAM connections open. Please note that the use of persistent PAM connections is slightly outside the PAM specification and may not work with all PAM configurations."
-msgstr "Aktiverar permanenta PAM-anslutningar där anslutningen till PAM-databasen hålls öppen och återanvänds för nya inloggningar. TTL anger hur länge anslutningen ska hållas öppen (i sekunder). Standardinställningen är att inte hålla PAM-anslutningar öppna. Observera att användningen av permanenta PAM-anslutningar ligger något utanför PAM-specifikationen och kanske inte fungerar med alla PAM-konfigurationer."
+msgstr ""
+"Aktiverar beständiga PAM-anslutningar där anslutningen till PAM-databasen "
+"hålls öppen och återanvänds för nya inloggningar. TTL anger hur länge "
+"anslutningen ska hållas öppen (i sekunder). Standardinställningen är att "
+"inte hålla PAM-anslutningar öppna. Observera att användningen av beständiga "
+"PAM-anslutningar ligger något utanför PAM-specifikationen och kanske inte "
+"fungerar med alla PAM-konfigurationer."
 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:38
 msgid "Do not perform the PAM account management group (account expiration etc)"
-msgstr "Utför inte PAM-kontohanteringsgruppen (kontoutgång etc.)"
+msgstr ""
+"Utför inte PAM:s kontohanteringskontroller (kontots giltighetstid m.m.)"
 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:44
 msgid "The program needs a PAM service to be configured in B</etc/pam.conf> or B</etc/pam.d/squid>"
-msgstr "Programmet behöver en PAM-tjänst som ska konfigureras i B</etc/pam.conf> eller B</etc/pam.d/squid>"
+msgstr ""
+"Programmet kräver att en PAM-tjänst konfigureras i B</etc/pam.conf> eller "
+"B</etc/pam.d/squid>"
 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:52
@@ -2314,17 +2644,23 @@ msgstr "För mer information om hur du konfigurerar PAM-tjänster, se PAM-dokume
 #: src/auth/basic/PAM/basic_pam_auth.8:57
 #, no-wrap
 msgid "NOTES"
-msgstr "ANTECKNINGAR"
+msgstr "ANMÄRKNINGAR"
 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:64
 msgid "When used for authenticating to local UNIX shadow password databases the program must be running as root or else it won't have sufficient permissions to access the user password database. Such use of this program is not recommended, but if you absolutely need to then make the program setuid root"
-msgstr "När programmet används för autentisering mot lokala UNIX-skuggparoll-databaser måste det köras som root, annars har det inte tillräckliga behörigheter för att komma åt användarnas paroll-databas. Sådan användning av programmet rekommenderas inte, men om du absolut måste göra det, ställ då in programmet som setuid root"
+msgstr ""
+"Vid autentisering mot lokala UNIX-lösenordsdatabaser av typen shadow måste "
+"programmet köras som root för att ha tillräcklig behörighet att läsa "
+"lösenordsdatabasen. Sådan användning rekommenderas inte, men om det är "
+"absolut nödvändigt måste programmet göras setuid root"
 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:93
 msgid "Squid B<basic_pam_auth> and this manual is Copyright 1999,2002,2003"
-msgstr "Squid B<basic_pam_auth> och denna manual är upphovsrättsskyddad 1999, 2002, 2003"
+msgstr ""
+"Squid B<basic_pam_auth> och denna manual är upphovsrättsskyddade 1999, 2002,"
+" 2003"
 
 #. type: Plain text
 #: src/auth/basic/PAM/basic_pam_auth.8:124
@@ -2334,7 +2670,7 @@ msgstr "PAM-systemadministratörsguide"
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:5
 msgid "basic_radius_auth - Squid RADIUS authentication helper"
-msgstr "basic_radius_auth - Squid RADIUS-autentiseringshjälpmedel"
+msgstr "basic_radius_auth – RADIUS-autentiseringshjälpprogram för Squid"
 
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:10
@@ -2374,7 +2710,9 @@ msgstr "Alternativ metod för att ange vilken server som ska anslutas till"
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:43
 msgid "Specify another server port where the RADIUS server listens for requests if different from the default RADIUS port.  Normally not specified."
-msgstr "Ange en annan serverport där RADIUS-servern lyssnar efter förfrågningar om den skiljer sig från standardporten för RADIUS. Anges normalt inte."
+msgstr ""
+"Ange en annan serverport där RADIUS-servern lyssnar efter begäranden om den "
+"skiljer sig från standardporten för RADIUS. Anges normalt inte."
 
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:48
@@ -2389,7 +2727,7 @@ msgstr "Alternativ metod för att ange den delade hemligheten. Att använda flag
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:58
 msgid "RADIUS request timeout. Default is 10 seconds."
-msgstr "Tidsgräns överstegs för RADIUS-förfrågan. Standard är 10 sekunder."
+msgstr "Tidsgräns för RADIUS-begäran. Standardvärdet är 10 sekunder."
 
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:65
@@ -2409,7 +2747,9 @@ msgstr "anger den delade RADIUS-hemligheten."
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:78
 msgid "specifies what name the proxy should use to identify itself to the RADIUS server.  This directive is optional."
-msgstr "anger vilket namn proxyn ska använda för att identifiera sig för RADIUS-servern. Denna direktiv är valfri."
+msgstr ""
+"anger vilket namn proxyn ska använda för att identifiera sig för RADIUS-"
+"servern. Detta direktiv är valfritt."
 
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:82
@@ -2419,7 +2759,7 @@ msgstr "Anger portnumret eller tjänstens namn som hjälpprogrammet ska ansluta 
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:86
 msgid "Specifies the RADIUS request timeout."
-msgstr "Anger tidsgränsen för RADIUS-förfrågningar."
+msgstr "Anger tidsgränsen för RADIUS-begäranden."
 
 #. type: Plain text
 #: src/auth/basic/RADIUS/basic_radius_auth.8:93
@@ -2439,12 +2779,18 @@ msgstr "B<RFC2058> - Remote Authentication Dial In User Service (RADIUS)"
 #. type: Plain text
 #: src/auth/basic/SASL/basic_sasl_auth.8:5
 msgid "basic_sasl_auth - Basic Authentication using SASL (specifically the cyrus-sasl authentication method)"
-msgstr "basic_sasl_auth - Grundläggande autentisering med SASL (specifikt autentiseringsmetoden cyrus-sasl)"
+msgstr ""
+"basic_sasl_auth – Basic-autentisering med SASL (specifikt "
+"autentiseringsmetoden cyrus-sasl)"
 
 #. type: Plain text
 #: src/auth/basic/SASL/basic_sasl_auth.8:16
 msgid "B<basic_sasl_auth> is an installed binary helper for Squid. SASL is configurable (somewhat like PAM).  Each service authenticating against SASL identifies itself with an application name.  Each application can be configured independently by the SASL administrator."
-msgstr "B<basic_sasl_auth> är ett installerat binärt hjälpmedel för Squid. SASL är konfigurerbart (ungefär som PAM). Varje tjänst som autentiseras mot SASL identifierar sig med ett applikationsnamn. Varje applikation kan konfigureras oberoende av SASL-administratören."
+msgstr ""
+"B<basic_sasl_auth> är ett installerat hjälpprogram för Squid. SASL kan "
+"konfigureras på ungefär samma sätt som PAM. Varje tjänst som autentiseras "
+"mot SASL identifierar sig med ett programnamn. SASL-administratören kan "
+"konfigurera varje program separat."
 
 #. type: Plain text
 #: src/auth/basic/SASL/basic_sasl_auth.8:22
@@ -2501,12 +2847,15 @@ msgstr "Vanligtvis kan autentiseringsdatabasen (B</etc/sasldb>, B</etc/shadow>, 
 #. type: Plain text
 #: src/auth/basic/SASL/basic_sasl_auth.8:72
 msgid "If the application name B<basic_sasl_auth> will also be used for the PAM service name if B<pwcheck_method:pam> is chosen. And example PAM configuration file B<basic_sasl_auth.pam> is also included."
-msgstr "Om applikationsnamnet B<basic_sasl_auth> också kommer att användas för PAM-tjänstens namn om B<pwcheck_method:pam> väljs. Ett exempel på en PAM-konfigurationsfil B<basic_sasl_auth.pam> ingår också."
+msgstr ""
+"Programnamnet B<basic_sasl_auth> används också som PAM-tjänstens namn om "
+"B<pwcheck_method:pam> väljs. Exempelfilen B<basic_sasl_auth.pam> med PAM-"
+"konfiguration ingår också."
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:5
 msgid "basic_sspi_auth.exe - Basic authentication protocol"
-msgstr "basic_sspi_auth.exe – Grundläggande autentiseringsprotokoll"
+msgstr "basic_sspi_auth.exe – Basic-autentiseringsprotokoll"
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:12
@@ -2524,7 +2873,10 @@ msgstr "Standarddomän"
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:22
 msgid "B<basic_sspi_auth.exe> is a simple authentication module for the Squid proxy server running on Windows NT to authenticate users on an NT domain in native WIN32 mode."
-msgstr "B<basic_sspi_auth.exe> är en enkel autentiseringsmodul för Squid-proxyservern som körs på Windows NT för att autentisera användare på en NT-domän i native WIN32-läge."
+msgstr ""
+"B<basic_sspi_auth.exe> är en enkel autentiseringsmodul för Squid på Windows "
+"NT. Den autentiserar användare i en NT-domän med det inbyggda "
+"WIN32-gränssnittet."
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:31
@@ -2534,12 +2886,13 @@ msgstr "Användningen är enkel. Programmet accepterar ett användarnamn och lö
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:36
 msgid "A Windows Local Group name allowed to authenticate."
-msgstr "Ett Windows-lokalt gruppnamn som får autentisera sig."
+msgstr "Namnet på en lokal Windows-grupp vars medlemmar får autentisera sig."
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:44
 msgid "A Windows Local Group name not allowed to authenticate."
-msgstr "Ett Windows-lokalt gruppnamn som inte får autentiseras."
+msgstr ""
+"Namnet på en lokal Windows-grupp vars medlemmar ska nekas autentisering."
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:48
@@ -2550,7 +2903,10 @@ msgstr "Standarddomänen för autentisering."
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:55
 msgid "Users that are allowed to access the web proxy must have the Windows NT User Rights I<\\&\\&> and must be included in the NT LOCAL User Groups specified in the Authenticator's command line."
-msgstr "Användare som har behörighet att komma åt webbproxyn måste ha Windows NT-användarrättigheterna I<\\&\\&> och måste ingå i de NT LOCAL-användargrupper som anges i Authenticators kommandorad."
+msgstr ""
+"Användare som får använda webbproxyn måste ha Windows NT-"
+"användarrättigheterna I<\\&\\&> och ingå i de lokala NT-användargrupper som "
+"anges på autentiserarens kommandorad."
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:58
@@ -2589,33 +2945,40 @@ msgid ""
 "B<CTRL-C>\n"
 " aborts the program.\n"
 msgstr ""
-"Jag rekommenderar starkt att \n"
+"Jag rekommenderar starkt att\n"
 "B<basic_sspi_auth.exe>\n"
-"testas innan den används i en \n"
-"produktionsmiljö. Den kan fungera olika på olika plattformar.\n"
-"För att testa den, kör den från kommandoraden. Ange användarnamn och lösenord\n"
+"testas innan det används i en\n"
+"produktionsmiljö. Det kan fungera olika på olika plattformar.\n"
+"Testa det genom att köra det från kommandoraden. Ange användarnamn och lösenord\n"
 "separerade med ett mellanslag. Tryck på ENTER för att få ett OK- eller\n"
 "ERR-meddelande.\n"
-"Se till att \n"
-"B<CTRL-D>fungerar på samma sätt som en vagnretur.\n"
-"Se till att \n"
+"Kontrollera att\n"
+"B<CTRL-D>\n"
+"fungerar på samma sätt som en vagnretur.\n"
+"Kontrollera att\n"
 "B<CTRL-C>\n"
-" avbryter programmet.\n"
+"avbryter programmet.\n"
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:108
 msgid "Test that entering an invalid username and password results in an B<ERR> message."
-msgstr "Testa att ett ogiltigt användarnamn och lösenord resulterar i ett B<ERR> -meddelande."
+msgstr ""
+"Testa att ett ogiltigt användarnamn och lösenord resulterar i ett "
+"B<ERR>-meddelande."
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:113
 msgid "Note that if NT guest user access is allowed on the PDC, an B<OK> message may be returned instead of B<ERR>"
-msgstr "Observera att om NT-gästanvändaråtkomst är tillåten på PDC kan ett B<OK> -meddelande returneras istället för B<ERR>"
+msgstr ""
+"Observera att om NT-gästanvändaråtkomst är tillåten på PDC kan ett "
+"B<OK>-meddelande returneras istället för B<ERR>"
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:117
 msgid "Test that entering a valid username and password results in an B<OK> message."
-msgstr "Testa att ett giltigt användarnamn och lösenord resulterar i ett B<OK> -meddelande."
+msgstr ""
+"Testa att ett giltigt användarnamn och lösenord resulterar i ett "
+"B<OK>-meddelande."
 
 #. type: Plain text
 #: src/auth/basic/SSPI/basic_sspi_auth.8:120
@@ -2631,7 +2994,8 @@ msgstr "Baserat på tidigare arbete av"
 #. type: Plain text
 #: src/auth/digest/file/digest_file_auth.8:5
 msgid "digest_file_auth - File based digest authentication helper for Squid."
-msgstr "digest_file_auth - Filbaserad hjälp för digest-autentisering för Squid."
+msgstr ""
+"digest_file_auth – Squids filbaserade hjälpprogram för Digest-autentisering."
 
 #. type: Plain text
 #: src/auth/digest/file/digest_file_auth.8:7
@@ -2647,7 +3011,9 @@ msgstr "fil"
 #. type: Plain text
 #: src/auth/digest/file/digest_file_auth.8:17
 msgid "B<digest_file_auth> is an installed binary authentication program for Squid. It handles digest authentication protocol and authenticates against a text file backend."
-msgstr "B<digest_file_auth> är ett installerat binärt autentiseringsprogram för Squid. Det hanterar digest-autentiseringsprotokollet och autentiserar mot en textfil-backend."
+msgstr ""
+"B<digest_file_auth> är ett installerat autentiseringshjälpprogram för Squid."
+" Det hanterar Digest-autentisering och autentiserar mot en textfil."
 
 #. type: Plain text
 #: src/auth/digest/file/digest_file_auth.8:20
@@ -2662,7 +3028,7 @@ msgstr "Acceptera hashade lösenord istället för klartext i lösenordsfilen"
 #. type: Plain text
 #: src/auth/digest/file/digest_file_auth.8:29
 msgid "Username database file format:"
-msgstr "Användarnamnets databasfilformat:"
+msgstr "Format för användardatabasfilen:"
 
 #. type: TP
 #: src/auth/digest/file/digest_file_auth.8:29
@@ -2680,13 +3046,13 @@ msgstr "- tomma eller blanka rader är möjliga;"
 #: src/auth/digest/file/digest_file_auth.8:35
 #, no-wrap
 msgid "- plaintext entry format is username:password"
-msgstr "- formatet för inmatning av klartext är användarnamn:lösenord"
+msgstr "- formatet för en klartextpost är username:password"
 
 #. type: TP
 #: src/auth/digest/file/digest_file_auth.8:38
 #, no-wrap
 msgid "- HA1 entry format is username:realm:HA1"
-msgstr "- HA1-inmatningsformatet är användarnamn:realm:HA1"
+msgstr "- formatet för en HA1-post är username:realm:HA1"
 
 #. type: Plain text
 #: src/auth/digest/file/digest_file_auth.8:51
@@ -2696,12 +3062,19 @@ msgstr "För att bygga en katalogintegrerad backend måste du kunna beräkna HA1
 #. type: Plain text
 #: src/auth/digest/file/digest_file_auth.8:59
 msgid "This implementation could be improved by using such a triple for the file format.  However storing such a triple does little to improve security: If compromised the B<username:realm:HA1> combination is \"plaintext equivalent\" - for the purposes of digest authentication they allow the user access. Password synchronization is not tackled by digest - just preventing on the wire compromise."
-msgstr "Denna implementering skulle kunna förbättras genom att använda en sådan trippel för filformatet.  Att lagra en sådan trippel förbättrar dock inte säkerheten i någon större utsträckning: Om den komprometteras är kombinationen B<username:realm:HA1> -”motsvarande klartext” – för ändamålet med digest-autentisering ger de användaren åtkomst. Lösenordssynkronisering hanteras inte av digest – det förhindrar bara kompromettering över nätverket."
+msgstr ""
+"Implementeringen skulle kunna förbättras genom att använda en sådan trippel "
+"i filformatet. Det skulle dock inte förbättra säkerheten nämnvärt: om "
+"kombinationen B<username:realm:HA1> röjs är den likvärdig med ett "
+"klartextlösenord för Digest-autentisering och ger åtkomst som användaren. "
+"Digest hanterar inte lösenordssynkronisering; det skyddar bara mot att "
+"lösenord röjs över nätverket."
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:5
 msgid "negotiate_kerberos_auth - Squid kerberos based authentication helper"
-msgstr "negotiate_kerberos_auth - Squid Kerberos-baserad autentiseringshjälp"
+msgstr ""
+"negotiate_kerberos_auth – Kerberos-autentiseringshjälpprogram för Squid"
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:7
@@ -2716,32 +3089,34 @@ msgstr "B<negotiate_kerberos_auth> är en installerad binärfil som gör det mö
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:30
 msgid "Remove realm from username before returning the username to squid."
-msgstr "Ta bort realm från användarnamnet innan du skickar tillbaka användarnamnet till squid."
+msgstr ""
+"Ta bort Kerberos-domänen från användarnamnet innan det skickas tillbaka till"
+" Squid."
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:33
 msgid "Provide Service Principal Name."
-msgstr "Ange tjänstens huvudnamn."
+msgstr "Ange tjänstens principalnamn (SPN)."
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:36
 msgid "Provide Kerberos Keytab Name (Default: /etc/krb5.keytab)"
-msgstr "Ange Kerberos Keytab-namn (standard: /etc/krb5.keytab)"
+msgstr "Ange namnet på Kerberos-keytab-filen (standard: /etc/krb5.keytab)"
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:39
 msgid "Provide Replay Cache Directory (Default: /var/tmp)"
-msgstr "Ange katalog för återuppspelningscache (standard: /var/tmp)"
+msgstr "Ange katalog för replay-cache (standard: /var/tmp)"
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:42
 msgid "Provide Replay Cache Type (Default: dfl)"
-msgstr "Ange typ av återuppspelningscache (standard: dfl)"
+msgstr "Ange typ av replay-cache (standard: dfl)"
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:49
 msgid "This helper is intended to be used as an B<authentication> helper in B<squid.conf.>"
-msgstr "Denna hjälpfunktion är avsedd att användas som en B<authentication> -hjälpfunktion i B<squid.conf.>"
+msgstr "Detta hjälpprogram är avsett för B<autentisering> i B<squid.conf.>"
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:67
@@ -2752,10 +3127,10 @@ msgid ""
 "also be provided by the -k E<lt>keytab nameE<gt> option. The fqdn must be the proxy name set in IE\n"
 " or firefox. You can not use an IP address.\n"
 msgstr ""
-"Lägg till följande rader i squids startskript för att peka squid till en keytab-fil som\n"
-"innehåller HTTP/fqdn-tjänstprincipalen för standarddomänen Kerberos. Keytab-namnet kan\n"
-"också anges med flaggan -k E<lt>keytab nameE<gt>. Fqdn måste vara det proxynamn som är inställt i IE\n"
-" eller Firefox. Du kan inte använda en IP-adress.\n"
+"Lägg till följande rader i Squids startskript för att ange en keytab-fil som\n"
+"innehåller tjänstprincipalen HTTP/fqdn för standarddomänen i Kerberos. Filnamnet\n"
+"kan också anges med flaggan -k E<lt>keytab nameE<gt>. fqdn måste vara det\n"
+"proxynamn som är inställt i IE eller Firefox. Du kan inte använda en IP-adress.\n"
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:70
@@ -2770,12 +3145,20 @@ msgstr "KRB5_CONFIG=/etc/krb5-squid.conf export KRB5_CONFIG"
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:83
 msgid "Kerberos can keep a replay cache to detect the reuse of Kerberos tickets (usually only possible in a 5 minute window) . If squid is under high load with Negotiate(Kerberos) proxy authentication requests the replay cache checks can create high CPU load. If the environment does not require high security the replay cache check can be disabled for MIT based Kerberos implementations by adding the below to the startup script or use the -t none option."
-msgstr "Kerberos kan spara en replay-cache för att upptäcka återanvändning av Kerberos-biljetter (vanligtvis endast möjligt inom ett 5-minutersfönster). Om squid är högt belastat med Negotiate(Kerberos)-proxyautentiseringsförfrågningar kan replay-cachekontrollerna skapa hög CPU-belastning. Om miljön inte kräver hög säkerhet kan replay-cachekontrollen inaktiveras för MIT-baserade Kerberos-implementeringar genom att lägga till nedanstående i startskriptet eller använda flaggan -t none."
+msgstr ""
+"Kerberos kan spara en replay-cache för att upptäcka återanvändning av "
+"Kerberos-biljetter (vanligtvis endast möjligt inom ett 5-minutersfönster). "
+"Om squid är högt belastat med "
+"Negotiate(Kerberos)-proxyautentiseringsbegäranden kan replay-"
+"cachekontrollerna skapa hög CPU-belastning. Om miljön inte kräver hög "
+"säkerhet kan replay-cachekontrollen inaktiveras för MIT-baserade Kerberos-"
+"implementeringar genom att lägga till nedanstående i startskriptet eller "
+"använda flaggan -t none."
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:86
 msgid "KRB5RCACHETYPE=none export KRB5RCACHETYPE"
-msgstr "KRB5RCACHETYPE=none exportera KRB5RCACHETYPE"
+msgstr "KRB5RCACHETYPE=none export KRB5RCACHETYPE"
 
 #. type: Plain text
 #: src/auth/negotiate/kerberos/negotiate_kerberos_auth.8:89
@@ -2831,12 +3214,15 @@ msgstr "B<ntlm_sspi_auth.exe> är en installerad binärfil som är byggd på Win
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:26
 msgid "Specify a Windows Local Group name allowed to authenticate."
-msgstr "Ange ett Windows-lokalt gruppnamn som får autentisera sig."
+msgstr ""
+"Ange namnet på en lokal Windows-grupp vars medlemmar får autentisera sig."
 
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:34
 msgid "Specify a Windows Local Group name which is to be denied authentication."
-msgstr "Ange ett namn på en lokal Windows-grupp som ska nekas autentisering."
+msgstr ""
+"Ange namnet på en lokal Windows-grupp vars medlemmar ska nekas "
+"autentisering."
 
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:42
@@ -2846,7 +3232,7 @@ msgstr "Aktiverar detaljerad felsökning av NTLM-paket."
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:46
 msgid "B<Allowing Users>"
-msgstr "B<Allowing Users>"
+msgstr "B<Ge användare åtkomst>"
 
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:49
@@ -2856,7 +3242,9 @@ msgstr "Användare som har tillåtelse att använda webbproxyn måste ha Windows
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:53
 msgid "Optionally the authenticator can verify the NT LOCAL group membership of the user against the User Group specified in the Authenticator's command line."
-msgstr "Alternativt kan autentiseraren verifiera användarens medlemskap i NT LOCAL-gruppen mot den användargrupp som anges i autentiserarens kommandorad."
+msgstr ""
+"Alternativt kan autentiseraren kontrollera användarens medlemskap i den "
+"lokala NT-grupp som anges på kommandoraden."
 
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:57
@@ -2871,7 +3259,7 @@ msgstr "Bättre gruppkontroll är tillgänglig med extern ACL, se dokumentatione
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:64
 msgid "B<squid.conf> typical minimal required changes:"
-msgstr "B<squid.conf> typiska minimikrav på ändringar:"
+msgstr "Typiska minimiändringar i B<squid.conf>:"
 
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:76
@@ -2881,12 +3269,15 @@ msgstr "Se Squids dokumentation för mer information."
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:84
 msgid "Internet Explorer has some problems with B<ftp://> URLs when handling internal Squid FTP icons.  The following B<squid.conf> ACL works around this when placed before the authentication ACL:"
-msgstr "Internet Explorer har vissa problem med B<ftp://>-URL:er vid hantering av interna Squid FTP-ikoner. Följande B<squid.conf> ACL löser detta när den placeras före autentiserings-ACL:"
+msgstr ""
+"Internet Explorer har problem med B<ftp://>-URL:er för Squids interna FTP-"
+"ikoner. Följande ACL i B<squid.conf> löser detta när den placeras före "
+"ACL:en för autentisering:"
 
 #. type: Plain text
 #: src/auth/ntlm/SSPI/ntlm_sspi_auth.8:95
 msgid "Based on prior work in by"
-msgstr "Baserat på tidigare arbete i av"
+msgstr "Baserat på tidigare arbete av"
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:5
@@ -2923,12 +3314,18 @@ msgstr "Eftersom det tar tid att generera och signera SSL-certifikat måste Squi
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:40
 msgid "This process generates new SSL certificates and uses a disk cache of certificates to improve response times on repeated requests.  Communication occurs via TCP sockets bound to the loopback interface."
-msgstr "Denna process genererar nya SSL-certifikat och använder en diskcache med certifikat för att förbättra svarstiderna vid upprepade förfrågningar. Kommunikationen sker via TCP-socklar som är kopplade till loopback-gränssnittet."
+msgstr ""
+"Denna process genererar nya SSL-certifikat och använder en diskcache med "
+"certifikat för att förbättra svarstiderna vid upprepade begäranden. "
+"Kommunikationen sker via TCP-socklar som är kopplade till loopback-"
+"gränssnittet."
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:46
 msgid "File system block size in bytes. Needed for processing natural size of certificate on disk.  Default value is 2048 bytes."
-msgstr "Filsystemets blockstorlek i byte. Behövs för att bearbeta certifikatets naturliga storlek på disken. Standardvärdet är 2048 byte."
+msgstr ""
+"Filsystemets blockstorlek i byte. Behövs för att beräkna certifikatets "
+"faktiska utrymmesbehov på disken. Standardvärdet är 2048 byte."
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:53
@@ -2943,22 +3340,25 @@ msgstr "Visa det aktuella serienumret med stderr och avsluta.  Kräver flaggan B
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:72
 msgid "Directory path of disk storage for new SSL certificates."
-msgstr "Katalogväg till disklagring för nya SSL-certifikat."
+msgstr "Sökväg till katalogen för disklagring av nya SSL-certifikat."
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:76
 msgid "Maximum size of SSL certificate disk storage."
-msgstr "Maximal storlek på SSL-certifikatets diskutrymme."
+msgstr "Maximal storlek på disklagringen för SSL-certifikat."
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:83
 msgid "HEX B<serial number > to use when initializing an SSL storage database.  The default value of serial number is the number of seconds since Epoch minus 1200000000."
-msgstr "HEX B<serial number > -värde som används vid initialisering av en SSL-lagringsdatabas.  Standardvärdet för serienummer är antalet sekunder sedan Epoch minus 1200000000."
+msgstr ""
+"Hexadecimalt B<serienummer> att använda när en databas för SSL-certifikat "
+"initieras. Standardvärdet är antalet sekunder sedan Unix-epoken minus "
+"1200000000."
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:87
 msgid "Display the binary version details using stderr."
-msgstr "Visa information om binärversionen med stderr."
+msgstr "Visa programmets versionsinformation på stderr."
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:91
@@ -2974,12 +3374,15 @@ msgstr "Certifikat lagras i denna databas i signerad form. Efter varje ändring 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:98
 msgid "B<Certificate chaining>"
-msgstr "B<Certifikatkedjning>"
+msgstr "B<Certifikatkedjor>"
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:103
 msgid "The version 1.0 of this helper will not add chained intermediate CA certificates.  The client must have a full chain of trust from the root CA all the way down to the end certificate generated by this program."
-msgstr "Version 1.0 av detta hjälpmedel lägger inte till kedjade mellanliggande CA-certifikat. Klienten måste ha en fullständig förtroendekedja från rot-CA hela vägen ner till det slutcertifikat som genereras av detta program."
+msgstr ""
+"Version 1.0 av detta hjälpprogram lägger inte till mellanliggande CA-"
+"certifikat i kedjan. Klienten måste ha en fullständig förtroendekedja från "
+"rotcertifikatutfärdaren till det slutcertifikat som programmet genererar."
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:106
@@ -2989,7 +3392,9 @@ msgstr "Vid signering med en mellanliggande certifikatutfärdare måste både ro
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:113
 msgid "Before this helper can be used the storage area for new certificates must be initialized manually.  This is done from the command line using the B<-c> parameters."
-msgstr "Innan detta hjälpmedel kan användas måste lagringsutrymmet för nya certifikat initialiseras manuellt.  Detta görs från kommandoraden med hjälp av B<-c> -parametrarna."
+msgstr ""
+"Innan hjälpprogrammet kan användas måste lagringsutrymmet för nya certifikat"
+" initieras manuellt. Detta görs från kommandoraden med parametern B<-c>."
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:116
@@ -2999,22 +3404,28 @@ msgstr "Till exempel:"
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:128
 msgid "For simple configuration the helper defaults can be used.  Only HTTP listening port options are required to enable generation and set the signing CA certificate.  For Example:"
-msgstr "För enkel konfiguration kan hjälpfunktionernas standardinställningar användas. Endast flaggor för HTTP-lyssningsport krävs för att aktivera generering och ställa in signeringscertifikatet. Till exempel:"
+msgstr ""
+"För en enkel konfiguration kan hjälpprogrammets standardinställningar "
+"användas. Endast alternativ för HTTP-lyssningsporten behövs för att aktivera"
+" certifikatgenerering och ange det signerande CA-certifikatet. Till exempel:"
 
 #. type: Plain text
 #: src/security/cert_generators/file/security_file_certgen.8.in:137
 msgid "For more customized configuration the helper certificate storage directory location and size can be altered with the B<sslcrtd_program> configuration directive.  For example:"
-msgstr "För mer anpassad konfiguration kan hjälpcertifikatets lagringskatalog och storlek ändras med konfigurationsdirektivet B<sslcrtd_program>. Till exempel:"
+msgstr ""
+"För en mer anpassad konfiguration kan katalogen och storleken för "
+"hjälpprogrammets certifikatlagring ändras med direktivet B<sslcrtd_program>."
+" Till exempel:"
 
 #. type: Plain text
 #: src/squid.8.in:5
 msgid "squid - HTTP web proxy caching server"
-msgstr "squid - HTTP-webbproxy-caching-server"
+msgstr "squid – cachande HTTP-webbproxyserver"
 
 #. type: Plain text
 #: src/squid.8.in:11
 msgid "facility"
-msgstr "anläggning"
+msgstr "facility"
 
 #. type: Plain text
 #: src/squid.8.in:13
@@ -3039,17 +3450,28 @@ msgstr "kommandorad"
 #. type: Plain text
 #: src/squid.8.in:30
 msgid "B<squid> is a high-performance proxy caching server for web clients, supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.  Unlike traditional caching software, Squid handles all requests in a single, non-blocking process."
-msgstr "B<squid> är en högpresterande proxy-caching-server för webbklienter som stöder FTP-, gopher-, ICAP-, ICP-, HTCP- och HTTP-dataobjekt.  Till skillnad från traditionell caching-programvara hanterar Squid alla förfrågningar i en enda, icke-blockerande process."
+msgstr ""
+"B<squid> är en högpresterande cachande proxyserver för webbklienter med stöd"
+" för dataobjekt över FTP, gopher, ICAP, ICP, HTCP och HTTP. Till skillnad "
+"från traditionell cacheprogramvara hanterar Squid alla begäranden i en enda "
+"icke-blockerande process."
 
 #. type: Plain text
 #: src/squid.8.in:34
 msgid "Squid keeps meta data and especially hot objects cached in RAM, caches DNS lookups, supports non-blocking DNS lookups, and implements negative caching of failed requests."
-msgstr "Squid lagrar metadata och särskilt populära objekt i RAM-minnet, cachar DNS-sökningar, stöder icke-blockerande DNS-sökningar och implementerar negativ cachning av misslyckade förfrågningar."
+msgstr ""
+"Squid lagrar metadata och särskilt populära objekt i RAM-minnet, cachar DNS-"
+"sökningar, stöder icke-blockerande DNS-sökningar och implementerar negativ "
+"cachning av misslyckade begäranden."
 
 #. type: Plain text
 #: src/squid.8.in:39
 msgid "Squid supports SSL, extensive access controls, and full request logging.  By using the lightweight Internet Cache Protocols ICP, HTCP or CARP, Squid caches can be arranged in a hierarchy or mesh for additional bandwidth savings."
-msgstr "Squid stöder SSL, omfattande åtkomstkontroller och fullständig loggning av förfrågningar. Genom att använda de lättviktiga Internet Cache Protocols ICP, HTCP eller CARP kan Squid-cacher ordnas i en hierarki eller ett nätverk för ytterligare bandbreddsbesparingar."
+msgstr ""
+"Squid stöder SSL, omfattande åtkomstkontroller och fullständig loggning av "
+"begäranden. Med de resurssnåla cacheprotokollen ICP, HTCP eller CARP kan "
+"Squid-cachar ordnas i en hierarki eller ett nätverk för att spara "
+"ytterligare bandbredd."
 
 #. type: Plain text
 #: src/squid.8.in:47
@@ -3064,22 +3486,28 @@ msgstr "Squid härstammar från det ARPA-finansierade Harvest-projektet."
 #. type: Plain text
 #: src/squid.8.in:55
 msgid "This manual page only lists the command line arguments.  For details on how to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the configuration manual on the Squid home page"
-msgstr "Denna manual sida listar endast kommandoradsargument. För detaljer om hur man konfigurerar Squid, se filen B<@SYSCONFDIR@/squid.conf.documented,> Squid wiki FAQ och exempel på http://wiki.squid-cache.org/ , eller konfigurationsmanualen på Squids webbplats"
+msgstr ""
+"Denna manualsida beskriver endast kommandoradsargumenten. Information om hur"
+" Squid konfigureras finns i filen B<@SYSCONFDIR@/squid.conf.documented,> i "
+"vanliga frågor och exempel på http://wiki.squid-cache.org/ eller i "
+"konfigurationsmanualen på Squids webbplats"
 
 #. type: Plain text
 #: src/squid.8.in:64
 msgid "Specify HTTP port number where Squid should listen for requests, in addition to any B<http_port> specifications in B<squid.conf>"
-msgstr "Ange HTTP-portnummer där Squid ska lyssna efter förfrågningar, utöver eventuella B<http_port>-specifikationer i B<squid.conf>"
+msgstr ""
+"Ange HTTP-portnummer där Squid ska lyssna efter begäranden, utöver "
+"eventuella B<http_port>-specifikationer i B<squid.conf>"
 
 #. type: Plain text
 #: src/squid.8.in:68
 msgid "Do not catch fatal signals."
-msgstr "Fånga inte upp ödesdigra signaler."
+msgstr "Fånga inte upp fatala signaler."
 
 #. type: Plain text
 #: src/squid.8.in:72
 msgid "Write debugging to stderr also."
-msgstr "Skriv också felsökning till stderr."
+msgstr "Skriv även felsökningsinformation till stderr."
 
 #. type: Plain text
 #: src/squid.8.in:84
@@ -3089,12 +3517,12 @@ msgstr "Använd den angivna konfigurationsfilen istället för B<@SYSCONFDIR@/sq
 #. type: Plain text
 #: src/squid.8.in:88
 msgid "Don't serve any requests until store is rebuilt."
-msgstr "Svara inte på några förfrågningar förrän butiken har byggts om."
+msgstr "Hantera inga begäranden förrän cachelagringen har byggts upp igen."
 
 #. type: Plain text
 #: src/squid.8.in:92
 msgid "Print help message."
-msgstr "Skriv ut hjälpmelding."
+msgstr "Skriv ut hjälpmeddelandet."
 
 #. type: Plain text
 #: src/squid.8.in:98
@@ -3109,7 +3537,7 @@ msgstr "Analysera konfigurationsfilen, skicka sedan signal till körande kopia (
 #. type: Plain text
 #: src/squid.8.in:110
 msgid "Use specified syslog facility. Implies B<-s>"
-msgstr "Använd specificerad syslog-funktion. Implicerar B<-s>"
+msgstr "Använd angiven syslog-kategori (facility). Aktiverar även B<-s>"
 
 #. type: Plain text
 #: src/squid.8.in:115
@@ -3119,12 +3547,15 @@ msgstr "Ange Windows-tjänstens namn som ska användas för tjänsteoperationer.
 #. type: Plain text
 #: src/squid.8.in:119
 msgid "No daemon mode."
-msgstr "Inget daemon-läge."
+msgstr "Kör inte som en bakgrundsprocess."
 
 #. type: Plain text
 #: src/squid.8.in:125
 msgid "Parent process does not exit until its children have finished. It has no effect with B<-N> which does not fork/exit at startup."
-msgstr "Föräldraprocessen avslutas inte förrän dess barnprocesser är färdiga. Det har ingen effekt med B<-N>, som inte förgrenar sig/avslutas vid start."
+msgstr ""
+"Föräldraprocessen avslutas inte förrän barnprocesserna har avslutats. Detta "
+"har ingen effekt med B<-N>, som inte skapar en bakgrundsprocess eller "
+"avslutas vid start."
 
 #. type: Plain text
 #: src/squid.8.in:129
@@ -3139,7 +3570,7 @@ msgstr "Ta bort en Windows-tjänst (se flaggan B<-n> )."
 #. type: Plain text
 #: src/squid.8.in:141
 msgid "Do not set B<REUSEADDR> on port."
-msgstr "Ställ inte in B<REUSEADDR> en på porten."
+msgstr "Aktivera inte B<REUSEADDR> på porten."
 
 #. type: Plain text
 #: src/squid.8.in:146
@@ -3149,7 +3580,7 @@ msgstr "Aktivera loggning till syslog. Kan även konfigureras i B<@SYSCONFDIR@/s
 #. type: Plain text
 #: src/squid.8.in:150
 msgid "Double-check swap during rebuild."
-msgstr "Dubbelkolla swap under ombyggnaden."
+msgstr "Dubbelkontrollera disklagringen under återuppbyggnaden."
 
 #. type: Plain text
 #: src/squid.8.in:154
@@ -3159,7 +3590,7 @@ msgstr "Ange ICP-portnummer (standard: 3130), inaktivera med 0."
 #. type: Plain text
 #: src/squid.8.in:158
 msgid "Print version and build details."
-msgstr "Utskriftsversion och byggnadsdetaljer."
+msgstr "Skriv ut versions- och bygginformation."
 
 #. type: Plain text
 #: src/squid.8.in:162
@@ -3179,12 +3610,19 @@ msgstr "Skapa saknade swap-kataloger och andra saknade cache_dir-strukturer, och
 #. type: Plain text
 #: src/squid.8.in:183
 msgid "This option does not enable validation of any present swap structures. Its focus is on creation of missing pieces. If nothing is missing, squid -z just exits. If you suspect cache_dir corruption, you must delete the top-level cache_dir directory before running squid -z."
-msgstr "Den här flaggan aktiverar inte validering av några befintliga swapstrukturer. Det fokuserar på att skapa saknade delar. Om inget saknas avslutas squid -z bara. Om du misstänker att cache_dir är skadad måste du ta bort cache_dir-katalogen på högsta nivå innan du kör squid -z."
+msgstr ""
+"Denna flagga validerar inte befintliga strukturer för disklagring, utan "
+"skapar bara de delar som saknas. Om inget saknas avslutas squid -z direkt. "
+"Om du misstänker att cache_dir är skadad måste du ta bort dess översta "
+"katalog innan du kör squid -z."
 
 #. type: Plain text
 #: src/squid.8.in:188
 msgid "By default, squid -z runs in daemon mode (so that configuration macros and other SMP features work as expected). Use B<-N> option to overwrite this."
-msgstr "Som standard körs squid -z i daemon-läge (så att konfigurationsmakron och andra SMP-funktioner fungerar som förväntat). Använd flaggan B<-N> för att skriva över detta."
+msgstr ""
+"Som standard körs squid -z som en bakgrundsprocess (så att "
+"konfigurationsmakron och andra SMP-funktioner fungerar som förväntat). "
+"Använd flaggan B<-N> för att ändra detta."
 
 #. type: SH
 #: src/squid.8.in:189
@@ -3200,7 +3638,11 @@ msgstr "Squid-konfigurationsfiler finns i @SYSCONFDIR@/:"
 #. type: Plain text
 #: src/squid.8.in:197
 msgid "The main configuration file. You must initially make changes to this file for B<squid> to work. For example, the default configuration only allows access from RFC private LAN networks.  Some packaging distributions block even that."
-msgstr "Huvudkonfigurationsfilen. Du måste först göra ändringar i denna fil för att B<squid> ska fungera. Till exempel tillåter standardkonfigurationen endast åtkomst från privata RFC-LAN-nätverk.  Vissa paketdistributioner blockerar även det."
+msgstr ""
+"Huvudkonfigurationsfilen. Du måste först ändra denna fil för att B<squid> "
+"ska fungera. Standardkonfigurationen tillåter till exempel endast åtkomst "
+"från lokala nätverk med privata adresser enligt RFC. Vissa distributioners "
+"paket blockerar även detta."
 
 #. type: Plain text
 #: src/squid.8.in:201 src/squid.8.in:207
@@ -3215,7 +3657,11 @@ msgstr "Använd detta för att slå upp standardkonfigurationsinställningarna o
 #. type: Plain text
 #: src/squid.8.in:212
 msgid "Use this to read the documentation for configuration options available in your build of Squid. The online configuration manual is also available for a full reference of options.  B<see>http://www.squid-cache.org/Doc/config/"
-msgstr "Använd detta för att läsa dokumentationen för konfigurationsflaggor som finns tillgängliga i din version av Squid. Den onlinebaserade konfigurationsmanualen finns också tillgänglig för en fullständig referens av flaggan.  B<see>http://www.squid-cache.org/Doc/config/"
+msgstr ""
+"Använd denna fil för att läsa om de konfigurationsalternativ som finns i "
+"ditt bygge av Squid. Konfigurationsmanualen på nätet innehåller också en "
+"fullständig referens över alternativen. B<Se> http://www.squid-"
+"cache.org/Doc/config/"
 
 #. type: Plain text
 #: src/squid.8.in:217
@@ -3225,7 +3671,7 @@ msgstr "Huvudkonfigurationsfilen för webbverktygen B<cachemgr.cgi>."
 #. type: Plain text
 #: src/squid.8.in:220
 msgid "The main configuration file for the Sample MSNT authenticator."
-msgstr "Huvudkonfigurationsfilen för Sample MSNT-autentiseraren."
+msgstr "Huvudkonfigurationsfilen för exempelautentiseraren MSNT."
 
 #. type: Plain text
 #: src/squid.8.in:225
@@ -3240,7 +3686,7 @@ msgstr "Vissa filer finns även på andra platser:"
 #. type: Plain text
 #: src/squid.8.in:231
 msgid "MIME type mappings for FTP gatewaying"
-msgstr "MIME-typ-mappningar för FTP-gatewaying"
+msgstr "MIME-typmappningar för FTP-gatewayfunktionen"
 
 #. type: Plain text
 #: src/squid.8.in:234
@@ -3255,37 +3701,52 @@ msgstr "Squid har skrivits under många år av ett skiftande team av utvecklare 
 #. type: Plain text
 #: src/squid.8.in:244
 msgid "With contributions from many others in the Squid community.  see CONTRIBUTORS for a full list of individuals who contributed code.  see CREDITS for a list of major code contributing copyright holders."
-msgstr "Med bidrag från många andra i Squid-gemenskapen. Se BIDRAGSGIVARE för en fullständig lista över personer som bidragit med kod. Se KREDITERINGAR för en lista över de viktigaste upphovsrättsinnehavarna som bidragit med kod."
+msgstr ""
+"Med bidrag från många andra i Squid-gemenskapen. Se CONTRIBUTORS för en "
+"fullständig lista över personer som bidragit med kod. Se CREDITS för en "
+"lista över upphovsrättsinnehavare som lämnat större kodbidrag."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:5
 msgid "cachemgr.cgi - Squid HTTP proxy manager CGI web interface"
-msgstr "cachemgr.cgi – Squid HTTP-proxyhanterare CGI-webbgränssnitt"
+msgstr "cachemgr.cgi – CGI-webbgränssnitt för hantering av Squids HTTP-proxy"
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:16
 msgid "The cache manager ( B<cachemgr.cgi> ) is a CGI utility for displaying statistics about the Squid HTTP proxy process as it runs. The cache manager is a convenient way to manage the cache and view statistics without logging into the server."
-msgstr "Cachehanteraren ( B<cachemgr.cgi> ) är ett CGI-verktyg för att visa statistik om Squid HTTP-proxyprocessen medan den körs. Cachehanteraren är ett bekvämt sätt att hantera cachen och visa statistik utan att logga in på servern."
+msgstr ""
+"Cachehanteraren (B<cachemgr.cgi>) är ett CGI-verktyg som visar statistik om "
+"Squids HTTP-proxyprocess medan den körs. Den gör det enkelt att hantera "
+"cachen och se statistik utan att logga in på servern."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:20
 msgid "Configuration examples for many common web servers can be found in the Squid FAQ wiki."
-msgstr "Konfigurations exempel för många vanliga webbservrar finns i Squid FAQ wiki."
+msgstr ""
+"Konfigurationsexempel för många vanliga webbservrar finns i Squids wiki med "
+"vanliga frågor."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:32
 msgid "The access configuration file defining which Squid servers may be managed via this B<cachemgr.cgi> program. Each line specifies a B<server>:B<port> followed by an optional description"
-msgstr "Konfigurationsfilen som definierar vilka Squid-servrar som kan hanteras via detta B<cachemgr.cgi> -program. Varje rad anger en B<server>:B<port> följt av en valfri beskrivning"
+msgstr ""
+"Konfigurationsfilen som definierar vilka Squid-servrar som kan hanteras via "
+"detta B<cachemgr.cgi>-program. Varje rad anger en B<server>:B<port> följt av"
+" en valfri beskrivning"
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:36
 msgid "The server name may contain shell wildcard characters such as *, [] etc.  A quick selection dropdown menu is automatically constructed from the simple server names."
-msgstr "Servernamnet kan innehålla jokertecken som *, [] etc. En snabbvalmeny skapas automatiskt utifrån de enkla servernamnen."
+msgstr ""
+"Servernamnet kan innehålla skaljokertecken som *, [] och liknande. En "
+"snabbvalsmeny skapas automatiskt utifrån de enkla servernamnen."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:40
 msgid "Specifying :port is optional. If not specified then the default proxy port is assumed. :* or :any matches any port on the target server."
-msgstr "Att ange :port är valfritt. Om det inte anges används standardproxyporten. :* eller :any matchar alla portar på målservrarna."
+msgstr ""
+"Det är valfritt att ange :port. Om den utelämnas används "
+"standardproxyporten. :* eller :any matchar valfri port på målservern."
 
 #. type: SH
 #: tools/cachemgr.cgi.8.in:41
@@ -3312,7 +3773,7 @@ msgstr "Se http://wiki.squid-cache.org/SquidFaq/BugReporting för mer informatio
 #. type: Plain text
 #: tools/purge/purge.1:5
 msgid "purge - magnifying glass into your squid cache"
-msgstr "purge - förstoringsglas in i din squid-cache"
+msgstr "purge – ett förstoringsglas för din Squid-cache"
 
 #. type: Plain text
 #: tools/purge/purge.1:21
@@ -3327,7 +3788,12 @@ msgstr "Detta är ett verktyg endast för experter, använd det på eget ansvar.
 #. type: Plain text
 #: tools/purge/purge.1:34
 msgid "a kind of \"i am alive\" flag. It can only be activated, if your stdout is a tty. If active, it will display a little rotating line to indicate that there is actually something happening. You should not use this switch if you capture your stdout in a file or if your expression list produces many matches. The -a flag is also incompatible with the (default) multi cache_dir mode."
-msgstr "en sorts \"jag lever\"-flagga. Den kan endast aktiveras om din stdout är en tty. Om den är aktiv visas en liten roterande linje för att indikera att något faktiskt händer. Du bör inte använda denna switch om du fångar din stdout i en fil eller om din uttryckslista ger många träffar. Flaggan -a är också oförenlig med (standard) multi cache_dir-läget."
+msgstr ""
+"en sorts livsteckenflagga. Den kan bara aktiveras om standardutmatningen är "
+"en terminal. När den är aktiv visas en roterande linje som anger att "
+"programmet arbetar. Använd inte flaggan om standardutmatningen sparas i en "
+"fil eller om uttryckslistan ger många träffar. Flaggan -a kan inte heller "
+"kombineras med standardläget för flera cache_dir."
 
 #. type: Plain text
 #: tools/purge/purge.1:36
@@ -3337,7 +3803,10 @@ msgstr "standard: av\t\tSe även: -n"
 #. type: Plain text
 #: tools/purge/purge.1:43
 msgid "this option lets you specify the location of the squid.conf file.  Purge understands about more than one cache_dir, and does so by parsing squid.conf. It knows about both ways of Squid-2 cache_dir specifications, and will automatically try to use the correct one."
-msgstr "med den här flaggan kan du ange platsen för filen squid.conf.  Purge förstår mer än en cache_dir och gör detta genom att analysera squid.conf. Det känner till båda sätten att ange cache_dir i Squid-2 och försöker automatiskt använda det rätta."
+msgstr ""
+"anger sökvägen till filen squid.conf. Verktyget purge läser filen och kan "
+"hantera flera cache_dir. Det känner till båda sätten att ange cache_dir i "
+"Squid-2 och försöker automatiskt använda det rätta."
 
 #. type: Plain text
 #: tools/purge/purge.1:45
@@ -3347,7 +3816,11 @@ msgstr "standard: /usr/local/squid/etc/squid.conf"
 #. type: Plain text
 #: tools/purge/purge.1:53
 msgid "if you want to rescue files from your cache, you need to specify the directory into which the files will be copied. Please note that purge will try to establish the original server directory structure. This switch also activates copy-out mode. Please do not use copy-out mode with any purge mode (-P) other than 0."
-msgstr "om du vill rädda filer från din cache måste du ange den katalog som filerna ska kopieras till. Observera att purge försöker återskapa den ursprungliga serverkatalogstrukturen. Denna switch aktiverar också kopieringsläget. Använd inte kopieringsläget med något annat purge-läge (-P) än 0."
+msgstr ""
+"om du vill rädda filer från din cache måste du ange den katalog som filerna "
+"ska kopieras till. Observera att purge försöker återskapa den ursprungliga "
+"serverkatalogstrukturen. Denna flagga aktiverar också kopieringsläget. "
+"Använd inte kopieringsläget med något annat purge-läge (-P) än 0."
 
 #. type: Plain text
 #: tools/purge/purge.1:56
@@ -3372,7 +3845,12 @@ msgstr "standard: 0"
 #. type: Plain text
 #: tools/purge/purge.1:74
 msgid "Specify one regular expression to be searched for in the cache.  This is useful if there is only a handful of objects you want to check. Please remember to escape the shell meta characters used in your regular expression. The use of single quotes around your expression is recommended. The capital letter version works case sensitive, the lower caps version does not."
-msgstr "Ange ett reguljärt uttryck som ska sökas efter i cachen. Detta är användbart om det bara finns ett fåtal objekt som du vill kontrollera. Kom ihåg att undvika de metatecken som används i ditt reguljära uttryck. Vi rekommenderar att du använder enkla citattecken runt ditt uttryck. Versionen med versaler är skiftlägeskänslig, medan versionen med gemener inte är det."
+msgstr ""
+"Ange ett reguljärt uttryck att söka efter i cachen. Detta är användbart om "
+"du bara vill kontrollera ett fåtal objekt. Kom ihåg att skydda skalets "
+"metatecken i uttrycket från att tolkas av skalet. Enkla citattecken runt "
+"uttrycket rekommenderas. Flaggan med versal är skiftlägeskänslig, medan "
+"flaggan med gemen inte är det."
 
 #. type: Plain text
 #: tools/purge/purge.1:76 tools/purge/purge.1:86
@@ -3387,7 +3865,9 @@ msgstr "om du har fler än ett fåtal uttryck eller vill kontrollera samma upps�
 #. type: Plain text
 #: tools/purge/purge.1:91
 msgid "if in copy-out mode (see: -C), you can specify to keep the HTTP Header in the recreated file."
-msgstr "om du är i kopieringsläge (se: -C) kan du ange att HTTP-rubriken ska behållas i den återskapade filen."
+msgstr ""
+"i kopieringsläge (se -C) kan du välja att behålla HTTP-huvudet i den "
+"återskapade filen."
 
 #. type: Plain text
 #: tools/purge/purge.1:93
@@ -3397,7 +3877,14 @@ msgstr "standard: av\t\tSe även: -C"
 #. type: Plain text
 #: tools/purge/purge.1:104
 msgid "tell purge to process one cache_dir after another, instead of doing things in parallel.  If you have more than one cache_dir in your configuration purge will fork off a worker process for each cache_dir to do the checks for optimum speed, assuming a decently designed cache. Since parallel execution will put quite some load on the system and its controllers, it is sometimes preferred to use less resources,\tthough it will take longer."
-msgstr "be purge att bearbeta en cache_dir efter en annan, istället för att göra saker parallellt. Om du har mer än en cache_dir i din konfiguration kommer purge att starta en arbetareprocess för varje cache_dir för att göra kontrollerna för optimal hastighet, förutsatt att cachen är ordentligt utformad. Eftersom parallell körning kommer att belasta systemet och dess styrenheter ganska mycket, är det ibland bättre att använda mindre resurser, även om det tar längre tid."
+msgstr ""
+"be purge att bearbeta en cache_dir efter en annan, istället för att göra "
+"saker parallellt. Om du har mer än en cache_dir i din konfiguration kommer "
+"purge att starta en arbetsprocess för varje cache_dir för att göra "
+"kontrollerna för optimal hastighet, förutsatt att cachen är ordentligt "
+"utformad. Eftersom parallell körning kommer att belasta systemet och dess "
+"styrenheter ganska mycket, är det ibland bättre att använda färre resurser, "
+"även om det tar längre tid."
 
 #. type: Plain text
 #: tools/purge/purge.1:106
@@ -3407,7 +3894,12 @@ msgstr "standard: parallellt läge för mer än en cache_dir"
 #. type: Plain text
 #: tools/purge/purge.1:116
 msgid "Some cache admins use a different port than 3128. The purge tool will need to connect to your cache in order to send the PURGE request (see -P). This option lets you specify the host and port to connect to. The port is optional. The port can be a name (check your /etc/services) or number. It is separated from the host name portion by a single colon, no spaces allowed."
-msgstr "Vissa cacheadministratörer använder en annan port än 3128. Rensningsverktyget måste ansluta till din cache för att kunna skicka PURGE-begäran (se -P). Med den här flaggan kan du ange vilken värd och port du vill ansluta till. Porten är valfri. Porten kan vara ett namn (kontrollera din /etc/services) eller ett nummer. Den separeras från värdnamnet med ett enda kolon, utan mellanslag."
+msgstr ""
+"Vissa cacheadministratörer använder en annan port än 3128. Verktyget purge "
+"måste ansluta till cachen för att skicka PURGE-begäran (se -P). Denna flagga"
+" anger värd och port. Porten är valfri och kan anges som ett tjänstenamn (se"
+" /etc/services) eller ett nummer. Den skiljs från värdnamnet med ett kolon "
+"utan mellanslag."
 
 #. type: Plain text
 #: tools/purge/purge.1:118
@@ -3422,37 +3914,52 @@ msgstr "Om du vill göra mer än bara skriva ut cacheinnehållet måste du ange 
 #. type: Plain text
 #: tools/purge/purge.1:128
 msgid "B<no bit set:\tjust print>"
-msgstr "B<<ingen bit inställd:\\tbara utskrift>"
+msgstr "B<ingen bit satt: endast utskrift>"
 
 #. type: Plain text
 #: tools/purge/purge.1:130
 msgid "B<bit#0 set:\tsend PURGE for matches>"
-msgstr "B<bit#0 inställd: skicka PURGE för matchningar>"
+msgstr "B<bit#0 satt: skicka PURGE för matchningar>"
 
 #. type: Plain text
 #: tools/purge/purge.1:132
 msgid "B<bit#1 set:\tunlink object file for 404 not found PURGEs>"
-msgstr "B<bit#1 inställd: koppla bort objektfil för 404 inte hittad PURGEs>"
+msgstr "B<bit#1 satt: ta bort objektfilen när PURGE returnerar 404 not found>"
 
 #. type: Plain text
 #: tools/purge/purge.1:134
 msgid "B<bit#2 set:\tunlink weird object files>"
-msgstr "B<bit#2 inställning: koppla bort konstiga objektfiler>"
+msgstr "B<bit#2 satt: ta bort avvikande objektfiler>"
 
 #. type: Plain text
 #: tools/purge/purge.1:145
 msgid "If you use a value other than 0 or 1, you will need to slow rebuild your cache content. A warning message will remind you of that. If you use bit#1, all unsuccessful PURGEs will result in the object file in your cache directory to be removed, because squid does not seem to know about it any longer. Beware that the asyncio might try to remove it after the purge tool, and thus complains bitterly. Bit#1 only makes sense, if Bit#0 is also set, otherwise it has no effect (since the HTTP status 404 is never returned)."
-msgstr "Om du använder ett annat värde än 0 eller 1 måste du långsamt återuppbygga ditt cacheminne. Ett varningsmeddelande påminner dig om detta. Om du använder bit#1 kommer alla misslyckade PURGE-kommandon att resultera i att objektfilen i din cachekatalog tas bort, eftersom squid inte längre verkar känna till den. Tänk på att asyncio kan försöka ta bort den efter rensningsverktyget och därmed klaga bittert. Bit#1 är bara meningsfullt om Bit#0 också är inställt, annars har det ingen effekt (eftersom HTTP-status 404 aldrig returneras)."
+msgstr ""
+"Om du använder ett annat värde än 0 eller 1 måste du göra en långsam "
+"återuppbyggnad av cacheinnehållet. Ett varningsmeddelande påminner dig om "
+"detta. Med bit#1 tas objektfilen i cachekatalogen bort när PURGE misslyckas,"
+" eftersom Squid inte längre verkar känna till den. Observera att asyncio kan"
+" försöka ta bort filen efter verktyget purge och då rapportera fel. Bit#1 "
+"har bara effekt om bit#0 också är satt, eftersom HTTP-status 404 annars "
+"aldrig returneras."
 
 #. type: Plain text
 #: tools/purge/purge.1:152
 msgid "Bit#2 is reserved for strange files which do not even contain a URL. Beware that these files may indicate a new object squid currently intends to swap onto disk. If the file suddenly went away, or is removed when squid tries to fetch the object, it will complain bitterly. You must slow rebuild your cache, if you use this option."
-msgstr "Bit#2 är reserverad för konstiga filer som inte ens innehåller en URL. Tänk på att dessa filer kan indikera ett nytt objekt som squid för närvarande avser att byta ut till disk. Om filen plötsligt försvinner eller tas bort när squid försöker hämta objektet, kommer det att klaga bittert. Du måste långsamt bygga om din cache om du använder den här flaggan."
+msgstr ""
+"Bit#2 gäller avvikande filer som inte ens innehåller en URL. Observera att "
+"de kan innehålla nya objekt som Squid håller på att skriva till disk. Om en "
+"sådan fil försvinner eller tas bort när Squid försöker hämta objektet "
+"rapporteras fel. Om du använder denna flagga måste du göra en långsam "
+"återuppbyggnad av cachen."
 
 #. type: Plain text
 #: tools/purge/purge.1:157
 msgid "It is recommended that if you dare to use bit#1 or bit#2, you should only grant the purge tool access to your squid, e.g.  move the HTTP and ICP listening port of squid to a different non-standard location during the purge."
-msgstr "Om du vågar använda bit#1 eller bit#2 rekommenderas att du endast ger rensningsverktyget åtkomst till din squid, t.ex. genom att flytta squids HTTP- och ICP-lyssningsport till en annan icke-standardplats under rensningen."
+msgstr ""
+"Om du använder bit#1 eller bit#2 rekommenderas att bara verktyget purge får "
+"åtkomst till Squid under rensningen. Du kan till exempel tillfälligt ändra "
+"Squids HTTP- och ICP-lyssningsportar till andra portar än standardportarna."
 
 #. type: Plain text
 #: tools/purge/purge.1:159
@@ -3462,7 +3969,9 @@ msgstr "standard: 0 (bara utskrift)"
 #. type: Plain text
 #: tools/purge/purge.1:164
 msgid "If you specify this switch, all commandline parameters will be shown after they were parsed."
-msgstr "Om du anger denna switch visas alla kommandoradsparametrar efter att de har analyserats."
+msgstr ""
+"Om du anger denna flagga visas alla kommandoradsparametrar efter att de har "
+"analyserats."
 
 #. type: Plain text
 #: tools/purge/purge.1:166
@@ -3472,7 +3981,8 @@ msgstr "standard: av"
 #. type: Plain text
 #: tools/purge/purge.1:171
 msgid "be verbose in the things reported about the file. See the output section below."
-msgstr "vara utförlig i rapporteringen om filen. Se avsnittet om utdata nedan."
+msgstr ""
+"rapportera utförlig information om filen. Se avsnittet om utdata nedan."
 
 #. type: Plain text
 #: tools/purge/purge.1:180
@@ -3482,7 +3992,9 @@ msgstr "För att kunna använda B<purge> för att påverka en körande proxy med
 #. type: Plain text
 #: tools/purge/purge.1:192
 msgid "Reconfigure or restart (preferred) your squid after changing the configuration file."
-msgstr "Konfigurera om eller starta om (rekommenderas) din squid efter att du har ändrat konfigurationsfilen."
+msgstr ""
+"Läs in konfigurationen på nytt eller starta om Squid (rekommenderas) efter "
+"att du har ändrat konfigurationsfilen."
 
 #. type: SH
 #: tools/purge/purge.1:193
@@ -3508,10 +4020,10 @@ msgid ""
 msgstr ""
 " # namn   betydelse\n"
 " = ====== ===========================================================\n"
-" 1 file   namn på cachefil eximed som matchar det reguljära uttrycket.\n"
-" 2 status   returresultat av rensningsbegäran,  \" 0\" i utskriftsläge.\n"
-" 3 storlek   objektstorlek inklusive lagrade rubriker, inte filstorlek.\n"
-" 4 uri   uppfattad uri\n"
+" 1 file   namn på den undersökta cachefil som matchar det reguljära uttrycket.\n"
+" 2 status resultat av PURGE-begäran, \"  0\" i utskriftsläge.\n"
+" 3 size   objektstorlek inklusive lagrade huvudfält, inte filstorlek.\n"
+" 4 uri    identifierad URI\n"
 
 #. type: Plain text
 #: tools/purge/purge.1:207
@@ -3526,7 +4038,11 @@ msgstr "/cache3/00/00/0000004A 0 5682 http://graphics.userfriendly.org/images/sl
 #. type: Plain text
 #: tools/purge/purge.1:214
 msgid "In verbose mode, additional columns are inserted before the uri. Time stamps are reported using hexadecimal notation, and Squid's standard for reporting \"no such timestamp\" == -1, and \"unparsable timestamp\" == -2."
-msgstr "I verboseläge infogas ytterligare kolumner före uri. Tidsstämplar rapporteras med hexadecimal notation, och Squids standard för rapportering av \"ingen sådan tidsstämpel\" == -1, och \"otolkbar tidsstämpel\" == -2."
+msgstr ""
+"I läge med utförlig utdata infogas ytterligare kolumner före uri. "
+"Tidsstämplar rapporteras med hexadecimal notation, och Squids standard för "
+"rapportering av \"ingen sådan tidsstämpel\" == -1, och \"otolkbar "
+"tidsstämpel\" == -2."
 
 #. type: Plain text
 #: tools/purge/purge.1:228
@@ -3548,17 +4064,17 @@ msgid ""
 msgstr ""
 " # namn   betydelse\n"
 " = ====== ===========================================================\n"
-" 1 fil  namn på cachefil som matchar re.\n"
-" 2 status  returresultat av rensningsbegäran, \" 0\" i utskriftsläge \"-P 0\".\n"
-" 3 storlek  objektstorlek inklusive lagrade rubriker, inte filstorlek.\n"
-" 4 md5    MD5 för URI från filen, eller strängen \"(no_md5_data_available)\".\n"
-" 5 ts    UTC för värdet i Date: header i hexadecimal notation\n"
-" 6 lr    UTC för senaste gången objektet refererades\n"
-" 7 ex    UTC för Expires: header\n"
-" 8 lr    UTC för Last-Modified: header\n"
-" 9 flags   Värde för objektets flags-fält i hex, se: Programmers Guide\n"
-" 10 refcnt Antal gånger objektet refererades.\n"
-" 11 uri    STORE_META_URL uri eller \"strange_file\"\n"
+" 1 file   namn på den undersökta cachefil som matchar uttrycket.\n"
+" 2 status resultat av PURGE-begäran, \"  0\" i utskriftsläget \"-P 0\".\n"
+" 3 size   objektstorlek inklusive lagrade huvudfält, inte filstorlek.\n"
+" 4 md5    MD5 för filens URI eller strängen \"(no_md5_data_available)\".\n"
+" 5 ts     UTC-värdet i huvudfältet Date: i hexadecimal notation\n"
+" 6 lr     UTC-tiden då objektet senast refererades\n"
+" 7 ex     UTC-värdet i huvudfältet Expires:\n"
+" 8 lr     UTC-värdet i huvudfältet Last-Modified:\n"
+" 9 flags  objektets flaggfält i hexadecimal notation, se Programmerarhandboken\n"
+"10 refcnt antal gånger som objektet refererades\n"
+"11 uri    URI från STORE_META_URL eller \"strange_file\"\n"
 
 #. type: Plain text
 #: tools/purge/purge.1:230
@@ -3573,17 +4089,21 @@ msgstr "/cache1/00/00/000000B7 0 406 7CFCB1D319F158ADC9CFD991BB8F6DCE 397d449b 3
 #. type: Plain text
 #: tools/purge/purge.1:235
 msgid "Purge does not slow rebuild the cache for you."
-msgstr "Tömning gör inte att cacheminnet byggs om långsammare."
+msgstr ""
+"Verktyget purge utför inte den långsamma återuppbyggnaden av cachen åt dig."
 
 #. type: Plain text
 #: tools/purge/purge.1:238
 msgid "It is still relatively slow, especially if your machine is low on memory and/or unable to hold all OS directory cache entries in main memory."
-msgstr "Det är fortfarande relativt långsamt, särskilt om din dator har lite minne och/eller inte kan lagra alla cacheposter i operativsystemets katalog i huvudminnet."
+msgstr ""
+"Det är fortfarande relativt långsamt, särskilt om datorn har ont om minne "
+"eller inte kan hålla alla poster i operativsystemets katalogcache i "
+"primärminnet."
 
 #. type: Plain text
 #: tools/purge/purge.1:240
 msgid "Should never be used on \"busy\" caches with purge modes higher than 1."
-msgstr "Bör aldrig användas på \"upptagna\" cacher med rensningslägen högre än 1."
+msgstr "Använd aldrig rensningslägen högre än 1 på cachar som används aktivt."
 
 #. type: SH
 #: tools/purge/purge.1:241
@@ -3614,7 +4134,7 @@ msgstr "Detta program och denna manual har skrivits av"
 #. type: Plain text
 #: tools/purge/purge.1:260
 msgid "Based on original squidpurge README."
-msgstr "Baserat på original README för squidpurge."
+msgstr "Baserat på den ursprungliga README-filen för squidpurge."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:5
@@ -3639,7 +4159,7 @@ msgstr "IMS"
 #. type: Plain text
 #: tools/squidclient/squidclient.1:20
 msgid "Host header"
-msgstr "Host-rubrik"
+msgstr "Host-huvudfält"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:24
@@ -3689,22 +4209,29 @@ msgstr "klientens X.509-certifikatfil"
 #. type: Plain text
 #: tools/squidclient/squidclient.1:59
 msgid "TLS session parameters"
-msgstr "TLS-sessionparametrar"
+msgstr "TLS-sessionsparametrar"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:69
 msgid "B<squidclient> is a tool providing a command line interface for retrieving URLs.  Designed for testing any HTTP 0.9, 1.0, or 1.1 web server or proxy.  This tool can be combined with scripts to perform any basic HTTP operation.  Some additional features for access to the B<squid> proxy object cache and management information are provided."
-msgstr "B<squidclient> är ett verktyg som tillhandahåller ett kommandoradsgränssnitt för att hämta URL:er.  Utformat för att testa alla HTTP 0.9-, 1.0- eller 1.1-webbservrar eller proxyservrar.  Detta verktyg kan kombineras med skript för att utföra alla grundläggande HTTP-åtgärder.  Vissa ytterligare funktioner för åtkomst till B<squid> proxyobjektcache och hanteringsinformation tillhandahålls."
+msgstr ""
+"B<squidclient> är ett kommandoradsverktyg för att hämta URL:er. Det är "
+"avsett för testning av webbservrar och proxyservrar med HTTP 0.9, 1.0 eller "
+"1.1. Verktyget kan kombineras med skript för att utföra grundläggande HTTP-"
+"åtgärder. Det har också funktioner för åtkomst till B<squid> objektcache "
+"och administrationsinformation."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:74
 msgid "Do NOT include Accept: header."
-msgstr "Inkludera INTE Accept:-header."
+msgstr "Inkludera INTE huvudfältet Accept:."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:80
 msgid "Send B<string> as User-Agent: header. To omit the header completely set string to empty ('')."
-msgstr "Skicka B<sträng> som User-Agent: header. För att utelämna rubriken helt, ange en tom sträng ('')."
+msgstr ""
+"Skicka B<sträng> som huvudfältet User-Agent:. Ange en tom sträng ('') för "
+"att utelämna fältet helt."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:85
@@ -3714,17 +4241,17 @@ msgstr "Hämta URL från servervärd.  Standard är B<localhost>"
 #. type: Plain text
 #: tools/squidclient/squidclient.1:91
 msgid "Extra headers to send. Use B<'\\en'> for new lines."
-msgstr "Extra rubriker att skicka. Använd B<'\\en'> för nya rader."
+msgstr "Extra huvudfält att skicka. Använd B<'\\en'> för radbrytningar."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:95
 msgid "If-Modified-Since time (in Epoch seconds)."
-msgstr "If-Modified-Since-tid (i Epoch-sekunder)."
+msgstr "If-Modified-Since-tid (i sekunder sedan Unix-epoken)."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:99
 msgid "Host header content"
-msgstr "Innehåll i Host-rubriken"
+msgstr "Innehållet i huvudfältet Host"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:103
@@ -3739,22 +4266,26 @@ msgstr "Ange en lokal IP-adress att binda till. Standard är ingen."
 #. type: Plain text
 #: tools/squidclient/squidclient.1:122
 msgid "Request method, default is I<GET.> Squid also supports a non-standard method called I<PURGE.> You can use that to purge a specific URL from the cache.  You need to have I<purge> access setup in B<squid.conf> similar to I<manager> access. Here is an example:"
-msgstr "Begär metod, standard är I<GET.> Squid stöder också en icke-standardmetod som kallas I<PURGE.> Du kan använda den för att rensa en specifik URL från cachen.  Du måste ha I<purge> -åtkomst inställd i B<squid.conf> på samma sätt som I<manager> -åtkomst. Här är ett exempel:"
+msgstr ""
+"Metod för begäran; standard är I<GET.> Squid stöder också den icke-"
+"standardiserade metoden I<PURGE.> Den kan användas för att ta bort en "
+"specifik URL ur cachen. Du måste konfigurera åtkomst för I<purge> i "
+"B<squid.conf> på liknande sätt som för I<manager>. Här är ett exempel:"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:130
 msgid "Proxy Negotiate(Kerberos) authentication."
-msgstr "Proxy Negotiate (Kerberos) autentisering."
+msgstr "Negotiate-autentisering (Kerberos) mot proxyn."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:132 tools/squidclient/squidclient.1:138
 msgid "Use kinit username@DOMAIN first to get initial TGS."
-msgstr "Använd först kinit användarnamn@DOMAIN för att få initial TGS."
+msgstr "Använd först kinit username@DOMAIN för att få en initial TGS."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:136
 msgid "WWW Negotiate(Kerberos) authentication."
-msgstr "WWW Förhandla (Kerberos) autentisering."
+msgstr "Negotiate-autentisering (Kerberos) mot webbservern."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:143
@@ -3764,7 +4295,7 @@ msgstr "Portnummer för cache. Standardvärdet är 3128."
 #. type: Plain text
 #: tools/squidclient/squidclient.1:147
 msgid "Request body. Using the named file as data."
-msgstr "Begäran. Använd den namngivna filen som data."
+msgstr "Begärans kropp. Använd den angivna filen som data."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:151
@@ -3779,12 +4310,12 @@ msgstr "Tyst. Skriv inte ut data till stdout."
 #. type: Plain text
 #: tools/squidclient/squidclient.1:161
 msgid "Trace I<count> HTTP relay or proxy hops"
-msgstr "Spåra I<count> a HTTP-relä eller proxyhopp"
+msgstr "Spåra I<antal> HTTP-relä- eller proxyhopp"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:165
 msgid "Timeout value (seconds) for read/write operations."
-msgstr "Timeout-värde (sekunder) för läs-/skrivoperationer."
+msgstr "Tidsgräns (sekunder) för läsning och skrivning."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:169
@@ -3794,17 +4325,18 @@ msgstr "Användarnamn för proxyautentisering"
 #. type: Plain text
 #: tools/squidclient/squidclient.1:173
 msgid "WWW authentication username"
-msgstr "WWW-autentiseringsanvändarnamn"
+msgstr "Användarnamn för autentisering mot webbservern"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:177
 msgid "Verbose. Print outgoing message to stderr."
-msgstr "Verbose. Skriv ut utgående meddelande till stderr."
+msgstr "Utförlig utdata. Skriv det utgående meddelandet till stderr."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:181
 msgid "HTTP Version. Use '-' for HTTP/0.9 omitted case"
-msgstr "HTTP-version. Använd '-' för HTTP/0.9 utelämnat fall"
+msgstr ""
+"HTTP-version. Använd '-' för att utelämna versionsfältet som i HTTP/0.9"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:185
@@ -3814,7 +4346,7 @@ msgstr "Lösenord för proxyautentisering"
 #. type: Plain text
 #: tools/squidclient/squidclient.1:189
 msgid "WWW authentication password"
-msgstr "WWW-autentiseringslösenord"
+msgstr "Lösenord för autentisering mot webbservern"
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:193
@@ -3829,12 +4361,16 @@ msgstr "Använd TLS med oautentiserat (anonymt) certifikat."
 #. type: Plain text
 #: tools/squidclient/squidclient.1:202
 msgid "File containing client X.509 certificate in PEM format.  May be repeated to load several client certificates."
-msgstr "Fil som innehåller klientcertifikat X.509 i PEM-format. Kan upprepas för att ladda flera klientcertifikat."
+msgstr ""
+"Fil med klientens X.509-certifikat i PEM-format. Kan upprepas för att läsa "
+"in flera klientcertifikat."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:207
 msgid "File containing trusted Certificate Authority (CA) certificates in PEM format.  May be repeated to load any number of files."
-msgstr "Fil som innehåller certifikat från betrodda certifikatutfärdare (CA) i PEM-format. Kan upprepas för att ladda valfritt antal filer."
+msgstr ""
+"Fil med certifikat från betrodda certifikatutfärdare (CA) i PEM-format. Kan "
+"upprepas för att läsa in valfritt antal filer."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:212
@@ -3849,12 +4385,17 @@ msgstr "Om det upprepas kommer endast det sista värdet att ha effekt."
 #. type: Plain text
 #: tools/squidclient/squidclient.1:219
 msgid "Enable ping mode. Optional -g and -I parameters must follow immediately if used.  Repeated use resets to default ping settings."
-msgstr "Aktivera ping-läge. Valfria parametrarna -g och -I måste anges omedelbart efter varandra om de används. Upprepad användning återställer till standardinställningarna för ping."
+msgstr ""
+"Aktivera ping-läge. De valfria parametrarna -g och -I måste följa direkt "
+"efter flaggan för ping-läge om de används. Upprepad användning återställer "
+"standardinställningarna för ping."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:225
 msgid "Ping mode, perform.I count iterations (default is to loop until interrupted)."
-msgstr "Ping-läge, utför. Jag räknar iterationer (standard är att loopa tills det avbryts)."
+msgstr ""
+"Ping-läge: utför angivet antal iterationer (standard är att fortsätta tills "
+"körningen avbryts)."
 
 #. type: Plain text
 #: tools/squidclient/squidclient.1:229
