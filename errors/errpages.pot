@@ -1,15 +1,16 @@
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Squid\n"
+"Project-Id-Version: Squid-5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-11 19:57+1300\n"
+"POT-Creation-Date: 2026-09-17 20:49+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@lists.squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Translate Toolkit 3.17.5\n"
+"X-Generator: Translate Toolkit 3.19.5\n"
 
 #: templates/ERR_SECURE_CONNECT_FAIL%2Bhtml.body.div.div.blockquote.p:31-1
 msgid "%D"
