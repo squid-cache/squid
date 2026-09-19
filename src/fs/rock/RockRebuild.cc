@@ -359,7 +359,7 @@ Rock::Rebuild::start()
         failure("cannot read db header", errno);
 
     // slot prefix of SM_PAGE_SIZE should fit both core entry header and ours
-    assert(sizeof(DbCellHeader) < SM_PAGE_SIZE);
+    static_assert(sizeof(DbCellHeader) < SM_PAGE_SIZE);
     buf.init(SM_PAGE_SIZE, SM_PAGE_SIZE);
 
     dbOffset = SwapDir::HeaderSize + loadingPos * dbSlotSize;

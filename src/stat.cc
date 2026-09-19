@@ -868,7 +868,7 @@ GetAvgStat(Mgr::IntervalActionData& stats, int minutes, int hours)
     StatCounters *l;
     double dt;
     double ct;
-    assert(N_COUNT_HIST > 1);
+    static_assert(N_COUNT_HIST > 1);
     assert(minutes > 0 || hours > 0);
     f = &CountHist[0];
     l = f;
