@@ -374,7 +374,7 @@ HttpReply::hdrCacheClean()
  * Returns the body size of a HTTP response
  */
 int64_t
-HttpReply::bodySize(const HttpRequestMethod& method) const
+HttpReply::bodySize(const Http::RequestMethod& method) const
 {
     if (sline.version.major < 1)
         return -1;
@@ -525,7 +525,7 @@ HttpReply::httpMsgParseError()
  * along with this response
  */
 bool
-HttpReply::expectingBody(const HttpRequestMethod& req_method, int64_t& theSize) const
+HttpReply::expectingBody(const Http::RequestMethod& req_method, int64_t& theSize) const
 {
     bool expectBody = true;
 

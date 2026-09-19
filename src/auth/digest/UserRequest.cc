@@ -123,7 +123,7 @@ Auth::Digest::UserRequest::authenticate(HttpRequest * request, ConnStateData *, 
              * widespread and such broken browsers no longer are commonly
              * used.
              */
-            sTmp = HttpRequestMethod(Http::METHOD_GET).image();
+            sTmp = Http::RequestMethod(Http::METHOD_GET).image();
             DigestCalcResponse(SESSIONKEY, authenticateDigestNonceNonceHex(digest_request->nonce),
                                digest_request->nc, digest_request->cnonce, digest_request->qop,
                                sTmp.c_str(), digest_request->uri, HA2, Response);
