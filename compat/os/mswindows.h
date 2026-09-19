@@ -220,14 +220,6 @@ setenv(const char * const name, const char * const value, const int overwrite)
 #define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
 #endif
 
-#define SIGHUP  1   /* hangup */
-#define SIGKILL 9   /* kill (cannot be caught or ignored) */
-#define SIGBUS  10  /* bus error */
-#define SIGPIPE 13  /* write on a pipe with no one to read it */
-#define SIGCHLD 20  /* to parent on child stop or exit */
-#define SIGUSR1 30  /* user defined signal 1 */
-#define SIGUSR2 31  /* user defined signal 2 */
-
 #if defined(_MSC_VER)
 typedef int uid_t;
 typedef int gid_t;
@@ -534,7 +526,6 @@ struct rusage {
 #undef ACL
 
 SQUIDCEXTERN int chroot(const char *dirname);
-SQUIDCEXTERN int kill(pid_t, int);
 SQUIDCEXTERN struct passwd * getpwnam(char *unused);
 SQUIDCEXTERN struct group * getgrnam(char *unused);
 
