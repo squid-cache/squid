@@ -23,6 +23,7 @@
 #include "globals.h"
 #include "HeaderMangling.h"
 #include "http/Stream.h"
+#include "HttpHdrCc.h"
 #include "HttpHeaderTools.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -1002,12 +1003,18 @@ clientReplyContext::traceReply()
     triggerInitialStoreRead();
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
-    MemBuf content;
-    content.init();
-    http->request->pack(&content, true /* hide authorization data */);
-    const HttpReplyPointer rep(new HttpReply);
-    rep->setHeaders(Http::scOkay, nullptr, "message/http", content.contentSize(), 0, squid_curtime);
-    rep->body.set(SBuf(content.buf, content.size));
+
+    ErrorState err(HTTP_TRACE_REPLY, Http::scOkay, http->request, http->al);
+    auto rep = err.BuildHttpReply();
+    // RFC 9110 specifies that TRACE response is not cacheable
+    // Reinforce that with explicit caching controls
+    HttpHdrCc cc;
+    cc.noStore(true);
+    cc.mustRevalidate(true);
+    cc.maxAge(0);
+    rep->putCc(cc);
+    // Reinforce that with explicit Expires for old HTTP/1.0 agents
+    rep->header.putTime(Http::HdrType::EXPIRES, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
     http->storeEntry()->completeSuccessfully("traceReply() stored the entire response");
 }
