@@ -14,6 +14,7 @@
 #include "acl/Checklist.h"
 #include "acl/forward.h"
 #include "base/CbcPointer.h"
+#include "compat/netsnmp.h"
 #include "error/forward.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -106,7 +107,7 @@ public:
     Auth::UserRequest::Pointer auth_user_request;
 #endif
 #if SQUID_SNMP
-    char *snmp_community = nullptr;
+    const netsnmp_pdu *snmp = nullptr; // Parsed SNMP request packet
 #endif
 
     // TODO: RefCount errors; do not ignore them because their "owner" is gone!

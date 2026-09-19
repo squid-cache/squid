@@ -17,10 +17,6 @@ typedef int64_t snint;
 #define MIN(a,b) (a<b?a:b)
 #endif
 
-#include "snmp.h"
-#include "snmp_api.h"
-#include "snmp_impl.h"
-
 /* MIB definitions
  * SQUID-MIB
  *      .iso.org.dod.internet.private.enterprises.nlanr.squid

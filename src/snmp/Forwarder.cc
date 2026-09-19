@@ -83,12 +83,13 @@ Snmp::Forwarder::sendError(int error)
         return; // client gone
 
     Snmp::Request& req = static_cast<Snmp::Request&>(*request);
-    req.pdu.command = SNMP_PDU_RESPONSE;
+    req.pdu.command = SNMP_MSG_RESPONSE;
     req.pdu.errstat = error;
     u_char buffer[SNMP_REQUEST_SIZE];
-    int len = sizeof(buffer);
-    if (snmp_build(&req.session, &req.pdu, buffer, &len) == 0)
-        comm_udp_sendto(fd, req.address, buffer, len);
+    auto len = sizeof(buffer);
+    size_t filled = 0;
+    if (snmp_build(reinterpret_cast<u_char**>(&buffer), &len, &filled, &req.session, &req.pdu) == 0)
+        comm_udp_sendto(fd, req.address, buffer, filled);
     else
         debugs(49, DBG_IMPORTANT, "ERROR: Failed to encode an error response to SNMP agent query from " << req.address);
 }
@@ -108,7 +109,7 @@ Snmp::SendResponse(const Ipc::RequestId requestId, const Pdu &pdu)
         snmp_free_pdu(response_pdu);
     } catch (const std::exception& e) {
         debugs(49, DBG_CRITICAL, e.what());
-        response.pdu.command = SNMP_PDU_RESPONSE;
+        response.pdu.command = SNMP_MSG_RESPONSE;
         response.pdu.errstat = SNMP_ERR_GENERR;
     }
     Ipc::TypedMsgHdr message;
