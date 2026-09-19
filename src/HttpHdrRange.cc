@@ -96,6 +96,11 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
                     return false;
                 }
 
+                if (last_pos == std::numeric_limits<decltype(last_pos)>::max()) {
+                    debugs(64, 2, "unsupported huge last-byte-pos range-spec near: " << field);
+                    return false;
+                }
+
                 HttpHdrRangeSpec::HttpRange aSpec (offset, last_pos + 1);
 
                 length = aSpec.size();
