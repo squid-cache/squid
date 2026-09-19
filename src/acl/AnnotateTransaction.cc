@@ -20,7 +20,7 @@ Acl::AnnotateTransactionCheck::match(ACLChecklist * const ch)
     if (const auto request = checklist->request) {
         const auto tdata = dynamic_cast<ACLAnnotationData*>(data.get());
         assert(tdata);
-        tdata->annotate(request->notes(), &delimiters.value, checklist->al);
+        tdata->annotate(request->notes(), delimiters.value(), checklist->al);
     } else {
         debugs(28, DBG_IMPORTANT, "WARNING: " << name << " ACL is used in context without " <<
                "current transaction information. Did not annotate.");

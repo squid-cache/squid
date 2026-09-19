@@ -25,14 +25,15 @@ void
 TypedOption<CharacterSetOptionValue>::import(const SBuf &rawValue) const
 {
     SBuf chars = rawValue; // because c_str() is not constant
-    recipient_->value = CharacterSet(__FILE__, chars.c_str());
+    recipient_->setValue(CharacterSet(__FILE__, chars.c_str()));
 }
 
 template <>
 inline void
 TypedOption<CharacterSetOptionValue>::printValue(std::ostream &os) const
 {
-    recipient_->value.printChars(os); // TODO: Quote if needed.
+    Assure(recipient_->value());
+    recipient_->value()->printChars(os); // TODO: Quote if needed.
 }
 
 /// option value to configure one or more characters (e.g., -m=",;")
