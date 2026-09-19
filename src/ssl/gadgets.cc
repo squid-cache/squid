@@ -300,13 +300,14 @@ Ssl::CertificateProperties::CertificateProperties():
 static void
 printX509Signature(const Security::CertPointer &cert, std::string &out)
 {
-    const ASN1_BIT_STRING *sig = Ssl::X509_get_signature(cert);
-    if (sig && sig->data) {
-        const unsigned char *s = sig->data;
-        for (int i = 0; i < sig->length; ++i) {
-            char hex[3];
-            snprintf(hex, sizeof(hex), "%02x", s[i]);
-            out.append(hex);
+    if (const auto sig = Ssl::X509_get_signature(cert)) {
+        if (const auto s = ASN1_STRING_get0_data(sig)) {
+            const auto len = ASN1_STRING_length(sig);
+            for (int i = 0; i < len; ++i) {
+                char hex[3];
+                snprintf(hex, sizeof(hex), "%02x", s[i]);
+                out.append(hex);
+            }
         }
     }
 }
@@ -418,8 +419,9 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     unsigned char *ext_der = nullptr;
     int ext_len = ASN1_item_i2d((ASN1_VALUE *)theAuthKeyId.get(), &ext_der, ASN1_ITEM_ptr(method->it));
     Ssl::ASN1_OCTET_STRING_Pointer extOct(ASN1_OCTET_STRING_new());
-    extOct.get()->data = ext_der;
-    extOct.get()->length = ext_len;
+    if (ASN1_STRING_set(extOct.get(), ext_der, ext_len) != 1)
+        return false;
+
     Ssl::X509_EXTENSION_Pointer extAuthKeyId(X509_EXTENSION_create_by_NID(nullptr, NID_authority_key_identifier, 0, extOct.get()));
     if (!extAuthKeyId.get())
         return false;
@@ -493,13 +495,9 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
                     int ext_len = ASN1_item_i2d((ASN1_VALUE *)keyusage,
                                                 &ext_der,
                                                 (const ASN1_ITEM *)ASN1_ITEM_ptr(method->it));
-
-                    ASN1_OCTET_STRING *ext_oct = ASN1_OCTET_STRING_new();
-                    ext_oct->data = ext_der;
-                    ext_oct->length = ext_len;
-                    X509_EXTENSION_set_data(ext, ext_oct);
-
-                    ASN1_OCTET_STRING_free(ext_oct);
+                    Ssl::ASN1_OCTET_STRING_Pointer extOct(ASN1_OCTET_STRING_new());
+                    if (ASN1_STRING_set(extOct.get(), ext_der, ext_len) != 1)
+                        X509_EXTENSION_set_data(ext, extOct.get());
                     ASN1_BIT_STRING_free(keyusage);
                 }
             }
@@ -513,12 +511,6 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     // because Squid does not generate valid fake CA certificates.
 
     return added;
-}
-
-SBuf
-Ssl::AsnToSBuf(const ASN1_STRING &buffer)
-{
-    return SBuf(reinterpret_cast<const char *>(buffer.data), buffer.length);
 }
 
 /// OpenSSL ASN1_STRING_to_UTF8() wrapper
