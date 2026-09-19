@@ -41,7 +41,7 @@ class ErrorDetail: public ::ErrorDetail
     MEMPROXY_CLASS(Security::ErrorDetail);
 
 public:
-    typedef ErrorDetailPointer Pointer;
+    using Pointer = ErrorDetailPointer;
 
     /// Details an origin or cache_peer certificate verification failure or mismatch.
     /// \param peer is an origin server or cache_peer certificate
