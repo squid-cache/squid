@@ -10691,17 +10691,13 @@ DOC_END
 
 NAME: max_filedescriptors max_filedesc
 TYPE: int
+IFDEF: HAVE_SETRLIMIT&&(RLIMIT_NOFILE||RLIMIT_OFILE)
 DEFAULT: 0
 DEFAULT_DOC: Guess a reasonable value (e.g., use soft limit set by ulimit).
 LOC: Config.max_filedescriptors
 DOC_START
 	Sets the maximum number of file descriptors, up to the hard OS limit (where
 	supported).
-
-	Currently, the explicitly configured value is ignored when `setrlimit(2)` or
-	`RLIMIT_NOFILE` support was not detected at `./configure` time. A level-1
-	"WARNING" message is written to cache.log in such cases, but future Squid
-	versions will fail to start instead.
 
 	Currently, if `setrlimit(2)` fails to set the soft and hard limits to the
 	configured value, a level-0 "ERROR" message is written to cache.log, and
