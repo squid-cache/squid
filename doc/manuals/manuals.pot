@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Squid-5\n"
-"POT-Creation-Date: 2026-09-17 20:49+1200\n"
+"POT-Creation-Date: 2026-09-20 00:51+1200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@lists.squid-cache.org>\n"
