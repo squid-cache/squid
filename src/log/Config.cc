@@ -42,6 +42,9 @@ Log::LogConfig::BuiltInFormatName(const Format::log_type logformatType)
 
     case Log::Format::CLF_REFERER:
         return "referrer";
+
+    case Format::CLF_CEF:
+        return "cef";
     }
 
     // forgotten (by developers) type, invalid type, or unreachable code
@@ -77,6 +80,9 @@ Log::LogConfig::FindBuiltInFormat(const char *logformatName)
 
     if (strcmp(logformatName, "referrer") == 0)
         return Format::CLF_REFERER;
+
+    if (strcmp(logformatName, "cef") == 0)
+        return Format::CLF_CEF;
 
     // CLF_NONE, CLF_UNKNOWN, CLF_CUSTOM types cannot be specified explicitly.
     // TODO: Ban "none" and "unknown" custom logformat names to avoid confusion.

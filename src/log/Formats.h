@@ -25,6 +25,7 @@ namespace Format
 
 typedef enum {
     CLF_UNKNOWN,
+    CLF_CEF,
     CLF_COMBINED,
     CLF_COMMON,
     CLF_CUSTOM,
@@ -57,6 +58,9 @@ void HttpdCommon(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Log with Apache httpd combined format
 void HttpdCombined(const AccessLogEntryPointer &al, Logfile * logfile);
+
+/// Display log details in SIEM Common Event Format.
+void SiemCef(const AccessLogEntryPointer &al, Logfile * logfile);
 
 }; // namespace Format
 }; // namespace Log

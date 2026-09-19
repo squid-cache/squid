@@ -23,6 +23,7 @@ liblog_la_SOURCES = \
 	File.h \
 	FormatHttpdCombined.cc \
 	FormatHttpdCommon.cc \
+	FormatSiemCef.cc \
 	FormatSquidCustom.cc \
 	FormatSquidIcap.cc \
 	FormatSquidNative.cc \
