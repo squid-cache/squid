@@ -27,7 +27,6 @@ using FQDNH = void (const char *, const Dns::LookupDetails &, void *);
 void fqdncache_init();
 void fqdnStats(StoreEntry *);
 void fqdncache_restart();
-void fqdncache_purgelru(void *);
 void fqdncacheAddEntryFromHosts(char *addr, SBufList &hostnames);
 
 const char *fqdncache_gethostbyaddr(const Ip::Address &, int flags);
