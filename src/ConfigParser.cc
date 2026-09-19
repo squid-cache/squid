@@ -34,6 +34,13 @@ bool ConfigParser::PreviewMode_ = false;
 
 static const char *SQUID_ERROR_TOKEN = "[invalid token]";
 
+ConfigParser &
+Configuration::LegacyParser()
+{
+    static ConfigParser *instance = new ConfigParser();
+    return *instance;
+}
+
 void
 ConfigParser::destruct()
 {
