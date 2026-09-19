@@ -40,7 +40,7 @@
 #include "StoreIOBuffer.h"
 #include "tools.h"
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -105,7 +105,7 @@ static void
 comm_empty_os_read_buffers(int fd)
 {
 #if _SQUID_LINUX_
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     // Bug 4146: SSL-Bump BIO does not release sockets on close.
     if (fd_table[fd].ssl)
         return;

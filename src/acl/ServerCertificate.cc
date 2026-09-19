@@ -8,7 +8,7 @@
 
 #include "squid.h"
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 
 #include "acl/FilledChecklist.h"
 #include "acl/ServerCertificate.h"
@@ -37,5 +37,5 @@ Acl::ServerCertificateCheck::match(ACLChecklist * const ch)
     return data->match(cert.get());
 }
 
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 

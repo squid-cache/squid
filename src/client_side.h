@@ -28,7 +28,7 @@
 #include "auth/UserRequest.h"
 #endif
 #include "security/KeyLogger.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "security/forward.h"
 #include "security/Handshake.h"
 #include "ssl/support.h"
@@ -45,7 +45,7 @@ class HttpHdrRangeSpec;
 class MasterXaction;
 typedef RefCount<MasterXaction> MasterXactionPointer;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 namespace Ssl
 {
 class ServerBump;
@@ -254,7 +254,7 @@ public:
     /// the second part of old httpsAccept, waiting for future HttpsServer home
     void postHttpsAccept();
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     /// Initializes and starts a peek-and-splice negotiation with the SSL client
     void startPeekAndSplice();
 
@@ -394,7 +394,7 @@ protected:
 
     void startPinnedConnectionMonitoring();
     void clientPinnedConnectionRead(const CommIoCbParams &io);
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     /// Handles a ready-for-reading TLS squid-to-server connection that
     /// we thought was idle.
     /// \return false if and only if the connection should be closed.
@@ -453,7 +453,7 @@ private:
     bool parseProxyProtocolHeader();
     bool proxyProtocolError(const char *reason);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     /// \returns a pointer to the matching cached TLS context or nil
     Security::ContextPointer getTlsContextFromCache(const SBuf &cacheKey, const Ssl::CertificateProperties &certProperties);
 
@@ -474,7 +474,7 @@ private:
     Auth::UserRequest::Pointer auth_;
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     bool switchedToHttps_ = false;
     bool parsingTlsHandshake = false; ///< whether we are getting/parsing TLS Hello bytes
     /// The number of parsed HTTP requests headers on a bumped client connection

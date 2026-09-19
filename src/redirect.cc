@@ -32,7 +32,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/support.h"
 #endif
 

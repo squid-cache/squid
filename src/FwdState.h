@@ -23,7 +23,7 @@
 #include "PeerSelectState.h"
 #include "ResolvedPeers.h"
 #include "security/forward.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/support.h"
 #endif
 
