@@ -100,10 +100,6 @@ accessLogLogTo(CustomLog *log, const AccessLogEntryPointer &al, ACLChecklist *ch
                 Log::Format::HttpdCommon(al, log->logfile);
                 break;
 
-            case Log::Format::CLF_REFERER:
-                Log::Format::SquidReferer(al, log->logfile);
-                break;
-
             case Log::Format::CLF_USERAGENT:
                 Log::Format::SquidUserAgent(al, log->logfile);
                 break;
