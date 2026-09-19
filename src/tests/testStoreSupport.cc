@@ -8,7 +8,6 @@
 
 #include "squid.h"
 #include "event.h"
-#include "EventLoop.h"
 #include "testStoreSupport.h"
 
 /* construct a stock loop with event dispatching, a time service that advances
