@@ -89,9 +89,8 @@ for f in `ls -1 \
 	src/log/*/*.8 \
 	src/security/*/*/*.8 \
 	src/security/*/*/*.8.in \
-	src/src/store/id_rewriters/*/*.8 \
-	tools/*/*.1 \
-	tools/*.8.in \
+	src/store/id_rewriters/*/*.8 \
+	tools/*/*.8 \
 ` ; do
 	echo "" >>po4a.conf
 	manp=`basename ${f}`
