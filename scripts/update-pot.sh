@@ -66,6 +66,21 @@ cd ..
 
 # Build the po4a.conf
 cat doc/po4a.cnf >po4a.conf
+
+for f in `ls -1 \
+	src/auth/*/*/*.pl.in \
+	src/acl/external/*/*.pl.in \
+	src/http/url_rewriters/*/*.pl.in \
+	src/log/*/*.pl.in \
+	src/security/*/*/*.pl.in \
+	src/store/id_rewriters/*/*.pl.in \
+	tools/*/*.pl.in \
+` ; do
+	echo "" >>po4a.conf
+	manp=`basename ${f} | sed -e 's/pl.in/8/'`
+	echo "[type: pod] ${f} \$lang:doc/manuals/\$lang/${manp}" >>po4a.conf
+done
+
 for f in `ls -1 \
 	src/*.8.in \
 	src/auth/*/*/*.8 \
