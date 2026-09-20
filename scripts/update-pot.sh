@@ -77,6 +77,7 @@ for f in `ls -1 \
 	tools/*/*.pl.in \
 ` ; do
 	echo "" >>po4a.conf
+	# TODO: Map `.pl.in` to `.8.in` and post-process those `.in` files.
 	manp=`basename ${f} | sed -e 's/pl.in/8/'`
 	echo "[type: pod] ${f} \$lang:doc/manuals/\$lang/${manp}" >>po4a.conf
 done
