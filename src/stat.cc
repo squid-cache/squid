@@ -1689,7 +1689,7 @@ bool
 statSawRecentRequests()
 {
     const auto recentMinutes = 5;
-    assert(N_COUNT_HIST > recentMinutes);
+    static_assert(N_COUNT_HIST > recentMinutes);
 
     // Math below computes the number of requests during the last 0-6 minutes.
     // CountHist is based on "minutes passed since Squid start" periods. It cannot
