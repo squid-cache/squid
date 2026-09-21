@@ -12,6 +12,7 @@
 #define SQUID_SRC_IP_ADDRESS_H
 
 #include "ip/forward.h"
+#include "sbuf/SBuf.h"
 
 #include <iosfwd>
 #include <ostream>
@@ -35,6 +36,49 @@
 
 namespace Ip
 {
+
+/**
+ * Formats an Address for stream output
+ *
+ * Normally instantiated via factory method Ip::Address::asText().
+ * Methods manipulate flags to determine output format
+ */
+class AddressText
+{
+public:
+    explicit AddressText(const Address &ip);
+
+    /// if the Address has a port, output it (default: no)
+    /// if set to true, also print brackets for IPv6 addresses
+    AddressText &withPort(bool b = true)
+    {
+        printPort_ = b;
+        if (b)
+            printBrackets_ = true;
+        return *this;
+    };
+
+    /// whether to print brackets surrounding the IP portion of IPv6 addresses (default: yes)
+    /// IPv4 addresses never have brackets
+    AddressText &bracketed(bool b = true)
+    {
+        printBrackets_ = b;
+        return *this;
+    };
+    /// output to ostream. Normally used through operator <<
+    std::ostream &print(std::ostream &) const;
+
+private:
+    const Address &ip_;
+    bool printPort_ = false;
+    bool printBrackets_ = true;
+};
+
+inline std::ostream &
+operator<<(std::ostream &os, const AddressText &at)
+{
+    return at.print(os);
+}
 
 /**
  * Holds and manipulates IPv4, IPv6, and Socket Addresses.
@@ -227,6 +271,9 @@ public:
      */
     char* toStr(char *buf, const unsigned int blen, int force = AF_UNSPEC) const;
 
+    /// Return object textually representing an Address for stream output
+    AddressText asText() const { return AddressText(*this); }
+
     /** Return the ASCII equivalent of the address:port combination
      *  Provides a URL formatted version of the content.
      *  If buffer is not large enough the data is truncated silently.
@@ -368,6 +415,8 @@ private:
     static const struct in6_addr v4_anyaddr;
     static const struct in6_addr v4_noaddr;
     static const struct in6_addr v6_noaddr;
+
+    friend class AddressText;
 };
 
 inline std::ostream &
