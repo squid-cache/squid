@@ -138,7 +138,7 @@ void
 httpHeaderInitModule(void)
 {
     /* check that we have enough space for masks */
-    assert(8 * sizeof(HttpHeaderMask) >= Http::HdrType::enumEnd_);
+    static_assert(8 * sizeof(HttpHeaderMask) >= Http::HdrType::enumEnd_);
 
     // masks are needed for stats page still
     for (auto h : WholeEnum<Http::HdrType>()) {
