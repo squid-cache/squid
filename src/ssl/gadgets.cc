@@ -349,24 +349,36 @@ Ssl::OnDiskCertificateDbKey(const Ssl::CertificateProperties &properties)
     return certKey;
 }
 
-/// Check if mimicCert certificate has the Authority Key Identifier extension
-/// and if yes add the extension to cert certificate with the same fields if
-/// possible. If the issuerCert certificate  does not have the Subject Key
-/// Identifier extension (required to build the keyIdentifier field of
-/// AuthorityKeyIdentifier) then the authorityCertIssuer and
-/// authorityCertSerialNumber fields added.
+/// Adds an Authority Key Identifier extension to the cert certificate.
+/// The extension value is built from the issuerCert properties: its Subject
+/// Key Identifier, or its issuer name and serial number if the issuerCert
+/// certificate does not have the Subject Key Identifier extension (required
+/// to build the keyIdentifier field of AuthorityKeyIdentifier).
+/// If the mimicCert certificate has the Authority Key Identifier extension,
+/// the same set of fields is added (if possible). Otherwise (e.g. a
+/// client-first bump with no mimicCert), the keyIdentifier field is added
+/// unconditionally: RFC 5280 requires it (except for self-signed
+/// certificates), and strict validators reject certificates without it.
 static bool
-mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mimicCert, Security::CertPointer const &issuerCert)
+addAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mimicCert, Security::CertPointer const &issuerCert)
 {
-    if (!mimicCert.get() || !issuerCert.get())
+    if (!issuerCert.get())
         return false;
 
-    Ssl::AUTHORITY_KEYID_Pointer akid((AUTHORITY_KEYID *)X509_get_ext_d2i(mimicCert.get(), NID_authority_key_identifier, nullptr, nullptr));
-
     bool addKeyId = false, addIssuer = false;
-    if (akid.get()) {
-        addKeyId = (akid.get()->keyid != nullptr);
-        addIssuer = (akid.get()->issuer && akid.get()->serial);
+    if (mimicCert.get()) {
+        // Mimic the AuthorityKeyIdentifier fields of the origin certificate.
+        Ssl::AUTHORITY_KEYID_Pointer akid((AUTHORITY_KEYID *)X509_get_ext_d2i(mimicCert.get(), NID_authority_key_identifier, nullptr, nullptr));
+        if (akid.get()) {
+            addKeyId = (akid.get()->keyid != nullptr);
+            addIssuer = (akid.get()->issuer && akid.get()->serial);
+        }
+    } else {
+        // Client-first bump: no origin certificate to mimic, but strict
+        // validators (e.g. Python 3.13+ VERIFY_X509_STRICT, openssl
+        // -x509_strict) reject forged leaves without an AKI. Build one from
+        // the signing CA's Subject Key Identifier.
+        addKeyId = true;
     }
 
     if (!addKeyId && !addIssuer)
@@ -430,11 +442,9 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     return true;
 }
 
-/// Copy certificate extensions from cert to mimicCert.
-/// Returns the number of extensions copied.
-// Currently only extensions which are reported by the users that required are
-// mimicked. More safe to mimic extensions would be added here if users request
-// them.
+/// Adds certificate extensions to reflect `mimicCert` and `issuerCert` properties.
+/// We only add extensions that are deemed required based on users reports.
+/// \returns the number of extensions added
 static int
 mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimicCert, Security::CertPointer const &issuerCert)
 {
@@ -458,55 +468,56 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
         DecipherOnly
     };
 
-    // XXX: Add PublicKeyPointer. In OpenSSL, public and private keys are
-    // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
-    const Security::PrivateKeyPointer certKey(X509_get_pubkey(mimicCert.get()));
-#if OPENSSL_VERSION_MAJOR < 3
-    const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
-#else
-    const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
-#endif
-
     int added = 0;
     int nid;
-    for (int i = 0; (nid = extensions[i]) != 0; ++i) {
-        const int pos = X509_get_ext_by_NID(mimicCert.get(), nid, -1);
-        if (X509_EXTENSION *ext = X509_get_ext(mimicCert.get(), pos)) {
-            // Mimic extension exactly.
-            if (X509_add_ext(cert.get(), ext, -1))
-                ++added;
-            if (nid == NID_key_usage && !rsaPkey) {
-                // NSS does not require the KeyEncipherment flag on EC keys
-                // but it does require it for RSA keys.  Since ssl-bump
-                // substitutes RSA keys for EC ones, we need to ensure that
-                // that the more stringent requirements are met.
+    if (mimicCert.get()) {
+        // XXX: Add PublicKeyPointer. In OpenSSL, public and private keys are
+        // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
+        const Security::PrivateKeyPointer certKey(X509_get_pubkey(mimicCert.get()));
+#if OPENSSL_VERSION_MAJOR < 3
+        const auto rsaPkey = EVP_PKEY_get0_RSA(certKey.get()) != nullptr;
+#else
+        const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
+#endif
+        for (int i = 0; (nid = extensions[i]) != 0; ++i) {
+            const int pos = X509_get_ext_by_NID(mimicCert.get(), nid, -1);
+            if (X509_EXTENSION *ext = X509_get_ext(mimicCert.get(), pos)) {
+                // Mimic extension exactly.
+                if (X509_add_ext(cert.get(), ext, -1))
+                    ++added;
+                if (nid == NID_key_usage && !rsaPkey) {
+                    // NSS does not require the KeyEncipherment flag on EC keys
+                    // but it does require it for RSA keys.  Since ssl-bump
+                    // substitutes RSA keys for EC ones, we need to ensure that
+                    // that the more stringent requirements are met.
 
-                const int p = X509_get_ext_by_NID(cert.get(), NID_key_usage, -1);
-                if ((ext = X509_get_ext(cert.get(), p)) != nullptr) {
-                    ASN1_BIT_STRING *keyusage = (ASN1_BIT_STRING *)X509V3_EXT_d2i(ext);
-                    ASN1_BIT_STRING_set_bit(keyusage, KeyEncipherment, 1);
+                    const int p = X509_get_ext_by_NID(cert.get(), NID_key_usage, -1);
+                    if ((ext = X509_get_ext(cert.get(), p)) != nullptr) {
+                        ASN1_BIT_STRING *keyusage = (ASN1_BIT_STRING *)X509V3_EXT_d2i(ext);
+                        ASN1_BIT_STRING_set_bit(keyusage, KeyEncipherment, 1);
 
-                    //Build the ASN1_OCTET_STRING
-                    const X509V3_EXT_METHOD *method = X509V3_EXT_get(ext);
-                    assert(method && method->it);
-                    unsigned char *ext_der = nullptr;
-                    int ext_len = ASN1_item_i2d((ASN1_VALUE *)keyusage,
-                                                &ext_der,
-                                                (const ASN1_ITEM *)ASN1_ITEM_ptr(method->it));
+                        //Build the ASN1_OCTET_STRING
+                        const X509V3_EXT_METHOD *method = X509V3_EXT_get(ext);
+                        assert(method && method->it);
+                        unsigned char *ext_der = nullptr;
+                        int ext_len = ASN1_item_i2d((ASN1_VALUE *)keyusage,
+                                                    &ext_der,
+                                                    (const ASN1_ITEM *)ASN1_ITEM_ptr(method->it));
 
-                    ASN1_OCTET_STRING *ext_oct = ASN1_OCTET_STRING_new();
-                    ext_oct->data = ext_der;
-                    ext_oct->length = ext_len;
-                    X509_EXTENSION_set_data(ext, ext_oct);
+                        ASN1_OCTET_STRING *ext_oct = ASN1_OCTET_STRING_new();
+                        ext_oct->data = ext_der;
+                        ext_oct->length = ext_len;
+                        X509_EXTENSION_set_data(ext, ext_oct);
 
-                    ASN1_OCTET_STRING_free(ext_oct);
-                    ASN1_BIT_STRING_free(keyusage);
+                        ASN1_OCTET_STRING_free(ext_oct);
+                        ASN1_BIT_STRING_free(keyusage);
+                    }
                 }
             }
         }
     }
 
-    if (mimicAuthorityKeyId(cert, mimicCert, issuerCert))
+    if (addAuthorityKeyId(cert, mimicCert, issuerCert))
         ++added;
 
     // We could also restrict mimicking of the CA extension to CA:FALSE
@@ -675,9 +686,11 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
             // We want to mimic the server-sent subjectAltName, not enhance it.
             useCommonNameAsAltName = false;
         }
-
-        addedExtensions += mimicExtensions(cert, properties.mimicCert, properties.signWithX509);
     }
+
+    // Also mimics the AuthorityKeyIdentifier (built from the signing CA when
+    // there is no mimicCert, e.g. in client-first bump mode).
+    addedExtensions += mimicExtensions(cert, properties.mimicCert, properties.signWithX509);
 
     if (useCommonNameAsAltName && addAltNameWithSubjectCn(cert))
         ++addedExtensions;
