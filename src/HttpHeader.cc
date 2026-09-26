@@ -84,7 +84,7 @@ static std::array<HttpHeaderStat, hoEnd> HttpHeaderStats = {{
 #endif
         HttpHeaderStat(/*hoRequest*/ "request", &RequestHeadersMask),
         HttpHeaderStat(/*hoReply*/ "reply", &ReplyHeadersMask)
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         , HttpHeaderStat(/*hoErrorDetail*/ "error detail templates", nullptr)
 #endif
         /* hoEnd */

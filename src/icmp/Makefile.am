@@ -63,7 +63,7 @@ pinger_LDADD=\
 	$(top_builddir)/src/mem/libminimal.la \
 	$(LIBCAP_LIBS) \
 	$(COMPAT_LIB) \
-	$(SSLLIB) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 
 CLEANFILES += $(COPIED_SOURCE)

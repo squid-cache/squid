@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "compat/openssl.h"
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>
@@ -45,7 +45,7 @@ class PeerOptions;
 /// On errors, emits DBG_IMPORTANT with details and returns false.
 bool CreateServerSession(const Security::ContextPointer &, const Comm::ConnectionPointer &, Security::PeerOptions &, const char *squidCtx);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 typedef SSL Connection;
 
 using Session = SSL_SESSION;
@@ -99,7 +99,7 @@ void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::Sessi
 /// Needs to be done before using the SessionPointer for a handshake.
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 // TODO: remove from public API. It is only public because of Security::ServerOptions::updateContextConfig
 /// Setup the given TLS context with callbacks used to manage the session cache
 void SetSessionCacheCallbacks(Security::ContextPointer &);

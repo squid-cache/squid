@@ -21,7 +21,7 @@
 #include "acl/Arp.h"
 #include "acl/Eui64.h"
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "acl/AtStep.h"
 #include "acl/AtStepData.h"
 #endif
@@ -72,7 +72,7 @@
 #include "acl/SourceIp.h"
 #include "acl/SquidError.h"
 #include "acl/SquidErrorData.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "acl/Certificate.h"
 #include "acl/CertificateData.h"
 #include "acl/ServerName.h"
@@ -80,7 +80,7 @@
 #include "acl/SslErrorData.h"
 #endif
 #include "acl/StringData.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "acl/ServerCertificate.h"
 #endif
 #include "acl/Tag.h"
@@ -245,7 +245,7 @@ Acl::Init()
     RegisterMaker("client_connection_mark", [](TypeName)->Node* { return new ConnMark; }); // XXX: Add name parameter to ctor
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     RegisterMaker("ssl_error", [](TypeName name)->Node* { return new FinalizedParameterizedNode<CertificateErrorCheck>(name, new ACLSslErrorData); });
 
     RegisterMaker("user_cert", [](TypeName name)->Node* { return new FinalizedParameterizedNode<ClientCertificateCheck>(name, new ACLCertificateData(Ssl::GetX509UserAttribute, "*")); });

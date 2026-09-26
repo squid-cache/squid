@@ -13,7 +13,7 @@
 #include "Store.h"
 
 #include <limits>
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "compat/openssl.h"
 #if HAVE_OPENSSL_SSL_H
 #include <openssl/ssl.h>

@@ -14,7 +14,7 @@
 
 #include <cstddef>
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "compat/openssl.h"
 #if HAVE_OPENSSL_CRYPTO_H
 #include <openssl/crypto.h>
@@ -28,7 +28,7 @@
             sk_object ## _pop_free(a, freefunction); \
         }
 
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 
 namespace Security
 {

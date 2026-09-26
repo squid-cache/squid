@@ -57,7 +57,7 @@ SUBDIRS += \
 	mgr
 
 SSL_LIBS=
-if ENABLE_SSL
+if ENABLE_LIBOPENSSL
 SUBDIRS += ssl
 SSL_LIBS += \
 	ssl/libsslsquid.la \
@@ -545,7 +545,6 @@ squid_LDADD = \
 	$(LIBCAP_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(LIBHEIMDAL_KRB5_LIBS) \
-	$(SSLLIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
@@ -554,6 +553,7 @@ squid_LDADD = \
 	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 
@@ -1155,11 +1155,11 @@ tests_testRock_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 else
@@ -1332,11 +1332,11 @@ tests_testUfs_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 else
@@ -1496,12 +1496,12 @@ tests_testStore_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SSLLIB) \
 	CommCalls.o \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 
@@ -1672,11 +1672,11 @@ tests_testDiskIO_LDADD = \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
 	$(REGEXLIB) \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 
@@ -1722,10 +1722,10 @@ tests_testACLMaxUserIP_LDADD = \
 	parser/libparser.la \
 	sbuf/libsbuf.la \
 	base/libbase.la \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 else
@@ -1815,10 +1815,10 @@ tests_testHttp1Parser_LDADD= \
 	ip/libip.la \
 	sbuf/libsbuf.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 
@@ -1920,11 +1920,11 @@ tests_testHttpReply_LDADD=\
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(top_builddir)/lib/libmiscutil.la \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
@@ -1990,7 +1990,7 @@ tests_testHttpRequest_LDADD = \
 	$(LIBGNUTLS_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
-	$(SSLLIB) \
+	$(LIBOPENSSL_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
@@ -2282,7 +2282,6 @@ tests_testCacheManager_LDADD = \
 	$(LIBGNUTLS_LIBS) \
 	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(REGEXLIB) \
-	$(SSLLIB) \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBSYSTEMD_LIBS) \
 	$(COMPAT_LIB) \
@@ -2290,6 +2289,7 @@ tests_testCacheManager_LDADD = \
 	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
