@@ -578,7 +578,7 @@ AnyP::Uri::parse(const HttpRequestMethod& method, const SBuf &rawUrl)
         return true;
 
     } catch (...) {
-        debugs(23, 2, "error: " << CurrentException << " " << Raw("rawUrl", rawUrl.rawContent(), rawUrl.length()));
+        debugs(23, 2, "error: " << CurrentException << " " << Raw("rawUrl", rawUrl.rawContent(), rawUrl.length()).whole().minLevel(2));
         return false;
     }
 }
@@ -622,7 +622,7 @@ AnyP::Uri::parseUrn(Parser::Tokenizer &tok)
     host(nid.c_str());
     // TODO validate path characters
     path(tok.remaining());
-    debugs(23, 3, "Split URI into proto=urn, nid=" << nid << ", " << Raw("path",path().rawContent(),path().length()));
+    debugs(23, 3, "Split URI into proto=urn, nid=" << nid << ", " << Raw("path",path().rawContent(),path().length()).whole().minLevel(3));
 }
 
 /// Extracts and returns a (suspected but only partially validated) uri-host
