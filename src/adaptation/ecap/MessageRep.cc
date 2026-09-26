@@ -165,6 +165,9 @@ Adaptation::Ecap::FirstLineRep::protocol() const
     case AnyP::PROTO_AUTHORITY_FORM:
     case AnyP::PROTO_SSL:
     case AnyP::PROTO_TLS:
+    case AnyP::PROTO_TCP:
+    case AnyP::PROTO_UDP:
+    case AnyP::PROTO_ICMP:
     case AnyP::PROTO_UNKNOWN:
         return protocolUnknown; // until we remember the protocol image
     case AnyP::PROTO_NONE:

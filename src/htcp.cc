@@ -1490,6 +1490,7 @@ htcpOpenPorts()
     }
 
     htcpIncomingConn = new Comm::Connection;
+    htcpIncomingConn->transport = AnyP::PROTO_UDP;
     htcpIncomingConn->local = Config.Addrs.udp_incoming;
     htcpIncomingConn->local.port(Config.Port.htcp);
 
@@ -1503,13 +1504,11 @@ htcpOpenPorts()
     }
 
     auto call = asyncCallbackFun(31, 2, htcpIncomingConnectionOpened);
-    Ipc::StartListening(SOCK_DGRAM,
-                        IPPROTO_UDP,
-                        htcpIncomingConn,
-                        Ipc::fdnInHtcpSocket, call);
+    Ipc::StartListening(htcpIncomingConn, Ipc::fdnInHtcpSocket, call);
 
     if (!Config.Addrs.udp_outgoing.isNoAddr()) {
         htcpOutgoingConn = new Comm::Connection;
+        htcpOutgoingConn->transport = AnyP::PROTO_UDP;
         htcpOutgoingConn->local = Config.Addrs.udp_outgoing;
         htcpOutgoingConn->local.port(Config.Port.htcp);
 
@@ -1523,7 +1522,7 @@ htcpOpenPorts()
         }
 
         enter_suid();
-        comm_open_listener(SOCK_DGRAM, IPPROTO_UDP, htcpOutgoingConn, "Outgoing HTCP Socket");
+        comm_open_listener(htcpOutgoingConn, "Outgoing HTCP Socket");
         leave_suid();
 
         if (!Comm::IsConnOpen(htcpOutgoingConn))
