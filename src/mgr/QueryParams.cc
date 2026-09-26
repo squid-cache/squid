@@ -109,18 +109,15 @@ ParseParamValue(const SBuf &rawValue)
  *   value  = *pchar | ( 1*DIGIT *( ',' 1*DIGIT ) )
  */
 void
-Mgr::QueryParams::Parse(Parser::Tokenizer &tok, QueryParams &aParams)
+Mgr::QueryParams::Parse(SBuf &buf, QueryParams &aParams)
 {
     static const CharacterSet nameChars = CharacterSet("param-name", "_") + CharacterSet::ALPHA + CharacterSet::DIGIT;
     static const CharacterSet valueChars = CharacterSet("param-value", "&= #").complement();
     static const CharacterSet delimChars("param-delim", "&");
 
-    while (!tok.atEnd()) {
+    Parser::Tokenizer tok(buf);
 
-        // TODO: remove '#' processing when AnyP::Uri splits 'query#fragment' properly
-        // #fragment handled by caller. Do not throw.
-        if (tok.remaining()[0] == '#')
-            return;
+    while (!tok.atEnd()) {
 
         if (tok.skipAll(delimChars))
             continue;
