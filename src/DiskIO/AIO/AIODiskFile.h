@@ -14,7 +14,7 @@
 #include "cbdata.h"
 #include "DiskIO/AIO/async_io.h"
 #include "DiskIO/DiskFile.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 
 class AIODiskIOStrategy;
 
@@ -48,12 +48,12 @@ public:
 
 private:
     void error(bool const &);
-    int fd;
-    String path;
-    AIODiskIOStrategy *strategy;
+    int fd = -1;
+    SBuf path;
+    AIODiskIOStrategy *strategy = nullptr;
     RefCount<IORequestor> ioRequestor;
-    bool closed;
-    bool error_;
+    bool closed = true;
+    bool error_ = false;
 };
 
 #endif /* HAVE_DISKIO_MODULE_AIO */
