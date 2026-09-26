@@ -12,8 +12,8 @@
 #include "debug/Stream.h"
 #include "globals.h"
 #include "helper/ChildConfig.h"
-#include "Parsing.h"
-#include "sbuf/SBuf.h"
+#include "parser/Tokenizer.h"
+#include "sbuf/Stream.h"
 
 #include <cstring>
 
@@ -72,67 +72,52 @@ Helper::ChildConfig::needNew() const
 void
 Helper::ChildConfig::parseConfig()
 {
-    char const *token = ConfigParser::NextToken();
-
-    if (!token) {
-        self_destruct();
-        return;
-    }
+    auto squidConf = Configuration::LegacyParser();
 
     /* starts with a bare number for the max... back-compatible */
-    n_max = xatoui(token);
-
-    if (n_max < 1) {
-        debugs(0, DBG_CRITICAL, "ERROR: The maximum number of processes cannot be less than 1.");
-        self_destruct();
-        return;
-    }
+    ::Parser::Tokenizer tok(squidConf.token("maximum number of helper processes"));
+    n_max = tok.udec64("max");
+    if (n_max < 1)
+        throw TextException("maximum number of helper processes cannot be less than 1", Here());
 
     /* Parse extension options */
-    for (; (token = ConfigParser::NextToken()) ;) {
-        if (strncmp(token, "startup=", 8) == 0) {
-            n_startup = xatoui(token + 8);
-        } else if (strncmp(token, "idle=", 5) == 0) {
-            n_idle = xatoui(token + 5);
-            if (n_idle < 1) {
-                debugs(0, DBG_CRITICAL, "WARNING: OVERRIDE: Using idle=0 for helpers causes request failures. Overriding to use idle=1 instead.");
-                n_idle = 1;
-            }
-        } else if (strncmp(token, "concurrency=", 12) == 0) {
-            concurrency = xatoui(token + 12);
-        } else if (strncmp(token, "queue-size=", 11) == 0) {
-            queue_size = xatoui(token + 11);
+    char *key;
+    char *value;
+    while (squidConf.optionalKvPair(key, value)) {
+        tok.reset(SBuf(value));
+        if (strcmp(key, "startup") == 0) {
+            n_startup = tok.udec64(key);
+            if (n_startup > n_max)
+                throw TextException(ToSBuf("option startup=", value, " cannot exceed maximum number of processes (", n_max, ")"), Here());
+
+        } else if (strcmp(key, "idle") == 0) {
+            n_idle = tok.udec64(key);
+            if (n_idle < 1)
+                throw TextException(ToSBuf("option ", key, "=", value, " must be at least 1"), Here());
+            if (n_idle > n_max)
+                throw TextException(ToSBuf("option ", key, "=", value, " cannot exceed maximum number of processes (", n_max, ")"), Here());
+
+        } else if (strcmp(key, "concurrency") == 0) {
+            concurrency = tok.udec64(key);
+
+        } else if (strcmp(key, "queue-size") == 0) {
+            queue_size = tok.udec64(key);
             defaultQueueSize = false;
-        } else if (strncmp(token, "on-persistent-overload=", 23) == 0) {
-            const SBuf action(token + 23);
-            if (action.cmp("ERR") == 0)
+
+        } else if (strcmp(key, "on-persistent-overload") == 0) {
+            if (tok.buf().cmp("ERR") == 0)
                 onPersistentOverload = actErr;
-            else if (action.cmp("die") == 0)
+            else if (tok.buf().cmp("die") == 0)
                 onPersistentOverload = actDie;
-            else {
-                debugs(0, DBG_CRITICAL, "ERROR: Unsupported on-persistent-overloaded action: " << action);
-                self_destruct();
-                return;
-            }
-        } else if (strncmp(token, "reservation-timeout=", 20) == 0)
-            reservationTimeout = xatoui(token + 20);
-        else {
-            debugs(0, DBG_PARSE_NOTE(DBG_IMPORTANT), "ERROR: Undefined option: " << token << ".");
-            self_destruct();
-            return;
+            else
+                throw TextException(ToSBuf("unsupported on-persistent-overloaded action: ", value), Here());
+
+        } else if (strcmp(key, "reservation-timeout") == 0) {
+            reservationTimeout = tok.udec64(key);
+
+        } else {
+            throw TextException(ToSBuf("undefined option: ", key), Here());
         }
-    }
-
-    /* simple sanity. */
-
-    if (n_startup > n_max) {
-        debugs(0, DBG_CRITICAL, "WARNING: OVERRIDE: Capping startup=" << n_startup << " to the defined maximum (" << n_max <<")");
-        n_startup = n_max;
-    }
-
-    if (n_idle > n_max) {
-        debugs(0, DBG_CRITICAL, "WARNING: OVERRIDE: Capping idle=" << n_idle << " to the defined maximum (" << n_max <<")");
-        n_idle = n_max;
     }
 
     if (defaultQueueSize)
