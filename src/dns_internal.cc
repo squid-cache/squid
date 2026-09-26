@@ -30,6 +30,7 @@
 #include "ip/tools.h"
 #include "MemBuf.h"
 #include "mgr/Registration.h"
+#include "parser/Tokenizer.h"
 #include "snmp_agent.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -252,7 +253,7 @@ static int max_shared_edns = RFC1035_DEFAULT_PACKET_SZ;
 #endif
 
 static OBJH idnsStats;
-static void idnsAddNameserver(const char *buf);
+static void idnsAddNameserver(const SBuf &ns, const SBuf &origin);
 static void idnsAddMDNSNameservers();
 static void idnsAddPathComponent(const char *buf);
 static void idnsFreeSearchpath(void);
@@ -304,27 +305,73 @@ idnsAddMDNSNameservers()
         return;
 
     // mDNS resolver addresses are explicit multicast group IPs
+    static const SBuf origin("mDNS specification");
     if (Ip::EnableIpv6) {
-        idnsAddNameserver("FF02::FB");
-        nameservers.back().S.port(5353);
+        static const SBuf mDnsIp6("[FF02::FB]:5353");
+        idnsAddNameserver(mDnsIp6, origin);
         nameservers.back().mDNSResolver = true;
         ++nns_mdns_count;
     }
 
-    idnsAddNameserver("224.0.0.251");
-    nameservers.back().S.port(5353);
+    static const SBuf mDnsIp4("224.0.0.251:5353");
+    idnsAddNameserver(mDnsIp4, origin);
     nameservers.back().mDNSResolver = true;
 
     ++nns_mdns_count;
 }
 
 static void
-idnsAddNameserver(const char *buf)
+idnsAddNameserver(const SBuf &buf, const SBuf &origin)
 {
     Ip::Address A;
 
-    if (!(A = buf)) {
-        debugs(78, DBG_CRITICAL, "WARNING: rejecting '" << buf << "' as a name server, because it is not a numeric IP address");
+    try {
+        static const CharacterSet hostChars = CharacterSet("host", "._-") + CharacterSet::ALPHA + CharacterSet::DIGIT;
+        static const CharacterSet ip6Chars = CharacterSet("ip6", ":") + CharacterSet::HEXDIG;
+
+        Parser::Tokenizer tok(buf);
+        SBuf foundHost;
+        if (tok.prefix(foundHost, hostChars)) {
+            debugs(78, 5, "found host name or IPv4: " << foundHost);
+        } else if (tok.prefix(foundHost, ip6Chars) && tok.remaining().isEmpty() /* no port allowed */) {
+            debugs(78, 5, "found IPv6 address: " << foundHost);
+        } else if (tok.skip('[')) {
+            // Squid extension for servers with custom ports needs to handle bracketed IPv6
+            if (tok.prefix(foundHost, ip6Chars) && tok.skip(']'))
+                debugs(78, 5, "found IPv6 with brackets: " << foundHost);
+            else
+                throw TextException("invalid IP address", Here());
+        } else {
+            throw TextException("missing or invalid host/IP", Here());
+        }
+
+        // Squid extension for servers with custom ports
+        int64_t foundPort = 0;
+        if (tok.skip(':')) {
+            if (tok.int64(foundPort, 10, false)) {
+                if (foundPort <= 0 || foundPort > std::numeric_limits<uint16_t>::max())
+                    throw TextException("invalid port number", Here());
+                debugs(78, 5, "found port number: " << foundPort);
+            } else
+                throw TextException("missing or invalid port", Here());
+        }
+
+        if (!tok.remaining().isEmpty())
+            throw TextException("garbage after host:port", Here());
+
+        // TODO: support host/FQDN that resolves to multiple IPs
+        // TODO: support configured append_domain search for non-IPs
+
+        // XXX: performance regression. c_str() copies
+        if (!A.GetHostByName(foundHost.c_str()))
+            throw TextException("invalid IP, or unknown hostname", Here());
+        A.port(foundPort != 0 ? foundPort : NS_DEFAULTPORT);
+
+        if (!Ip::EnableIpv6 && !A.setIPv4())
+            throw TextException("IPv6 is disabled", Here());
+
+    } catch (...) {
+        debugs(78, DBG_CRITICAL, "ERROR: rejecting " << origin << " nameserver '" << buf << "' with " << CurrentException);
         return;
     }
 
@@ -334,19 +381,14 @@ idnsAddNameserver(const char *buf)
         debugs(78, DBG_CRITICAL, "Will be using " << A << " instead, assuming you meant that DNS is running on the same machine");
     }
 
-    if (!Ip::EnableIpv6 && !A.setIPv4()) {
-        debugs(78, DBG_IMPORTANT, "WARNING: IPv6 is disabled. Discarding " << A << " in DNS server specifications.");
-        return;
-    }
-
-    auto &nameserver = nameservers.emplace_back(ns());
-    A.port(NS_DEFAULTPORT);
+    ns nameserver;
     nameserver.S = A;
 #if WHEN_EDNS_RESPONSES_ARE_PARSED
     nameserver.last_seen_edns = RFC1035_DEFAULT_PACKET_SZ;
     // TODO generate a test packet to probe this NS from EDNS size and ability.
 #endif
-    debugs(78, 3, "Added nameserver #" << nameservers.size()-1 << " (" << A << ")");
+    nameservers.emplace_back(nameserver);
+    debugs(78, Important(15), "Added nameserver #" << nameservers.size()-1 << " (" << A << ") from " << origin << " " << buf);
 }
 
 static void
@@ -388,10 +430,10 @@ idnsFreeSearchpath(void)
 static bool
 idnsParseNameservers(void)
 {
+    static const SBuf origin("squid.conf dns_nameservers");
     bool result = false;
     for (auto &i : Config.dns.nameservers) {
-        debugs(78, Important(15), "Adding nameserver " << i << " from squid.conf");
-        idnsAddNameserver(i.c_str());
+        idnsAddNameserver(i, origin);
         result = true;
     }
     return result;
@@ -418,15 +460,10 @@ idnsParseResolvConf(void)
         if (nullptr == t) {
             continue;
         } else if (strcmp(t, "nameserver") == 0) {
-            t = strtok(nullptr, w_space);
-
-            if (nullptr == t)
-                continue;
-
-            debugs(78, DBG_IMPORTANT, "Adding nameserver " << t << " from " << _PATH_RESCONF);
-
-            idnsAddNameserver(t);
-            result = true;
+            if (const auto label = strtok(nullptr, w_space)) {
+                idnsAddNameserver(SBuf(label), SBuf(_PATH_RESCONF));
+                result = true;
+            }
         } else if (strcmp(t, "domain") == 0) {
             idnsFreeSearchpath();
             t = strtok(nullptr, w_space);
@@ -526,6 +563,9 @@ idnsParseWIN32SearchList(const char * Separator)
 static bool
 idnsParseWIN32Registry(void)
 {
+    static const SBuf originDhcp("Registry 'DhcpNameServer'");
+    static const SBuf originNs("Registry 'NameServer'");
+
     char *t;
     char *token;
     HKEY hndKey, hndKey2;
@@ -548,9 +588,8 @@ idnsParseWIN32Registry(void)
                 token = strtok(t, ", ");
 
                 while (token) {
-                    idnsAddNameserver(token);
+                    idnsAddNameserver(SBuf(token), originDhcp);
                     result = true;
-                    debugs(78, DBG_IMPORTANT, "Adding DHCP nameserver " << token << " from Registry");
                     token = strtok(nullptr, ",");
                 }
                 xfree(t);
@@ -564,8 +603,7 @@ idnsParseWIN32Registry(void)
                 token = strtok(t, ", ");
 
                 while (token) {
-                    debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
-                    idnsAddNameserver(token);
+                    idnsAddNameserver(SBuf(token), originNs);
                     result = true;
                     token = strtok(nullptr, ", ");
                 }
@@ -618,8 +656,7 @@ idnsParseWIN32Registry(void)
                                 RegQueryValueEx(hndKey2, "DhcpNameServer", nullptr, &Type, (LPBYTE)t, &Size);
                                 token = strtok(t, ", ");
                                 while (token) {
-                                    debugs(78, DBG_IMPORTANT, "Adding DHCP nameserver " << token << " from Registry");
-                                    idnsAddNameserver(token);
+                                    idnsAddNameserver(SBuf(token), originDhcp);
                                     result = true;
                                     token = strtok(nullptr, ", ");
                                 }
@@ -632,8 +669,7 @@ idnsParseWIN32Registry(void)
                                 RegQueryValueEx(hndKey2, "NameServer", nullptr, &Type, (LPBYTE)t, &Size);
                                 token = strtok(t, ", ");
                                 while (token) {
-                                    debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
-                                    idnsAddNameserver(token);
+                                    idnsAddNameserver(SBuf(token), originNs);
                                     result = true;
                                     token = strtok(nullptr, ", ");
                                 }
@@ -677,8 +713,7 @@ idnsParseWIN32Registry(void)
                 token = strtok(t, ", ");
 
                 while (token) {
-                    debugs(78, DBG_IMPORTANT, "Adding nameserver " << token << " from Registry");
-                    idnsAddNameserver(token);
+                    idnsAddNameserver(SBuf(token), originNs);
                     result = true;
                     token = strtok(nullptr, ", ");
                 }
@@ -1618,9 +1653,12 @@ Dns::Init(void)
 #endif
 
         debugs(78, DBG_IMPORTANT, "or use the 'dns_nameservers' option in squid.conf.");
+        static const SBuf origin("squid default");
+        static const SBuf localhost4("127.0.0.1");
+        static const SBuf localhost6("::1");
         if (Ip::EnableIpv6)
-            idnsAddNameserver("::1");
-        idnsAddNameserver("127.0.0.1");
+            idnsAddNameserver(localhost6, origin);
+        idnsAddNameserver(localhost4, origin);
     }
 
     if (!init) {
