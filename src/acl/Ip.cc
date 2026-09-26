@@ -17,6 +17,7 @@
 #include "debug/Stream.h"
 #include "ip/tools.h"
 #include "MemBuf.h"
+#include "sbuf/Stream.h"
 #include "wordlist.h"
 
 #include <algorithm>
@@ -230,15 +231,18 @@ acl_ip_data::containsVetted(const Ip::Address &needle) const
 }
 
 /* Handle either type of address, IPv6 will be discarded with a warning if disabled */
-#define SCAN_ACL1_6       "%[0123456789ABCDEFabcdef:]-%[0123456789ABCDEFabcdef:]/%[0123456789]"
-#define SCAN_ACL2_6       "%[0123456789ABCDEFabcdef:]-%[0123456789ABCDEFabcdef:]%c"
-#define SCAN_ACL3_6       "%[0123456789ABCDEFabcdef:]/%[0123456789]"
-#define SCAN_ACL4_6       "%[0123456789ABCDEFabcdef:]/%c"
+#define SCAN_ACL1_6       "%39[0123456789ABCDEFabcdef:]-%39[0123456789ABCDEFabcdef:]/%3[0123456789]"
+#define SCAN_ACL2_6       "%39[0123456789ABCDEFabcdef:]-%39[0123456789ABCDEFabcdef:]%c"
+#define SCAN_ACL3_6       "%39[0123456789ABCDEFabcdef:]/%3[0123456789]"
+#define SCAN_ACL4_6       "%39[0123456789ABCDEFabcdef:]/%c"
 /* We DO need to know which is which though, for proper CIDR masking. */
-#define SCAN_ACL1_4       "%[0123456789.]-%[0123456789.]/%[0123456789.]"
-#define SCAN_ACL2_4       "%[0123456789.]-%[0123456789.]%c"
-#define SCAN_ACL3_4       "%[0123456789.]/%[0123456789.]"
-#define SCAN_ACL4_4       "%[0123456789.]/%c"
+#define SCAN_ACL1_4       "%15[0123456789.]-%15[0123456789.]/%15[0123456789.]"
+#define SCAN_ACL2_4       "%15[0123456789.]-%15[0123456789.]%c"
+#define SCAN_ACL3_4       "%15[0123456789.]/%15[0123456789.]"
+#define SCAN_ACL4_4       "%15[0123456789.]/%c"
+/* Handle non-ip/incorrect patterns */
+#define SCAN_ACLX_1       "%255[^/]/%255s"
+#define SCAN_ACLX_2       "%255s"
 
 acl_ip_data *
 acl_ip_data::FactoryParse(const char *t)
@@ -292,10 +296,10 @@ acl_ip_data::FactoryParse(const char *t)
         iptype=AF_INET6;
 
 // Neither
-    } else if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
-        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: non-IP pattern: %[^/]/%s");
+    } else if (sscanf(t, SCAN_ACLX_1, addr1, mask) == 2) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: non-IP pattern: " << SCAN_ACLX_1);
         addr2[0] = '\0';
-    } else if (sscanf(t, "%s", addr1) == 1) {
+    } else if (sscanf(t, SCAN_ACLX_2, addr1) == 1) {
         /*
          * Note, must use plain getaddrinfo() here because at startup
          * ipcache hasn't been initialized
@@ -357,6 +361,9 @@ acl_ip_data::FactoryParse(const char *t)
         }
 
         return q;
+    } else {
+        delete q;
+        throw TextException(ToSBuf("Excessively long ACL parameter value: ", t), Here());
     }
 
     /* ignore IPv6 addresses when built with IPv4-only */
