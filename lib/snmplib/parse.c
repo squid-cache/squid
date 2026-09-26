@@ -81,9 +81,6 @@ SOFTWARE.
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
