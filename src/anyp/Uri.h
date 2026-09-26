@@ -115,15 +115,15 @@ public:
     /// the provided set of expected characters.
     static SBuf Encode(const SBuf &, const CharacterSet &expected);
 
-    /// %-decode the given buffer
+    /// %-decode the given buffer using RFC 3986 Percent-Encoding rules while
+    /// treating `%00` triplet presence as a decoding failure
     /// \retval std::nullopt on decoding failures
     /// \sa DecodeOrDupe()
     static std::optional<SBuf> Decode(const SBuf &);
 
-    /// %-decode the given buffer
-    /// \retval decoded input if input obeys RFC 3986 Percent-Encoding rules
-    /// \retval an input copy if input violates RFC 3986 Percent-Encoding rules
-    /// \sa Decode()
+    /// %-decode the given buffer; uses Decode() for input validation
+    /// \retval decoded input if Decode() successfully decodes input
+    /// \retval an input copy if Decode() fails to decode input
     static SBuf DecodeOrDupe(const SBuf &input);
 
     /**

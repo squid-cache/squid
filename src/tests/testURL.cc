@@ -100,7 +100,6 @@ TestUri::testEncoding()
         {SBuf("fo o"), SBuf("fo%20o")},
         {SBuf("?1"), SBuf("%3F1")},
         {SBuf("\377"), SBuf("%FF")},
-        {SBuf("fo\0o", 4), SBuf("fo%00o")},
     };
 
     for (const auto &testCase: basicTestCases) {
@@ -115,6 +114,7 @@ TestUri::testEncoding()
         SBuf("%%"),
         SBuf("%%%"),
         SBuf("%0"),
+        SBuf("%00"),
         SBuf("%1"),
         SBuf("%1Z"),
         SBuf("%1\000", 2),
