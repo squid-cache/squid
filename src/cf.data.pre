@@ -1724,9 +1724,12 @@ CONFIG_START
 # Recommended minimum configuration:
 #
 
-# Example rule allowing access from your local networks.
-# Adapt to list your (internal) IP networks from where browsing
-# should be allowed
+# Define what "from your local network" means.
+# Adapt to list your (internal) IP networks (LAN).
+# It is common to allow access from these addresses, but your needs may vary.
+# Be careful with negating this ACL: This ACL does not match Squid-generated
+# requests, so `!localnet` does _not_ mean an "external" request received
+# from a non-local address. It means "external or internally-generated"!
 acl localnet src 0.0.0.1-0.255.255.255	# RFC 1122 "this" network (LAN)
 acl localnet src 10.0.0.0/8		# RFC 1918 local private network (LAN)
 acl localnet src 100.64.0.0/10		# RFC 6598 shared address space (CGN)
@@ -1735,6 +1738,20 @@ acl localnet src 172.16.0.0/12		# RFC 1918 local private network (LAN)
 acl localnet src 192.168.0.0/16		# RFC 1918 local private network (LAN)
 acl localnet src fc00::/7       	# RFC 4193 local private network range
 acl localnet src fe80::/10      	# RFC 4291 link-local (directly plugged) machines
+
+# Define what "to your local network" means.
+# Adapt to list your (internal) IP networks.
+# It is common to deny access to these addresses, but your needs may vary.
+acl to_localnet dst 0.0.0.1-0.255.255.255 # RFC 1122 "this" network (LAN)
+acl to_localnet dst 10.0.0.0/8     # RFC 1918 local private network (LAN)
+acl to_localnet dst 100.64.0.0/10  # RFC 6598 shared address space (CGN)
+acl to_localnet dst 169.254.0.0/16 # RFC 3927 link-local (directly plugged) machines
+acl to_localnet dst 172.16.0.0/12  # RFC 1918 local private network (LAN)
+acl to_localnet dst 192.168.0.0/16 # RFC 1918 local private network (LAN)
+acl to_localnet dst 255.255.255.255 # RFC 919 broadcast on a local network (LAN)
+acl to_localnet dst fc00::/7       # RFC 4193 local private network range
+acl to_localnet dst fe80::/10      # RFC 4291 link-local (directly plugged) machines
+acl to_localnet dst ff00::/8       # RFC 4291 multicast addresses
 
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
@@ -1988,7 +2005,7 @@ http_access deny manager
 # network by proxying external TCP connections to unprotected services.
 http_access allow localhost
 
-# The two deny rules below are unnecessary in this default configuration
+# The three deny rules below are unnecessary in this default configuration
 # because they are followed by a "deny all" rule. However, they may become
 # critically important when you start allowing external requests below them.
 
@@ -2000,15 +2017,29 @@ http_access deny to_localhost
 # their server via certain well-known link-local (a.k.a. APIPA) addresses.
 http_access deny to_linklocal
 
+# Protect services running inside your local network (LAN). These services
+# often assume that only LAN users can access them. This rule also denies
+# internally-generated AIA requests for missing intermediate X.509
+# certificates when those requests target LAN services.
+http_access deny !localnet to_localnet
+
 #
-# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+# INSERT YOUR OWN RULE(S) HERE TO ALLOW PERMITTED TRANSACTIONS.
+# The two examples below cover one common use case, but your needs may vary.
 #
 
-# For example, to allow access from your local networks, you may uncomment the
-# following rule (and/or add rules that match your definition of "local"):
+# Uncomment to allow access from local network (LAN) to any destination that
+# was not banned earlier (e.g., all `to_linklocal` destinations were banned).
 # http_access allow localnet
 
-# And finally deny all other access to this proxy
+# Uncomment to allow all internally-generated requests (e.g., AIA requests for
+# missing intermediate X.509 certificates) to any destination that was not
+# banned earlier (e.g., all `to_localnet` destinations were banned for such
+# requests).
+# acl internallyGenerated transaction_initiator internal
+# http_access allow internallyGenerated
+
+# And finally deny all other requests
 http_access deny all
 CONFIG_END
 DOC_END
