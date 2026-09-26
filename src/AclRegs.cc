@@ -68,6 +68,7 @@
 #include "acl/ReplyMimeType.h"
 #include "acl/RequestHeaderStrategy.h"
 #include "acl/RequestMimeType.h"
+#include "acl/Snmp.h"
 #include "acl/SourceDomain.h"
 #include "acl/SourceIp.h"
 #include "acl/SquidError.h"
@@ -278,7 +279,7 @@ Acl::Init()
 #endif
 
 #if SQUID_SNMP
-    RegisterMaker("snmp_community", [](TypeName name)->Node* { return new FinalizedParameterizedNode<SnmpCommunityCheck>(name, new ACLStringData); });
+    RegisterMaker("snmp_community", [](TypeName name)->Node* { return new FinalizedParameterizedNode<Snmp::CommunityCheck>(name, new ACLStringData); });
 #endif
 }
 

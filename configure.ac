@@ -936,9 +936,44 @@ AC_ARG_ENABLE(snmp,
 SQUID_DEFINE_BOOL(SQUID_SNMP,${enable_snmp:=yes},
    [Define to enable SNMP monitoring of Squid])
 AM_CONDITIONAL(ENABLE_SNMP, [test "x$enable_snmp" = "xyes"])
-AS_IF([test "x$enable_snmp" = "xyes"],[SNMPLIB="../lib/snmplib/libsnmplib.la"])
+AS_IF([test "x$enable_snmp" = "xyes"],[
+  dnl required libraries used by this feature:
+  with_netsnmp=yes
+])
 AC_MSG_NOTICE([SNMP support enabled: $enable_snmp])
-AC_SUBST(SNMPLIB)
+
+SQUID_AUTO_LIB(netsnmp,[Net-SNMP],[LIBNETSNMP])
+SQUID_CHECK_LIB_WORKS(netsnmp,[
+  PKG_CHECK_MODULES([LIBNETSNMP],[netsnmp],[:],[:])
+  CPPFLAGS="$LIBNETSNMP_CFLAGS $CPPFLAGS"
+  LIBS="$LIBNETSNMP_PATH $LIBNETSNMP_LIBS $LIBS"
+  AC_TYPE_SSIZE_T
+  SQUID_DEFINE_BOOL(HAVE_SSIZE_T,${ac_cv_type_ssize_t},[ssize_t is defined])
+
+  AC_CHECK_HEADERS([ \
+    netinet/in.h \
+    net-snmp/types.h \
+    net-snmp/pdu_api.h \
+    net-snmp/session_api.h \
+  ],[],[LIBNETSNMP_LIBS=""],[
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#define NET_SNMP_CONFIG_H 1
+#define NETSNMP_ATTRIBUTE_DEPRECATED /*[[deprecated]]*/
+#if defined(__cplusplus)
+#define NETSNMP_IMPORT extern "C"
+#else
+#define NETSNMP_IMPORT extern
+#endif
+#if HAVE_NET_SNMP_TYPES_H
+#include <net-snmp/types.h>
+#if defined(FREE) && FREE == 4
+#undef FREE
+#endif
+#endif
+  ])
+])
 
 AC_ARG_ENABLE(eui,
   AS_HELP_STRING([--disable-eui],
@@ -2492,7 +2527,6 @@ AC_CONFIG_FILES([
 	icons/Makefile
 	lib/Makefile
 	lib/ntlmauth/Makefile
-	lib/snmplib/Makefile
 	lib/sspi/Makefile
 	scripts/Makefile
 	src/Makefile

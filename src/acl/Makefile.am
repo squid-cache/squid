@@ -124,6 +124,8 @@ libacls_la_SOURCES = \
 	ReplyMimeType.h \
 	RequestHeaderStrategy.h \
 	RequestMimeType.h \
+	Snmp.cc \
+	Snmp.h \
 	SourceDomain.cc \
 	SourceDomain.h \
 	SourceIp.cc \

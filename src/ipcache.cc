@@ -22,15 +22,12 @@
 #include "ipcache.h"
 #include "mgr/Registration.h"
 #include "snmp_agent.h"
+#include "snmp_core.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "util.h"
 #include "wordlist.h"
-
-#if SQUID_SNMP
-#include "snmp_core.h"
-#endif
 
 /**
  \defgroup IPCacheAPI IP Cache API
@@ -1172,67 +1169,48 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_netIpFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
+    size_t value = 0;
+    auto type = ASN_COUNTER; // most of these are Counter32
     switch (Var->name[LEN_SQ_NET + 1]) {
 
     case IP_ENT:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      ipcacheCount(),
-                                      SMI_GAUGE32);
+        value = ipcacheCount();
+        type = ASN_GAUGE;
         break;
 
     case IP_REQ:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      IpcacheStats.requests,
-                                      SMI_COUNTER32);
+        value = IpcacheStats.requests;
         break;
 
     case IP_HITS:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      IpcacheStats.hits,
-                                      SMI_COUNTER32);
-        break;
-
-    case IP_PENDHIT:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      0,
-                                      SMI_GAUGE32);
+        value = IpcacheStats.hits;
         break;
 
     case IP_NEGHIT:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      IpcacheStats.negative_hits,
-                                      SMI_COUNTER32);
+        value = IpcacheStats.negative_hits;
         break;
 
     case IP_MISS:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      IpcacheStats.misses,
-                                      SMI_COUNTER32);
+        value = IpcacheStats.misses;
         break;
 
+    // deprecated OIDs, do not produce an error, just value=0
+    case IP_PENDHIT:
     case IP_GHBN:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      0, /* deprecated */
-                                      SMI_COUNTER32);
-        break;
-
     case IP_LOC:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      0, /* deprecated */
-                                      SMI_COUNTER32);
         break;
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        assert(!Answer);
+        return nullptr;
     }
 
-    return Answer;
+    variable_list *Answer = nullptr;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value, sizeof(value));
 }
 
 #endif /*SQUID_SNMP */

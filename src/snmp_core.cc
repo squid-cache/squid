@@ -44,7 +44,6 @@ static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunct
 static oid *snmpCreateOid(int length,...);
 mib_tree_entry * snmpLookupNodeStr(mib_tree_entry *entry, const char *str);
 bool snmpCreateOidFromStr(const char *str, oid **name, int *nl);
-SQUIDCEXTERN void (*snmplib_debug_hook) (int, char *);
 static oid *static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
@@ -56,7 +55,6 @@ static oid_ParseFn *snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, s
 static oid_ParseFn *snmpTreeGet(oid * Current, snint CurrentLen);
 static mib_tree_entry *snmpTreeEntry(oid entry, snint len, mib_tree_entry * current);
 static mib_tree_entry *snmpTreeSiblingEntry(oid entry, snint len, mib_tree_entry * current);
-extern "C" void snmpSnmplibDebug(int lvl, char *buf);
 
 /*
  * Turns the MIB into a Tree structure. Called during the startup process.
@@ -68,8 +66,6 @@ snmpInit()
         return;
 
     debugs(49, 5, "snmpInit: Building SNMP mib tree structure");
-
-    snmplib_debug_hook = snmpSnmplibDebug;
 
     /*
      * This following bit of evil is to get the final node in the "squid" mib
@@ -390,39 +386,36 @@ snmpHandleUdp(int sock, void *)
 static void
 snmpDecodePacket(SnmpRequest * rq)
 {
-    struct snmp_pdu *PDU;
-    u_char *Community;
-    u_char *buf = rq->buf;
-    int len = rq->len;
-
     if (!Config.accessList.snmp) {
         debugs(49, DBG_IMPORTANT, "WARNING: snmp_access not configured. agent query DENIED from : " << rq->from);
         return;
     }
 
     debugs(49, 5, "Called.");
-    PDU = snmp_pdu_create(0);
     /* Always answer on SNMPv1 */
-    rq->session.Version = SNMP_VERSION_1;
-    Community = snmp_parse(&rq->session, PDU, buf, len);
+    rq->session.version = SNMP_VERSION_1;
+
+    auto *buf = rq->buf;
+    auto len = rq->len;
 
     /* Check if we have explicit permission to access SNMP data.
      * default (set above) is to deny all */
-    if (Community) {
+    auto *PDU = snmp_pdu_create(0);
+    if (snmp_parse(nullptr, &rq->session, PDU, buf, len) == 0) {
         ACLFilledChecklist checklist(Config.accessList.snmp, nullptr);
         checklist.src_addr = rq->from;
-        checklist.snmp_community = (char *) Community;
+        checklist.snmp = PDU;
 
-        if (checklist.fastCheck().allowed() && (snmp_coexist_V2toV1(PDU))) {
-            rq->community = Community;
+        if (checklist.fastCheck().allowed() && PDU->version <= SNMP_VERSION_2c) {
+            rq->community = PDU->community;
             rq->PDU = PDU;
             debugs(49, 5, "snmpAgentParse: reqid=[" << PDU->reqid << "]");
             snmpConstructReponse(rq);
         } else {
             debugs(49, DBG_IMPORTANT, "WARNING: SNMP agent query DENIED from : " << rq->from);
+            checklist.snmp = nullptr; // prevent dangling pointer
             snmp_free_pdu(PDU);
         }
-        xfree(Community);
         rq->community = nullptr;
         rq->session.community = nullptr;
         rq->session.community_len = 0;
@@ -454,99 +447,101 @@ snmpConstructReponse(SnmpRequest * rq)
     snmp_free_pdu(rq->PDU);
 
     if (RespPDU != nullptr) {
-        if (snmp_build(&rq->session, RespPDU, rq->outbuf, &rq->outlen) == 0)
+        size_t offset = 0;
+        size_t len = rq->outlen;
+        if (snmp_build(&(rq->outbuf), &len, &offset, &(rq->session), RespPDU) == 0) {
+            assert(len <= std::numeric_limits<decltype(rq->outlen)>::max());
+            rq->outlen = len;
             comm_udp_sendto(rq->sock, rq->from, rq->outbuf, rq->outlen);
-        else
+        } else {
             debugs(49, DBG_IMPORTANT, "ERROR: Failed to encode a response to SNMP agent query from " << rq->from);
+        }
         snmp_free_pdu(RespPDU);
     }
 }
 
-/*
- * Decide how to respond to the request, construct a response and
- * return the response to the requester.
+/**
+ * Using the SNMP request PDU, construct a response and
+ *
+ * \return a response PDU for the given request PDU.
  */
-
 struct snmp_pdu *
-snmpAgentResponse(struct snmp_pdu *PDU) {
+snmpAgentResponse(struct snmp_pdu *PDU)
+{
+    debugs(49, 5, "Called.");
 
-    struct snmp_pdu *Answer = nullptr;
-
-    debugs(49, 5, "snmpAgentResponse: Called.");
-
-    if ((Answer = snmp_pdu_create(SNMP_PDU_RESPONSE))) {
+    if (auto Answer = snmp_pdu_create(SNMP_MSG_RESPONSE)) {
         Answer->reqid = PDU->reqid;
         Answer->errindex = 0;
 
-        if (PDU->command == SNMP_PDU_GET || PDU->command == SNMP_PDU_GETNEXT) {
+        if (PDU->command == SNMP_MSG_GET || PDU->command == SNMP_MSG_GETNEXT) {
             /* Indirect way */
-            int get_next = (PDU->command == SNMP_PDU_GETNEXT);
-            variable_list *VarPtr_;
-            variable_list **RespVars = &(Answer->variables);
-            oid_ParseFn *ParseFn;
+            auto get_next = (PDU->command == SNMP_MSG_GETNEXT);
+            auto RespVars = &(Answer->variables);
             int index = 0;
-            /* Loop through all variables */
 
-            for (VarPtr_ = PDU->variables; VarPtr_; VarPtr_ = VarPtr_->next_variable) {
-                variable_list *VarPtr = VarPtr_;
-                variable_list *VarNew = nullptr;
-                oid *NextOidName = nullptr;
-                snint NextOidNameLen = 0;
+            /* Loop through all variables */
+            for (auto VarPtr_ = PDU->variables; VarPtr_; VarPtr_ = VarPtr_->next_variable) {
+                variable_list *VarPtr = VarPtr_; // temporary local pointer
 
                 ++index;
 
+                // Convert the requested 'name' (OID string format?) to OID binary format ...
+                // and locate which handler Squid uses to produce that OID's data
+                oid *NextOidName = nullptr;
+                snint NextOidNameLen = 0;
+                oid_ParseFn *ParseFn;
                 if (get_next)
                     ParseFn = snmpTreeNext(VarPtr->name, VarPtr->name_length, &NextOidName, &NextOidNameLen);
                 else
                     ParseFn = snmpTreeGet(VarPtr->name, VarPtr->name_length);
 
-                if (ParseFn == nullptr) {
+                // locate the requested next-OID
+                variable_list *VarNew = nullptr;
+                if (!ParseFn) {
                     Answer->errstat = SNMP_ERR_NOSUCHNAME;
                     debugs(49, 5, "snmpAgentResponse: No such oid. ");
                 } else {
+                    // maybe convert OID to (temporary local) VarBind tree representation
                     if (get_next) {
-                        VarPtr = snmp_var_new(NextOidName, NextOidNameLen);
+                        snmp_set_var_objid(VarPtr, NextOidName, NextOidNameLen);
                         xfree(NextOidName);
                     }
 
-                    int * errstatTmp =  &(Answer->errstat);
-
+                    // use Squid's handler to generate the response data
+                    // using the VarBind tree representation of the request OID (or nullptr if none)
+                    auto errstatTmp =  &(Answer->errstat);
                     VarNew = (*ParseFn) (VarPtr, (snint *) errstatTmp);
 
                     if (get_next)
-                        snmp_var_free(VarPtr);
+                        snmp_free_varbind(VarPtr);
                 }
 
                 if ((Answer->errstat != SNMP_ERR_NOERROR) || (VarNew == nullptr)) {
                     Answer->errindex = index;
                     debugs(49, 5, "snmpAgentResponse: error.");
 
-                    if (VarNew)
-                        snmp_var_free(VarNew);
-
-                    while ((VarPtr = Answer->variables) != nullptr) {
-                        Answer->variables = VarPtr->next_variable;
-                        snmp_var_free(VarPtr);
-                    }
+                    // Drop incomplete/broken response content we generated already
+                    snmp_free_varbind(VarNew);
+                    snmp_free_varbind(Answer->variables);
 
                     /* Steal the original PDU list of variables for the error response */
                     Answer->variables = PDU->variables;
-
                     PDU->variables = nullptr;
 
-                    return (Answer);
+                    // stop using the request PDU
+                    break;
                 }
-
-                /* No error.  Insert this var at the end, and move on to the next.
-                 */
+                // else - No error.  Insert this var at the end, and move on to the next.
                 *RespVars = VarNew;
-
                 RespVars = &(VarNew->next_variable);
             }
-        }
+         }
+        return Answer;
     }
 
-    return (Answer);
+    // failed to allocate/create a response PDU
+    return nullptr;
 }
 
 static oid_ParseFn *
@@ -1060,12 +1055,6 @@ snmpDebugOid(const oid * const Name, const snint Len, MemBuf &outbuf)
     return outbuf.content();
 }
 
-void
-snmpSnmplibDebug(int lvl, char *buf)
-{
-    debugs(49, lvl, buf);
-}
-
 /*
    IPv4 address: 10.10.0.9  ==>
    oid == 10.10.0.9
@@ -1129,12 +1118,3 @@ oid2addr(const oid * const id, const size_t size)
     else
         return i6addr;
 }
-
-int
-Acl::SnmpCommunityCheck::match(ACLChecklist * const ch)
-{
-    const auto checklist = Filled(ch);
-
-    return data->match (checklist->snmp_community);
-}
-
