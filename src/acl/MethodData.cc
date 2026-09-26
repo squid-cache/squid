@@ -22,7 +22,7 @@ ACLMethodData::~ACLMethodData()
 }
 
 bool
-ACLMethodData::match(HttpRequestMethod toFind)
+ACLMethodData::match(Http::RequestMethod toFind)
 {
     for (auto i = values.begin(); i != values.end(); ++i) {
         if (*i == toFind) {
@@ -39,7 +39,7 @@ SBufList
 ACLMethodData::dump() const
 {
     SBufList sl;
-    for (std::list<HttpRequestMethod>::const_iterator i = values.begin(); i != values.end(); ++i) {
+    for (std::list<Http::RequestMethod>::const_iterator i = values.begin(); i != values.end(); ++i) {
         sl.push_back((*i).image());
     }
 
@@ -50,7 +50,7 @@ void
 ACLMethodData::parse()
 {
     while (char *t = ConfigParser::strtokFile()) {
-        HttpRequestMethod m;
+        Http::RequestMethod m;
         m.HttpRequestMethodXXX(t);
         values.push_back(m);
         if (values.back() == Http::METHOD_PURGE)
