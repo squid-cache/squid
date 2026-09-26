@@ -13,9 +13,6 @@
 
 #if USE_OPENSSL
 #include "compat/openssl.h"
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
 
 #elif HAVE_LIBGNUTLS
 #if HAVE_GNUTLS_GNUTLS_H
