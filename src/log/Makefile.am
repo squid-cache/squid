@@ -26,7 +26,6 @@ liblog_la_SOURCES = \
 	FormatSquidCustom.cc \
 	FormatSquidIcap.cc \
 	FormatSquidNative.cc \
-	FormatSquidReferer.cc \
 	FormatSquidUseragent.cc \
 	Formats.h \
 	FormattedLog.cc \

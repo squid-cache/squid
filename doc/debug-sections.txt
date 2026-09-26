@@ -89,7 +89,6 @@ section 46    Access Log - Apache common format
 section 46    Access Log - Squid Custom format
 section 46    Access Log - Squid ICAP Logging
 section 46    Access Log - Squid format
-section 46    Access Log - Squid referer format
 section 46    Access Log - Squid useragent format
 section 47    Store Directory Routines
 section 47    Store Search
