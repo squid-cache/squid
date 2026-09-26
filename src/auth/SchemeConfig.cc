@@ -174,6 +174,8 @@ Auth::SchemeConfig::dump(StoreEntry *entry, const char *name, Auth::SchemeConfig
 void
 Auth::SchemeConfig::done()
 {
+    _active = false;
+
     delete keyExtras;
     keyExtras = nullptr;
     keyExtrasLine.clean();
