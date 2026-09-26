@@ -11,14 +11,20 @@
 #ifndef SQUID_SRC_CLIENTS_FTPCLIENT_H
 #define SQUID_SRC_CLIENTS_FTPCLIENT_H
 
+#include "base/CharacterSet.h"
+#include "base/TextException.h"
 #include "clients/Client.h"
 #include "error/Detail.h"
+#include "parser/BinaryTokenizer.h"
+#include "parser/Tokenizer.h"
 
 class String;
 namespace Ftp
 {
 
 extern const char *const crlf;
+
+bool parseEPSV(Parser::Tokenizer &tz, uint16_t &outPort);
 
 /// Holds FTP server reply error code
 /// Squid needs to interpret internally FTP reply codes and respond with
