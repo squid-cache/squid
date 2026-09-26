@@ -191,6 +191,13 @@ static TokenTableEntry TokenTableTransport[] = {
     TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
 };
 
+/// Squid runtime identification (squid::) tokens
+static TokenTableEntry TokenTableSquid[] = {
+    TokenTableEntry("hostname", LFT_SQUID_HOSTNAME),
+    TokenTableEntry("version", LFT_SQUID_VERSION),
+    TokenTableEntry(nullptr, LFT_NONE)           /* this must be last */
+};
+
 #if USE_ADAPTATION
 static TokenTableEntry TokenTableAdapt[] = {
     TokenTableEntry("all_trs", LFT_ADAPTATION_ALL_XACT_TIMES),
@@ -268,6 +275,7 @@ Format::Token::Init()
 #endif
     TheConfig.registerTokens(SBuf("proxy_protocol"), ::Format::TokenTableProxyProtocol);
     TheConfig.registerTokens(SBuf("transport"), ::Format::TokenTableTransport);
+    TheConfig.registerTokens(SBuf("squid"), ::Format::TokenTableSquid);
 }
 
 /// Scans a token table to see if the next token exists there
