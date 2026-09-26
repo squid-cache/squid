@@ -29,6 +29,7 @@ BEGIN {
 	define["HAVE_LIBCAP&&SO_MARK"]="--with-cap and Packet MARK (Linux)"
 	define["HAVE_LIBGNUTLS||USE_OPENSSL"]="--with-gnutls or --with-openssl"
 	define["HAVE_MSTATS&&HAVE_GNUMALLOC_H"]="GNU Malloc with mstats()"
+	define["HAVE_SETRLIMIT&&(RLIMIT_NOFILE||RLIMIT_OFILE)"]="Operating System setrlimit(RLIMIT_NOFILE)"
 	define["ICAP_CLIENT"]="--enable-icap-client"
 	define["SQUID_SNMP"]="--enable-snmp"
 	define["USE_ADAPTATION"]="--enable-ecap or --enable-icap-client"
