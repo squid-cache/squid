@@ -281,9 +281,6 @@ bool certificateMatchesProperties(X509 *peer_cert, CertificateProperties const &
 */
 const char *CommonHostName(X509 *x509);
 
-/// converts ASN1_STRING to SBuf
-SBuf AsnToSBuf(const ASN1_STRING &);
-
 /// interprets X.509 Subject or Issuer name entry (at the given position) as CN
 std::optional<AnyP::Host> ParseCommonNameAt(X509_NAME &, int);
 
