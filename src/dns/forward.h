@@ -22,8 +22,6 @@ namespace Dns
 
 class LookupDetails;
 
-void Init(void);
-
 /// A DNS domain name as described in RFC 1034 and RFC 1035.
 ///
 /// The object creator is responsible for removing any encodings (e.g., URI
