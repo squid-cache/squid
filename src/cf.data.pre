@@ -1246,19 +1246,36 @@ ENDIF
 	acl aclname url_regex [-i] ^http:// ...
 	  # POSIX extended regex matching on whole URL [fast]
 	  #
-	  # If request URL contains only valid pct-encoded triplets (RFC 3986),
-	  # all of them are decoded before matching (e.g., `%25` triplet is
-	  # replaced with a single `%` character). If request URL contains at
-	  # least one `%` character that does not start a valid pct-encoded
-	  # triplet (e.g., `%%`, `%X`, or `%2Y`), then the URL is not decoded at
-	  # all (i.e. the raw request URL is used for matching).
-	  #
-	  # If a request URL is decoded as described above, then all request URL
-	  # characters starting with the decoded `%00` pct-encoded triplet (if
-	  # any) are ignored during matching. There is currently no way to match
-	  # that triplet itself in a correctly percent-encoded URL.
+	  # If request URL contains only valid pct-encoded triplets (RFC 3986)
+	  # other than %00, then all of them are decoded before matching (e.g.,
+	  # `%25` triplet is replaced with a single `%` character). If request URL
+	  # contains at least one `%00` triplet or at least one `%` character that
+	  # does not start a valid pct-encoded triplet (e.g., `%%`, `%X`, or `%2Y`),
+	  # then the URL is not decoded at all (i.e. the raw request URL is used for
+	  # matching).
 	  #
 	  # ACL parameters are not decoded.
+	  #
+	  # The following examples use `%66` encoding of `f`, `%25` encoding of `%`,
+	  # and an invalid `%HH` triplet:
+	  #
+	  # * `url_regex foo` matches    `http://example.com/foo/`
+	  # * `url_regex foo` matches    `http://example.com/%66oo/`
+	  # * `url_regex foo` mismatches `http://example.com/%66oo/%HH`
+	  # * `url_regex %66` mismatches `http://example.com/%66oo/`
+	  # * `url_regex %66` matches    `http://example.com/%66oo/%HH`
+	  # * `url_regex %HH` matches    `http://example.com/%25HH`
+	  #
+	  # The last example demonstrates that it is not possible to use url_regex
+	  # for a reliable detection of requests with URLs that Squid does not
+	  # decode: While `url_regex %HH` does match some of those requests, it
+	  # also matches a successfully decoded URL in that last example.
+	  #
+	  # When the server returns prohibited content for the URL that Squid does
+	  # not decode (e.g., when the server ignores some `?f=foo.exe,q=%HH` query
+	  # parameters), it may be impractical to ban access to some server content
+	  # while allowing access to the same server in other cases. See
+	  # urlpath_regex ACL for more details.
 
 	acl aclname urllogin [-i] [^a-zA-Z0-9] ...
 	  # POSIX extended regex matching on URL login field [fast]
@@ -1270,6 +1287,14 @@ ENDIF
 
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # POSIX extended regex matching on URL path [fast]
+	  #
+	  # Unlike url_regex, this ACL does not decode RFC 3986 pct-encoded triplets
+	  # before checking whether the URL path matches the configured regex.
+	  #
+	  # Since servers usually decode request URLs, it may be impractical to use
+	  # this non-decoding ACL to ban access to some server content while
+	  # allowing access to other URLs on the same server because there are `2^n`
+	  # different ways to encode an `n`-letter keyword.
 
 	acl aclname port 80 70 21 0-1024 ...
 	  # destination TCP port (or port range) of the request [fast]
