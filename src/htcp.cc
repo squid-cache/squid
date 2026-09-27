@@ -337,7 +337,7 @@ htcpBuildAuth(char *buf, size_t buflen)
 {
     htcpAuthHeader auth;
     size_t copy_sz = 0;
-    assert(2 == sizeof(uint16_t));
+    static_assert(sizeof(uint16_t) == 2);
     auth.length = htons(2);
     copy_sz += 2;
     if (buflen < copy_sz)
