@@ -469,7 +469,6 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     };
 
     int added = 0;
-    int nid;
     if (mimicCert.get()) {
         // XXX: Add PublicKeyPointer. In OpenSSL, public and private keys are
         // internally represented by EVP_PKEY pair, but GnuTLS uses distinct types.
@@ -479,9 +478,9 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
 #else
         const auto rsaPkey = EVP_PKEY_is_a(certKey.get(), "RSA") == 1;
 #endif
-        for (int i = 0; (nid = extensions[i]) != 0; ++i) {
+        for (int i = 0, nid = 0; (nid = extensions[i]) != 0; ++i) {
             const int pos = X509_get_ext_by_NID(mimicCert.get(), nid, -1);
-            if (X509_EXTENSION *ext = X509_get_ext(mimicCert.get(), pos)) {
+            if (auto ext = X509_get_ext(mimicCert.get(), pos)) {
                 // Mimic extension exactly.
                 if (X509_add_ext(cert.get(), ext, -1))
                     ++added;
