@@ -272,23 +272,23 @@ ParseSubjectAltName(const GENERAL_NAME &san)
 
         // RFC 5280 section 4.2.1.6 signals IPv4/IPv6 address family using data length
 
-        if (san.d.iPAddress->length == 4) {
+        if (ASN1_STRING_length(san.d.iPAddress) == 4) {
             struct in_addr addr;
             static_assert(sizeof(addr.s_addr) == 4);
-            memcpy(&addr.s_addr, san.d.iPAddress->data, sizeof(addr.s_addr));
+            memcpy(&addr.s_addr, ASN1_STRING_get0_data(san.d.iPAddress), sizeof(addr.s_addr));
             const Ip::Address ip(addr);
             return AnyP::Host::ParseIp(ip);
         }
 
-        if (san.d.iPAddress->length == 16) {
+        if (ASN1_STRING_length(san.d.iPAddress) == 16) {
             struct in6_addr addr;
             static_assert(sizeof(addr.s6_addr) == 16);
-            memcpy(&addr.s6_addr, san.d.iPAddress->data, sizeof(addr.s6_addr));
+            memcpy(&addr.s6_addr, ASN1_STRING_get0_data(san.d.iPAddress), sizeof(addr.s6_addr));
             const Ip::Address ip(addr);
             return AnyP::Host::ParseIp(ip);
         }
 
-        debugs(83, 3, "unexpected length of an IP address SAN: " << san.d.iPAddress->length);
+        debugs(83, 3, "unexpected length of an IP address SAN: " << ASN1_STRING_length(san.d.iPAddress));
         return std::nullopt;
     }
 
@@ -856,7 +856,7 @@ Ssl::InitClientContext(Security::ContextPointer &ctx, Security::PeerOptions &pee
 
 /// \ingroup ServerProtocolSSLInternal
 static const char *
-ssl_get_attribute(X509_NAME * name, const char *attribute_name)
+ssl_get_attribute(const X509_NAME * name, const char *attribute_name)
 {
     static char buffer[1024];
     buffer[0] = '\0';
@@ -879,7 +879,7 @@ ssl_get_attribute(X509_NAME * name, const char *attribute_name)
 const char *
 Ssl::GetX509UserAttribute(X509 * cert, const char *attribute_name)
 {
-    X509_NAME *name;
+    const X509_NAME *name;
     const char *ret;
 
     if (!cert)
@@ -933,7 +933,7 @@ const char *
 Ssl::GetX509CAAttribute(X509 * cert, const char *attribute_name)
 {
 
-    X509_NAME *name;
+    const X509_NAME *name;
     const char *ret;
 
     if (!cert)
@@ -1484,7 +1484,7 @@ void Ssl::InRamCertificateDbKey(const Ssl::CertificateProperties &certProperties
     if (certProperties.mimicCert) {
         if (auto *sig = Ssl::X509_get_signature(certProperties.mimicCert)) {
             origSignatureAsKey = true;
-            key.append((const char *)sig->data, sig->length);
+            key.append((const char *)ASN1_STRING_get0_data(sig), ASN1_STRING_length(sig));
         }
     }
 
