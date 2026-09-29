@@ -241,7 +241,7 @@ manage_request()
                                          0,
                                          nullptr);
             if (!n) {
-                SEND2("NA * Windows error: %s", GetLastError());
+                SEND2("NA * Windows error: %lu", static_cast<unsigned long>(GetLastError()));
                 return 1;
             }
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
