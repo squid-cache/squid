@@ -22,7 +22,7 @@ main(int, char *[])
      * the store will never trim memory
      */
     assert (mem_node::InUseCount() == 1);
-    assert (SM_PAGE_SIZE > 50);
+    static_assert(SM_PAGE_SIZE > 50);
     aNode->nodeBuffer.length = 45;
     assert (aNode->start() == 0);
     assert (aNode->end() == 45);
