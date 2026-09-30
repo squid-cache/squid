@@ -232,16 +232,17 @@ manage_request()
         c = (char *) SSP_ValidateNegotiateCredentials(decoded, decodedLen, &Done, &status, cred);
 
         if (status == SSP_ERROR) {
+            const auto err = GetLastError();
             const auto n = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                                          FORMAT_MESSAGE_IGNORE_INSERTS,
                                          nullptr,
-                                         GetLastError(),
+                                         err,
                                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),    /* Default language */
                                          (LPTSTR) & ErrorMessage,
                                          0,
                                          nullptr);
             if (!n) {
-                SEND2("NA * Windows error: %s", GetLastError());
+                SEND2("NA * Windows error: %lu", static_cast<unsigned long>(err));
                 return 1;
             }
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
