@@ -55,7 +55,7 @@ CacheDigest::CacheDigest(uint64_t aCapacity, uint8_t bpe) :
     mask_size(0),
     bits_per_entry(bpe)
 {
-    assert(SQUID_MD5_DIGEST_LENGTH == 16);  /* our hash functions rely on 16 byte keys */
+    static_assert(SQUID_MD5_DIGEST_LENGTH == 16);  /* our hash functions rely on 16 byte keys */
     updateCapacity(aCapacity);
 }
 
