@@ -86,6 +86,13 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
         return 0;
     }
 
+    // size_diff() below computes last_pos + 1, which overflows when last_pos
+    // is INT64_MAX. No real object can be that large, so reject the spec.
+    if (last_pos == INT64_MAX) {
+        debugs(68, 2, "invalid (last-byte-pos too large) resp-range-spec near: '" << field << "'");
+        return 0;
+    }
+
     spec->length = size_diff(last_pos + 1, spec->offset);
 
     /* we managed to parse, check if the result makes sense */
