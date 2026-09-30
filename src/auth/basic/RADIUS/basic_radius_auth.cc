@@ -588,7 +588,7 @@ main(int argc, char **argv)
 
         /* Parse out the username and password */
         ptr = buf;
-        while (isspace(*ptr))
+        while (xisspace(*ptr))
             ++ptr;
         if ((end = strchr(ptr, ' ')) == nullptr) {
             SEND_ERR("No password");
