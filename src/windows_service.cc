@@ -918,7 +918,7 @@ int WIN32_StartService(int argc, char **argv)
     keys[4] = const_cast<char*>(service);
 
     if (!StartServiceCtrlDispatcher(DispatchTable)) {
-        fprintf(stderr, "StartServiceCtrlDispatcher error = %ld\n", GetLastError());
+        fprintf(stderr, "StartServiceCtrlDispatcher error = %lu\n", static_cast<unsigned long>(GetLastError()));
         return 1;
     }
 
