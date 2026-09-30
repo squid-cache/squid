@@ -13,6 +13,8 @@
 #include "http/Stream.h"
 #include "HttpHeaderRange.h"
 #include "HttpHeaderTools.h"
+
+#include <limits>
 #include "HttpReply.h"
 #include "Store.h"
 #include "StrList.h"
@@ -96,11 +98,9 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
                     return false;
                 }
 
-                // The range end below is exclusive, computed as last_pos + 1.
-                // That addition overflows when last_pos is INT64_MAX, which no
-                // real object can reach, so reject instead of overflowing.
-                if (last_pos == INT64_MAX) {
-                    debugs(64, 2, "invalid (last-byte-pos too large) range-spec near: " << field);
+                // prevent `last_pos + 1` overflows
+                if (last_pos == std::numeric_limits<decltype(last_pos)>::max()) {
+                    debugs(64, 2, "unsupported (last-byte-pos too large) range-spec near: " << field);
                     return false;
                 }
 
