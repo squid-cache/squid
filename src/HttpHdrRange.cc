@@ -13,11 +13,11 @@
 #include "http/Stream.h"
 #include "HttpHeaderRange.h"
 #include "HttpHeaderTools.h"
-
-#include <limits>
 #include "HttpReply.h"
 #include "Store.h"
 #include "StrList.h"
+
+#include <limits>
 
 /*
  *    Currently only byte ranges are supported
