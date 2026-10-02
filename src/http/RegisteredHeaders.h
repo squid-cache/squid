@@ -25,6 +25,7 @@ enum HdrType {
     ACCEPT_ENCODING,                /**< RFC 7231 */
     /*ACCEPT_FEATURES,*/            /* RFC 2295 */
     ACCEPT_LANGUAGE,                /**< RFC 7231 */
+    ACCEPT_QUERY,                   /**< draft-ietf-httpbis-safe-method-w-body */
     ACCEPT_RANGES,                  /**< RFC 7233 */
     AGE,                            /**< RFC 9111 */
     ALLOW,                          /**< RFC 7231 */
