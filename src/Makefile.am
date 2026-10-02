@@ -929,6 +929,26 @@ tests_testDns_LDADD = \
 	$(XTRA_LIBS)
 tests_testDns_LDFLAGS = $(LIBADD_DL)
 
+## Tests of ftp/*
+
+check_PROGRAMS += tests/testFtpEpsv
+tests_testFtpEpsv_SOURCES = \
+	tests/testFtpEpsv.cc
+nodist_tests_testFtpEpsv_SOURCES = \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testFtpEpsv_LDADD = \
+	clients/libclients.la \
+	ftp/libftp.la \
+	libsquid.la \
+	parser/libparser.la \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	$(COMPAT_LIB) \
+	$(LIBCPPUNIT_LIBS) \
+	$(XTRA_LIBS)
+tests_testFtpEpsv_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of parser/*
 
 check_PROGRAMS += tests/testTokenizer
