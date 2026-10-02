@@ -89,9 +89,6 @@
 #include "ssl/Config.h"
 #include "ssl/support.h"
 #endif
-#if SQUID_SNMP
-#include "snmp.h"
-#endif
 
 #include <algorithm>
 #if HAVE_GLOB_H
