@@ -196,7 +196,7 @@ fqdncacheExpiredEntry(const fqdncache_entry * f)
 }
 
 /// \ingroup FQDNCacheAPI
-void
+static void
 fqdncache_purgelru(void *)
 {
     dlink_node *m;
@@ -684,10 +684,6 @@ fqdncacheRegisterWithCacheManager(void)
 void
 fqdncache_init(void)
 {
-    int n;
-
-    fqdncacheRegisterWithCacheManager();
-
     if (fqdn_table)
         return;
 
@@ -702,9 +698,12 @@ fqdncache_init(void)
     fqdncache_low = (long) (((float) Config.fqdncache.size *
                              (float) FQDN_LOW_WATER) / (float) 100);
 
-    n = hashPrime(fqdncache_high / 4);
+    auto n = hashPrime(fqdncache_high / 4);
 
     fqdn_table = hash_create((HASHCMP *) strcmp, n, hash4);
+
+    fqdncacheRegisterWithCacheManager();
+    fqdncache_purgelru(nullptr);
 }
 
 #if SQUID_SNMP
