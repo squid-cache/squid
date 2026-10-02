@@ -56,7 +56,7 @@
 #include "Store.h"
 #include "StoreClient.h"
 #include "urn.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/cert_validate_message.h"
 #include "ssl/Config.h"
 #include "ssl/helper.h"
@@ -281,7 +281,7 @@ FwdState::completed()
             updateAleWithFinalError();
             errorAppendEntry(entry, err);
             err = nullptr;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             if (request->flags.sslPeek && request->clientConnectionManager.valid()) {
                 CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
                              ConnStateData::httpsPeeked, ConnStateData::PinnedIdleContext(Comm::ConnectionPointer(nullptr), request));
@@ -999,7 +999,7 @@ FwdState::secureConnectionToPeer(const Comm::ConnectionPointer &conn)
     const auto callback = asyncCallback(17, 4, FwdState::connectedToPeer, this);
     const auto sslNegotiationTimeout = connectingTimeout(conn);
     Security::PeerConnector *connector = nullptr;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (request->flags.sslPeek)
         connector = new Ssl::PeekingPeerConnector(requestPointer, conn, clientConn, callback, al, sslNegotiationTimeout);
     else
@@ -1234,7 +1234,7 @@ FwdState::dispatch()
     }
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (request->flags.sslPeek) {
         // we were just asked to peek at the server, and we did that
         CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,

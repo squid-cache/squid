@@ -17,7 +17,7 @@
 #include "security/ServerOptions.h"
 #include "security/Session.h"
 #include "SquidConfig.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "compat/openssl.h"
 #include "ssl/support.h"
 
@@ -40,7 +40,7 @@ Security::ServerOptions::operator =(const Security::ServerOptions &old) {
         dhParamsFile = old.dhParamsFile;
         eecdhCurve = old.eecdhCurve;
         parsedDhParams = old.parsedDhParams;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         if (auto *stk = SSL_dup_CA_list(old.clientCaStack.get()))
             clientCaStack = Security::ServerOptions::X509_NAME_STACK_Pointer(stk);
         else
@@ -119,7 +119,7 @@ Security::ServerOptions::parse(const char *token)
         generateHostCertificates = false;
 
     } else if (strncmp(token, "context=", 8) == 0) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         staticContextSessionId = SBuf(token+8);
         // to hide its arguably sensitive value, do not print token in these debugs
         if (staticContextSessionId.length() > SSL_MAX_SSL_SESSION_ID_LENGTH) {
@@ -163,7 +163,7 @@ Security::ContextPointer
 Security::ServerOptions::createBlankContext() const
 {
     Security::ContextPointer ctx;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::Initialize();
 
     SSL_CTX *t = SSL_CTX_new(TLS_server_method());
@@ -218,7 +218,7 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
     Security::ContextPointer t(createBlankContext());
     if (t) {
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         if (certs.size() > 1) {
             // NOTE: calling SSL_CTX_use_certificate() repeatedly _replaces_ the previous cert details.
             //       so we cannot use it and support multiple server certificates with OpenSSL.
@@ -300,7 +300,7 @@ Security::ServerOptions::createSigningContexts(const AnyP::PortCfg &port)
     if (!signingCa.pkey)
         debugs(3, DBG_IMPORTANT, "No TLS private key configured for  " << portType << "_port " << port.s);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::generateUntrustedCert(untrustedSigningCa.cert, untrustedSigningCa.pkey, signingCa.cert, signingCa.pkey);
 #elif HAVE_LIBGNUTLS
     // TODO: implement for GnuTLS. Just a warning for now since generate is implicitly on for all crypto builds.
@@ -340,7 +340,7 @@ Security::ServerOptions::loadClientCaFile()
     if (clientCaFile.isEmpty())
         return true;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     auto *stk = SSL_load_client_CA_file(clientCaFile.c_str());
     clientCaStack = Security::ServerOptions::X509_NAME_STACK_Pointer(stk);
 #endif
@@ -367,7 +367,7 @@ Security::ServerOptions::loadDhParams()
     // public and private components have the correct mathematical
     // relationship". See EVP_PKEY_check().
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #if OPENSSL_VERSION_MAJOR < 3
     DH *dhp = nullptr;
     if (FILE *in = fopen(dhParamsFile.c_str(), "r")) {
@@ -450,7 +450,7 @@ Security::ServerOptions::loadDhParams()
         return;
     }
 #endif
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
 }
 
 bool
@@ -459,7 +459,7 @@ Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
     updateContextOptions(ctx);
     updateContextSessionId(ctx);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (parsedFlags & SSL_FLAG_NO_SESSION_REUSE) {
         SSL_CTX_set_session_cache_mode(ctx.get(), SSL_SESS_CACHE_OFF);
     }
@@ -485,7 +485,7 @@ Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
     updateContextCa(ctx);
     updateContextClientCa(ctx);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     SSL_CTX_set_mode(ctx.get(), SSL_MODE_NO_AUTO_CHAIN);
     if (parsedFlags & SSL_FLAG_DONT_VERIFY_DOMAIN)
         SSL_CTX_set_ex_data(ctx.get(), ssl_ctx_ex_index_dont_verify_domain, (void *) -1);
@@ -498,7 +498,7 @@ Security::ServerOptions::updateContextConfig(Security::ContextPointer &ctx)
 void
 Security::ServerOptions::updateContextClientCa(Security::ContextPointer &ctx)
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (clientCaStack) {
         ERR_clear_error();
         if (STACK_OF(X509_NAME) *clientca = SSL_dup_CA_list(clientCaStack.get())) {
@@ -529,7 +529,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
     if (!eecdhCurve.isEmpty()) {
         debugs(83, 9, "Setting Ephemeral ECDH curve to " << eecdhCurve << ".");
 
-#if USE_OPENSSL && OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined(OPENSSL_NO_ECDH)
+#if HAVE_LIBOPENSSL && OPENSSL_VERSION_NUMBER >= 0x0090800fL && !defined(OPENSSL_NO_ECDH)
 
         Ssl::ForgetErrors();
 
@@ -568,7 +568,7 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
     }
 
     // set DH parameters into the server context
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (parsedDhParams) {
 #if OPENSSL_VERSION_MAJOR < 3
         if (SSL_CTX_set_tmp_dh(ctx.get(), parsedDhParams.get()) != 1) {
@@ -586,13 +586,13 @@ Security::ServerOptions::updateContextEecdh(Security::ContextPointer &ctx)
         }
 #endif // OPENSSL_VERSION_MAJOR
     }
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
 }
 
 void
 Security::ServerOptions::updateContextSessionId(Security::ContextPointer &ctx)
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (!staticContextSessionId.isEmpty())
         SSL_CTX_set_session_id_context(ctx.get(), reinterpret_cast<const unsigned char*>(staticContextSessionId.rawContent()), staticContextSessionId.length());
 #else

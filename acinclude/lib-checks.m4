@@ -32,7 +32,6 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TLS_METHODS],[
   AH_TEMPLATE(HAVE_OPENSSL_TLS_CLIENT_METHOD, "Define to 1 if the TLS_client_method() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_OPENSSL_TLS_SERVER_METHOD, "Define to 1 if the TLS_server_method() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_TLS_METHODS)
-  LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(ssl, TLS_method, AC_DEFINE(HAVE_OPENSSL_TLS_METHOD, 1))
   AC_CHECK_LIB(ssl, TLS_client_method, AC_DEFINE(HAVE_OPENSSL_TLS_CLIENT_METHOD, 1))
   AC_CHECK_LIB(ssl, TLS_server_method, AC_DEFINE(HAVE_OPENSSL_TLS_SERVER_METHOD, 1))
@@ -60,7 +59,6 @@ AC_DEFUN([SQUID_CHECK_LIBCRYPTO_API],[
   AH_TEMPLATE(HAVE_SSL_GET0_PARAM, "Define to 1 of the SSL_get0_param() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBCRYPTO_EVP_PKEY_GET_DEFAULT_DIGEST_NAME, "Define to 1 if the EVP_PKEY_get_default_digest_name() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libcrypto_api)
-  LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(crypto, OPENSSL_LH_strhash, AC_DEFINE(HAVE_LIBCRYPTO_OPENSSL_LH_STRHASH, 1))
   AC_CHECK_LIB(crypto, EVP_PKEY_get0_RSA, AC_DEFINE(HAVE_LIBCRYPTO_EVP_PKEY_GET0_RSA, 1))
   AC_CHECK_LIB(crypto, BIO_meth_new, AC_DEFINE(HAVE_LIBCRYPTO_BIO_METH_NEW, 1))
@@ -91,7 +89,6 @@ AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
   AH_TEMPLATE(HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM, "Define to 1 if the SSL_get_client_random() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY, "Define to 1 if the SSL_SESSION_get_master_key() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libssl_api)
-  LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(ssl, OPENSSL_init_ssl, AC_DEFINE(HAVE_LIBSSL_OPENSSL_INIT_SSL, 1))
   AC_CHECK_LIB(ssl, SSL_CIPHER_find, AC_DEFINE(HAVE_LIBSSL_SSL_CIPHER_FIND, 1))
   AC_CHECK_LIB(ssl, SSL_CTX_set_tmp_rsa_callback, AC_DEFINE(HAVE_LIBSSL_SSL_CTX_SET_TMP_RSA_CALLBACK, 1))
@@ -107,8 +104,7 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_GETCERTIFICATE_WORKS],[
   AH_TEMPLATE(SQUID_SSLGETCERTIFICATE_BUGGY, "Define to 1 if the SSL_get_certificate crashes squid")
   AH_TEMPLATE(SQUID_USE_SSLGETCERTIFICATE_HACK, "Define to 1 to use squid workaround for SSL_get_certificate")
   SQUID_STATE_SAVE(check_SSL_get_certificate)
-  LIBS="$SSLLIB $LIBS"
-  AS_IF([test "x$SSLLIBDIR" != "x"],[LIBS="$LIBS -Wl,-rpath -Wl,$SSLLIBDIR"])
+  AS_IF([test "x$LIBOPENSSL_PATH" != "x"],[LIBS="$LIBS -Wl,-rpath -Wl,$LIBOPENSSL_PATH"])
 
   AC_MSG_CHECKING(whether the SSL_get_certificate is buggy)
   AC_RUN_IFELSE([
@@ -297,7 +293,6 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TXTDB],[
 
   SQUID_STATE_SAVE(check_TXTDB)
 
-  LIBS="$LIBS $SSLLIB"
   squid_cv_check_openssl_pstring="no"
   AC_MSG_CHECKING(whether the TXT_DB use OPENSSL_PSTRING data member)
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([

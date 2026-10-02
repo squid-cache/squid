@@ -64,7 +64,7 @@ void Security::KeyLogger::maybeLog(const Connection &, const Acl::ChecklistFille
 
 #include "security/ErrorDetail.h"
 Security::ErrorDetail::ErrorDetail(ErrorCode, const CertPointer &, const CertPointer &, const char *) STUB
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 Security::ErrorDetail::ErrorDetail(ErrorCode, int, int) STUB
 #elif HAVE_LIBGNUTLS
 Security::ErrorDetail::ErrorDetail(ErrorCode, LibErrorCode, int) STUB
@@ -116,7 +116,7 @@ EncryptorAnswer &PeerConnector::answer() STUB_RETREF(EncryptorAnswer)
 Security::PeerOptions &Security::ProxyOutgoingConfig() STUB_RETREF(Security::PeerOptions)
 
 Security::PeerOptions::PeerOptions() {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     parsedOptions = 0;
 #endif
     STUB_NOP
@@ -156,7 +156,7 @@ void SessionSendGoodbye(const Security::SessionPointer &) STUB
 bool SessionIsResumed(const Security::SessionPointer &) STUB_RETVAL(false)
 void MaybeGetSessionResumeData(const Security::SessionPointer &, Security::SessionStatePointer &) STUB
 void SetSessionResumeData(const Security::SessionPointer &, const Security::SessionStatePointer &) STUB
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 void SetSessionCacheCallbacks(Security::ContextPointer &) STUB
 Security::SessionPointer NewSessionObject(const Security::ContextPointer &) STUB_RETVAL(nullptr)
 #endif

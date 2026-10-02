@@ -33,6 +33,5 @@ security_file_certgen_LDADD = \
 	$(top_builddir)/src/anyp/libanyp.la \
 	$(top_builddir)/src/base/libbase.la \
 	$(top_builddir)/src/time/libtime.la \
-	$(SSLLIB) \
-	$(COMPAT_LIB)
-
+	$(COMPAT_LIB) \
+	$(LIBOPENSSL_LIBS)

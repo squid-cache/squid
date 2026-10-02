@@ -9,7 +9,7 @@
 #ifndef SQUID_SRC_SSL_PROXYCERTS_H
 #define SQUID_SRC_SSL_PROXYCERTS_H
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "acl/forward.h"
 #include "acl/Gadgets.h"
 #include "ssl/gadgets.h"

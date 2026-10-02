@@ -69,7 +69,7 @@ Security::IoResult::printWithExtras(std::ostream &os) const
 void
 Security::ForgetErrors()
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::ForgetErrors();
 #endif
 }
@@ -102,7 +102,7 @@ Security::Handshake(Comm::Connection &transport, const ErrorCode topError, Fun i
     debugs(83, 5, callResult << '/' << xerrno << " for TLS connection " <<
            static_cast<void*>(connection) << " over " << transport);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (callResult > 0)
         return IoResult(IoResult::ioSuccess);
 
@@ -208,7 +208,7 @@ Security::IoResult
 Security::Accept(Comm::Connection &transport)
 {
     return Handshake(transport, SQUID_TLS_ERR_ACCEPT, [] (ConnectionPointer tlsConn) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         return SSL_accept(tlsConn);
 #elif HAVE_LIBGNUTLS
         return gnutls_handshake(tlsConn);
@@ -223,7 +223,7 @@ Security::IoResult
 Security::Connect(Comm::Connection &transport)
 {
     return Handshake(transport, SQUID_TLS_ERR_CONNECT, [] (ConnectionPointer tlsConn) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         return SSL_connect(tlsConn);
 #elif HAVE_LIBGNUTLS
         return gnutls_handshake(tlsConn);

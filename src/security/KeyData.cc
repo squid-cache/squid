@@ -25,7 +25,7 @@ Security::KeyData::loadCertificates()
     debugs(83, 2, "from " << certFile);
     cert.reset(); // paranoid: ensure cert is unset
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     const char *certFilename = certFile.c_str();
     Ssl::BIO_Pointer bio(BIO_new(BIO_s_file()));
     if (!bio || !BIO_read_filename(bio.get(), certFilename)) {
@@ -140,7 +140,7 @@ Security::KeyData::loadX509PrivateKeyFromFile()
 {
     debugs(83, 2, "from " << privateKeyFile);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     const char *keyFilename = privateKeyFile.c_str();
     // XXX: Ssl::AskPasswordCb needs SSL_CTX_set_default_passwd_cb_userdata()
     // so this may not fully work iff Config.Program.ssl_password is set.
