@@ -9,13 +9,11 @@
 #ifndef SQUID_COMPAT_ASSERT_H
 #define SQUID_COMPAT_ASSERT_H
 
-#if PURIFY
-#define assert(EX) ((void)0)
-#elif defined(NODEBUG)
-#define assert(EX) ((void)0)
-#else
-#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
+#if defined(assert)
+#undef assert
 #endif
+
+#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
 
 #ifdef __cplusplus
 extern "C" void
@@ -25,4 +23,3 @@ extern void
 xassert(const char *, const char *, int);
 
 #endif /* SQUID_COMPAT_ASSERT_H */
-

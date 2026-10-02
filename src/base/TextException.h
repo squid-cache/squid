@@ -70,8 +70,8 @@ std::ostream &operator <<(std::ostream &, const TextException &);
     Assure_(3, (condition), ("check failed: " description), (location))
 
 /// Like Assure() but only logs the exception if level-3 debugging is enabled
-/// and runs even when NDEBUG macro is defined. Deprecated: Use Assure() for
-/// code logic checks and throw explicitly when input validation fails.
+/// Deprecated: Use Assure() for code logic checks and throw
+/// explicitly when input validation fails.
 #define Must(condition) Must3((condition), #condition, Here())
 
 /// Reports and swallows all exceptions to prevent compiler warnings and runtime

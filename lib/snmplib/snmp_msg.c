@@ -87,9 +87,6 @@
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
 
 #include "asn1.h"
 #include "snmp.h"

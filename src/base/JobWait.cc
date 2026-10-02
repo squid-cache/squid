@@ -10,7 +10,6 @@
 #include "base/AsyncJobCalls.h"
 #include "base/JobWait.h"
 
-#include <cassert>
 #include <iostream>
 
 JobWaitBase::JobWaitBase() = default;
