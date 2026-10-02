@@ -73,38 +73,37 @@ namespace Security
 
 class CertError;
 /// Holds a list of X.509 certificate errors
-typedef CbDataList<Security::CertError> CertErrors;
+using CertErrors = CbDataList<Security::CertError>;
 
 #if USE_OPENSSL
-typedef X509 Certificate;
+using Certificate = X509;
 #elif HAVE_LIBGNUTLS
-typedef struct gnutls_x509_crt_int Certificate;
+using Certificate = struct gnutls_x509_crt_int;
 #else
-typedef struct notls_x509 Certificate;
+using Certificate = struct notls_x509;
 #endif
 
 #if USE_OPENSSL
 CtoCpp1(X509_free, X509 *);
-typedef Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref> > CertPointer;
+using CertPointer = Security::LockingPointer<X509, X509_free_cpp, HardFun<int, X509 *, X509_up_ref>>;
 #elif HAVE_LIBGNUTLS
-typedef std::shared_ptr<struct gnutls_x509_crt_int> CertPointer;
+using CertPointer = std::shared_ptr<Certificate>;
 #else
-typedef std::shared_ptr<Certificate> CertPointer;
+using CertPointer = std::shared_ptr<Certificate>;
 #endif
 
 #if USE_OPENSSL
 CtoCpp1(X509_CRL_free, X509_CRL *);
-typedef Security::LockingPointer<X509_CRL, X509_CRL_free_cpp, HardFun<int, X509_CRL *, X509_CRL_up_ref> > CrlPointer;
+using CrlPointer = Security::LockingPointer<X509_CRL, X509_CRL_free_cpp, HardFun<int, X509_CRL *, X509_CRL_up_ref>>;
 #elif HAVE_LIBGNUTLS
 CtoCpp1(gnutls_x509_crl_deinit, gnutls_x509_crl_t);
-typedef Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_deinit> CrlPointer;
+using CrlPointer = Security::LockingPointer<struct gnutls_x509_crl_int, gnutls_x509_crl_deinit>;
 #else
-typedef void *CrlPointer;
+using CrlPointer = void *;
 #endif
 
-typedef std::list<Security::CertPointer> CertList;
-
-typedef std::list<Security::CrlPointer> CertRevokeList;
+using CertList = std::list<Security::CertPointer>;
+using CertRevokeList = std::list<Security::CrlPointer>;
 
 #if USE_OPENSSL
 CtoCpp1(EVP_PKEY_free, EVP_PKEY *)
@@ -118,7 +117,7 @@ using PrivateKeyPointer = std::shared_ptr<void>;
 #if USE_OPENSSL
 #if OPENSSL_VERSION_MAJOR < 3
 CtoCpp1(DH_free, DH *);
-typedef Security::LockingPointer<DH, DH_free_cpp, HardFun<int, DH *, DH_up_ref> > DhePointer;
+using DhePointer = Security::LockingPointer<DH, DH_free_cpp, HardFun<int, DH *, DH_up_ref>>;
 #else
 using DhePointer = PrivateKeyPointer;
 #endif
@@ -131,21 +130,21 @@ using DhePointer = void *;
 class EncryptorAnswer;
 
 /// Squid-defined error code (<0), an error code returned by X.509 API, or zero
-typedef int ErrorCode;
+using ErrorCode = int;
 
 /// TLS library-reported non-validation error
 #if USE_OPENSSL
 /// the result of the first ERR_get_error(3SSL) call after a library call;
 /// `openssl errstr` expands these numbers into human-friendlier strings like
 /// `error:1408F09C:SSL routines:ssl3_get_record:http request`
-typedef unsigned long LibErrorCode;
+using LibErrorCode = unsigned long;
 #elif HAVE_LIBGNUTLS
 /// the result of an API function like gnutls_handshake() (e.g.,
 /// GNUTLS_E_WARNING_ALERT_RECEIVED)
-typedef int LibErrorCode;
+using LibErrorCode = int;
 #else
 /// should always be zero and virtually unused
-typedef int LibErrorCode;
+using LibErrorCode = int;
 #endif
 
 /// converts numeric LibErrorCode into a human-friendlier string
@@ -162,7 +161,7 @@ inline const char *ErrorString(const LibErrorCode code) {
 
 /// set of Squid defined TLS error codes
 /// \note using std::unordered_set ensures values are unique, with fast lookup
-typedef std::unordered_set<Security::ErrorCode> Errors;
+using Errors = std::unordered_set<Security::ErrorCode>;
 
 namespace Io
 {
@@ -193,7 +192,7 @@ class KeyLog;
 #if USE_OPENSSL
 using ParsedOptions = uint64_t;
 #elif HAVE_LIBGNUTLS
-typedef std::shared_ptr<struct gnutls_priority_st> ParsedOptions;
+using ParsedOptions = std::shared_ptr<struct gnutls_priority_st>;
 #else
 class ParsedOptions {}; // we never parse/use TLS options in this case
 #endif
@@ -201,7 +200,7 @@ class ParsedOptions {}; // we never parse/use TLS options in this case
 /// bitmask representing configured http(s)_port `sslflags`
 /// as well tls_outgoing_options `flags`, cache_peer `sslflags`, and
 /// icap_service `tls-flags`
-typedef long ParsedPortFlags;
+using ParsedPortFlags = long;
 
 class PeerConnector;
 class BlindPeerConnector;
@@ -212,7 +211,7 @@ class ServerOptions;
 class FuturePeerContext;
 
 class ErrorDetail;
-typedef RefCount<ErrorDetail> ErrorDetailPointer;
+using ErrorDetailPointer = RefCount<ErrorDetail>;
 
 std::ostream &operator <<(std::ostream &, const KeyLog &);
 
@@ -227,7 +226,7 @@ void CloseLogs(); ///< closes logs opened by OpenLogs()
 /// supplement official certificate validation errors to cover special cases.
 /// We use negative values, assuming that those official errors are positive.
 enum {
-    SQUID_TLS_ERR_OFFSET = std::numeric_limits<int>::min(),
+    SQUID_TLS_ERR_OFFSET = std::numeric_limits<Security::ErrorCode>::min(),
 
     /* TLS library calls/contexts other than validation (e.g., I/O) */
     SQUID_TLS_ERR_ACCEPT, ///< failure to accept a connection from a TLS client

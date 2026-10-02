@@ -601,7 +601,7 @@ Security::PeerOptions::parseFlags()
         SSL_FLAG_DONT_VERIFY_PEER|
         SSL_FLAG_DELAYED_AUTH|
         SSL_FLAG_CONDITIONAL_AUTH;
-    typedef std::bitset<sizeof(decltype(fl))> ParsedPortFlagBits;
+    using ParsedPortFlagBits = std::bitset<sizeof(decltype(fl))>;
     if (ParsedPortFlagBits(fl & mutuallyExclusive).count() > 1) {
         if (fl & SSL_FLAG_CONDITIONAL_AUTH)
             throw TextException("CONDITIONAL_AUTH is not compatible with NO_DEFAULT_CA and DELAYED_AUTH flags", Here());

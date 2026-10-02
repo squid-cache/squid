@@ -19,7 +19,7 @@ namespace Security {
 template <typename Fun>
 static IoResult Handshake(Comm::Connection &, ErrorCode, Fun);
 
-typedef SessionPointer::element_type *ConnectionPointer;
+using ConnectionPointer = SessionPointer::element_type *;
 
 } // namespace Security
 
