@@ -588,7 +588,7 @@ main(int argc, char **argv)
 
         /* Parse out the username and password */
         ptr = buf;
-        while (isspace(*ptr))
+        while (xisspace(*ptr))
             ++ptr;
         if ((end = strchr(ptr, ' ')) == nullptr) {
             SEND_ERR("No password");
@@ -597,7 +597,7 @@ main(int argc, char **argv)
         *end = '\0';
         urldecode(username, ptr, MAXPWNAM);
         ptr = end + 1;
-        while (isspace(*ptr))
+        while (xisspace(*ptr))
             ++ptr;
         urldecode(passwd, ptr, MAXPASS);
 
