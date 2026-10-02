@@ -15,6 +15,8 @@
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 
+#include <limits>
+
 /*
  *    Currently only byte ranges are supported
  *
@@ -83,6 +85,11 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 
     if (last_pos < spec->offset) {
         debugs(68, 2, "invalid (negative last-byte-pos) resp-range-spec near: '" << field << "'");
+        return 0;
+    }
+
+    if (last_pos == std::numeric_limits<decltype(last_pos)>::max()) {
+        debugs(68, 2, "unsupported huge last-byte-pos resp-range-spec near:  '" << field << "'");
         return 0;
     }
 
@@ -173,14 +180,29 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
         /* Additional paranoidal check for BUG2155 - entity-length MUST be > 0 */
         debugs(68, 2, "invalid (entity-length is negative) content-range-spec near: '" << str << "'");
         return 0;
-    } else if (known_spec(range->spec.length) && range->elength < (range->spec.offset + range->spec.length)) {
-        debugs(68, 2, "invalid (range is outside entity-length) content-range-spec near: '" << str << "'");
-        return 0;
     }
 
     // reject unsatisfied-range and such; we only use well-defined ranges today
     if (!known_spec(range->spec.offset) || !known_spec(range->spec.length)) {
         debugs(68, 2, "unwanted content-range-spec near: '" << str << "'");
+        return 0;
+    }
+
+    // Store I/O adds partial content offsets to the size of various objects and
+    // buffers (e.g., Store metadata, serialized HTTP headers, mem_node::data,
+    // and Store I/O buffer). Most such sums do not check for overflows, so we
+    // check here while assuming that those sizes cannot exceed maximumSize. We
+    // further assume that most offsets use int64_t or a larger integer type.
+    static_assert(std::numeric_limits<decltype(range->spec.offset)>::max() >= std::numeric_limits<int64_t>::max());
+    const auto maximumSize = int64_t(1024)*1024*1024*1024; // no in-memory Squid object/buffer size can exceed 1 TiB
+    const auto maximumOffset = std::numeric_limits<int64_t>::max() - maximumSize;
+    if (range->spec.length > maximumOffset || range->spec.offset > maximumOffset - range->spec.length) {
+        debugs(68, 2, "huge content-range-spec near: '" << str << "'");
+        return 0;
+    }
+
+    if (known_spec(range->elength) && range->elength < (range->spec.offset + range->spec.length)) {
+        debugs(68, 2, "invalid (range is outside entity-length) content-range-spec near: '" << str << "'");
         return 0;
     }
 
