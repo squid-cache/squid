@@ -92,6 +92,11 @@ class Error;
 class ErrorDetail;
 class ErrorState;
 
+namespace ErrorPage {
+class PercentCodeCompiler;
+class Build;
+} // namespace ErrorPage
+
 typedef RefCount<ErrorDetail> ErrorDetailPointer;
 
 #endif /* SQUID_SRC_ERROR_FORWARD_H */
