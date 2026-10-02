@@ -73,6 +73,7 @@ void SquidReferer(const AccessLogEntryPointer &, Logfile *) STUB
 void SquidCustom(const AccessLogEntryPointer &, CustomLog *) STUB
 void HttpdCommon(const AccessLogEntryPointer &, Logfile *) STUB
 void HttpdCombined(const AccessLogEntryPointer &, Logfile *) STUB
+void SiemCef(const AccessLogEntryPointer &, Logfile *) STUB
 }
 }
 
