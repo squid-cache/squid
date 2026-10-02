@@ -260,11 +260,11 @@ static void free_http_upgrade_request_protocols(HttpUpgradeProtocolAccess **prot
 
 /*
  * LegacyParser is a parser for legacy code that uses the global
- * approach.  This is static so that it is only exposed to cache_cf.
- * Other modules needing access to a ConfigParser should have it
- * provided to them in their parserFOO methods.
+ * approach.
+ * Deprecated; other modules needing access to a ConfigParser should
+ * have it provided to them in their parseFoo() methods.
  */
-static ConfigParser LegacyParser = ConfigParser();
+static auto LegacyParser = Configuration::LegacyParser();
 
 const char *cfg_directive = nullptr;
 const char *cfg_filename = nullptr;
