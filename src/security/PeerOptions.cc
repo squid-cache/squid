@@ -59,9 +59,6 @@ Security::PeerOptions::parse(const char *token)
         }
         KeyData &t = certs.back();
         t.privateKeyFile = SBuf(token + 4);
-    } else if (strncmp(token, "version=", 8) == 0) {
-        debugs(0, DBG_PARSE_NOTE(1), "WARNING: UPGRADE: SSL version= is deprecated. Use options= and tls-min-version= to limit protocols instead.");
-        sslVersion = xatoi(token + 8);
     } else if (strncmp(token, "min-version=", 12) == 0) {
         tlsMinVersion = SBuf(token + 12);
         optsReparse = true;
@@ -192,54 +189,6 @@ Security::PeerOptions::updateTlsVersionLimits()
 
         return;
     }
-
-    if (sslVersion > 2) {
-        // backward compatibility hack for sslversion= configuration
-        // only use if tls-min-version=N.N is not present
-        // values 0-2 for auto and SSLv2 are not supported any longer.
-        // Do it this way so we DO cause changes to options= in cachemgr config report
-        const char *add = nullptr;
-        switch (sslVersion) {
-        case 3:
-#if USE_OPENSSL
-            add = ":NO_TLSv1:NO_TLSv1_1:NO_TLSv1_2:NO_TLSv1_3";
-#elif HAVE_LIBGNUTLS
-            add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
-#endif
-            break;
-        case 4:
-#if USE_OPENSSL
-            add = ":NO_SSLv3:NO_TLSv1_1:NO_TLSv1_2:NO_TLSv1_3";
-#elif HAVE_LIBGNUTLS
-            add = ":+VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
-#endif
-            break;
-        case 5:
-#if USE_OPENSSL
-            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_2:NO_TLSv1_3";
-#elif HAVE_LIBGNUTLS
-            add = ":-VERS-TLS1.0:+VERS-TLS1.1:-VERS-TLS1.2:-VERS-TLS1.3";
-#endif
-            break;
-        case 6:
-#if USE_OPENSSL
-            add = ":NO_SSLv3:NO_TLSv1:NO_TLSv1_1:NO_TLSv1_3";
-#elif HAVE_LIBGNUTLS
-            add = ":-VERS-TLS1.0:-VERS-TLS1.1:-VERS-TLS1.3";
-#endif
-            break;
-        default: // nothing
-            break;
-        }
-        if (add) {
-            if (sslOptions.isEmpty())
-                sslOptions.append(add+1, strlen(add+1));
-            else
-                sslOptions.append(add, strlen(add));
-            optsReparse = true;
-        }
-        sslVersion = 0; // prevent sslOptions being repeatedly appended
-    }
 }
 
 Security::ContextPointer
@@ -307,16 +256,6 @@ static struct ssl_option {
         "NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
     },
 #endif
-#if defined(SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG)
-    {
-        "SSLREF2_REUSE_CERT_TYPE_BUG", SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
-    },
-#endif
-#if defined(SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER)
-    {
-        "MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
-    },
-#endif
 #if defined(SSL_OP_SSLEAY_080_CLIENT_DH_BUG)
     {
         "SSLEAY_080_CLIENT_DH_BUG", SSL_OP_SSLEAY_080_CLIENT_DH_BUG
@@ -380,11 +319,6 @@ static struct ssl_option {
 #if defined(SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG)
     {
         "NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
-    },
-#endif
-#if defined(SSL_OP_NO_SSLv3)
-    {
-        "NO_SSLv3", SSL_OP_NO_SSLv3
     },
 #endif
 #if defined(SSL_OP_NO_TLSv1)
@@ -524,6 +458,11 @@ Security::PeerOptions::parseOptions()
     // compliance with RFC 6176: Prohibiting Secure Sockets Layer (SSL) Version 2.0
     if (SSL_OP_NO_SSLv2)
         op |= SSL_OP_NO_SSLv2;
+#endif
+#if defined(SSL_OP_NO_SSLv3)
+    // compliance with RFC 7568: Prohibiting Secure Sockets Layer (SSL) Version 3.0
+    if (SSL_OP_NO_SSLv3)
+        op |= SSL_OP_NO_SSLv3;
 #endif
     parsedOptions = op;
 
