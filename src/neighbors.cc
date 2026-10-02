@@ -1672,7 +1672,7 @@ neighborsHtcpReply(const cache_key * key, HtcpReplyData * htcp, const Ip::Addres
  * Send HTCP CLR messages to all peers configured to receive them.
  */
 void
-neighborsHtcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
+neighborsHtcpClear(StoreEntry * e, HttpRequest * req, const Http::RequestMethod &method, htcp_clr_reason reason)
 {
     char buf[128];
 
