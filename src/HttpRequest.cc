@@ -28,6 +28,7 @@
 #include "HttpRequest.h"
 #include "log/Config.h"
 #include "MemBuf.h"
+#include "sbuf/List.h"
 #include "sbuf/StringConvert.h"
 #include "SquidConfig.h"
 #include "Store.h"
@@ -754,16 +755,19 @@ HttpRequest::notes()
 }
 
 void
-UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &helperNotes)
+UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &helperNotes, const SBufList &connTags)
 {
-    // Tag client connection if the helper responded with clt_conn_tag=tag.
-    const char *cltTag = "clt_conn_tag";
-    if (const char *connTag = helperNotes.findFirst(cltTag)) {
-        if (csd) {
-            csd->notes()->remove(cltTag);
-            csd->notes()->add(cltTag, connTag);
+    // Tag client connection if the helper responded with clt_conn_tag=tag
+    // OR, if the admin configured the annotation to be copied to the client connection
+    if (csd) {
+        for (const auto &note : helperNotes) {
+            if (IsMember(connTags, note->name())) {
+                csd->notes()->remove(note->name());
+                csd->notes()->add(note->name(), note->value());
+            }
         }
     }
+
     request.notes()->replaceOrAdd(&helperNotes);
 }
 

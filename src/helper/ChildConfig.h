@@ -9,6 +9,8 @@
 #ifndef SQUID_SRC_HELPER_CHILDCONFIG_H
 #define SQUID_SRC_HELPER_CHILDCONFIG_H
 
+#include "sbuf/SBuf.h"
+
 namespace Helper
 {
 
@@ -33,6 +35,9 @@ public:
      */
     int needNew() const;
     void parseConfig();
+
+    /// produce squid.conf syntax for mgr:config report
+    void printConfig(StoreEntry *, const char *directive);
 
     /**
      * Update an existing set of details with new start/max/idle/concurrent limits.
@@ -107,13 +112,20 @@ public:
 
     /// older stateful helper server reservations may be forgotten
     time_t reservationTimeout = 64; // reservation-timeout
+
+    /// List of kv-pair keys to set as annotations of the client TCP connection.
+    /// Default: clt_conn_tag
+    SBufList clientConnectionTags = { SBuf("clt_conn_tag") };
+
+private:
+    void parseNotesList(const SBuf &);
 };
 
 } // namespace Helper
 
 /* Legacy parser interface */
 #define parse_HelperChildConfig(c)     (c)->parseConfig()
-#define dump_HelperChildConfig(e,n,c)  storeAppendPrintf((e), "\n%s %d startup=%d idle=%d concurrency=%d\n", (n), (c).n_max, (c).n_startup, (c).n_idle, (c).concurrency)
+#define dump_HelperChildConfig(e,n,c)  (c).printConfig((e),(n))
 #define free_HelperChildConfig(dummy)  // NO.
 
 #endif /* SQUID_SRC_HELPER_CHILDCONFIG_H */

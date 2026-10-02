@@ -1019,7 +1019,7 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
     if (http->al)
         http->al->syncNotes(old_request);
 
-    UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
+    UpdateRequestNotes(http->getConn(), *old_request, reply.notes, Config.redirectChildren.clientConnectionTags);
 
     switch (reply.result) {
     case Helper::TimedOut:
@@ -1135,7 +1135,7 @@ ClientRequestContext::clientStoreIdDone(const Helper::Reply &reply)
     if (http->al)
         http->al->syncNotes(old_request);
 
-    UpdateRequestNotes(http->getConn(), *old_request, reply.notes);
+    UpdateRequestNotes(http->getConn(), *old_request, reply.notes, Config.storeIdChildren.clientConnectionTags);
 
     switch (reply.result) {
     case Helper::Unknown:
