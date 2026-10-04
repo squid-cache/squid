@@ -97,7 +97,8 @@ jobs:
 
   source-maintenance-tests:
 
-    runs-on: ubuntu-26.04
+    # 26.04 has a newer version of astyle
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Install prerequisite packages
