@@ -43,7 +43,7 @@ jobs:
 
   functionality-tests:
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       # XXX: A hack to fix Ubuntu runners that were created in April 2025.
@@ -97,7 +97,7 @@ jobs:
 
   source-maintenance-tests:
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Install prerequisite packages
@@ -125,7 +125,7 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - ubuntu-24.04
+          - ubuntu-26.04
         compiler:
           - { CC: gcc, CXX: g++ }
           - { CC: clang, CXX: clang++ }
@@ -175,7 +175,7 @@ jobs:
 
   CodeQL-tests:
 
-    runs-on: [ ubuntu-24.04 ]
+    runs-on: [ ubuntu-26.04 ]
 
     permissions:
       security-events: write
