@@ -780,11 +780,11 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     }
 
     /* check consistency further */
-    if ((size_t)cblock.mask_size != CacheDigest::CalcMaskSize(cblock.capacity, cblock.bits_per_entry)) {
-        debugs(72, DBG_CRITICAL, host << " digest cblock is corrupted " <<
-               "(mask size mismatch: " << cblock.mask_size << " ? " <<
-               CacheDigest::CalcMaskSize(cblock.capacity, cblock.bits_per_entry)
-               << ").");
+    const auto calculatedMaskSize = CacheDigest::CalcMaskSize(cblock.capacity, cblock.bits_per_entry);
+    if (size_t(cblock.mask_size) != calculatedMaskSize) {
+        debugs(72, DBG_CRITICAL, "ERROR: " << host << " digest cblock is corrupted or unsupported " <<
+               "(unexpected mask size: " << cblock.mask_size << " for " << cblock.capacity << '*' << cblock.bits_per_entry <<
+               "; expected: " << calculatedMaskSize << ")");
         return 0;
     }
 
@@ -799,7 +799,7 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
      * no cblock bugs below this point
      */
     /* check size changes */
-    if (pd->cd && cblock.mask_size != (ssize_t)pd->cd->mask_size) {
+    if (pd->cd && size_t(cblock.mask_size) != pd->cd->mask_size) {
         debugs(72, 2, host << " digest changed size: " << cblock.mask_size <<
                " -> " << pd->cd->mask_size);
         freed_size = pd->cd->mask_size;
