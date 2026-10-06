@@ -228,19 +228,6 @@ HttpHdrSc::packInto(Packable * p) const
     }
 }
 
-/* negative max_age will clean old max_Age setting */
-void
-HttpHdrSc::setMaxAge(char const *target, int max_age)
-{
-    HttpHdrScTarget *sct = findTarget(target);
-
-    if (!sct) {
-        sct = &targets.emplace_back(target);
-    }
-
-    sct->maxAge(max_age);
-}
-
 void
 HttpHdrSc::updateStats(StatHist * hist) const
 {

@@ -1170,22 +1170,6 @@ HttpHeader::putContRange(const HttpHdrContRange * cr)
 }
 
 void
-HttpHeader::putRange(const HttpHdrRange * range)
-{
-    assert(range);
-    /* remove old directives if any */
-    delById(Http::HdrType::RANGE);
-    /* pack into mb */
-    MemBuf mb;
-    mb.init();
-    range->packInto(&mb);
-    /* put */
-    addEntry(new HttpHeaderEntry(Http::HdrType::RANGE, SBuf(), mb.buf));
-    /* cleanup */
-    mb.clean();
-}
-
-void
 HttpHeader::putSc(HttpHdrSc *sc)
 {
     assert(sc);
