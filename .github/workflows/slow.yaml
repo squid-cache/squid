@@ -87,7 +87,7 @@ jobs:
           path: "**/*.log"
 
   macos:
-    runs-on: xcode-27
+    runs-on: macos-26
     name: macos
 
     steps:
