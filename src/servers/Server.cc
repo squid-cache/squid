@@ -103,6 +103,15 @@ Server::readSomeData()
     if (reading())
         return;
 
+    Assure(Comm::IsConnOpen(clientConnection));
+    if (commIsHalfClosed(clientConnection->fd)) {
+        // XXX: We cannot tell whether the caller requires more bytes (and,
+        // hence, we should fail here), is done with processing (and, hence, we
+        // should just close here), or may still write something to the client
+        // (and, hence, we should do nothing here). TODO: Add a parameter?
+        debugs(33, 3, "WARNING: Reading from a half-closed " << clientConnection);
+    }
+
     if (!mayBufferMoreRequestBytes())
         return;
 
