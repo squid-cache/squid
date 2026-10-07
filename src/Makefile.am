@@ -931,6 +931,26 @@ tests_testDns_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of parser/*
 
+check_PROGRAMS += tests/testHandshake
+tests_testHandshake_SOURCES = \
+	tests/testHandshake.cc \
+	security/Handshake.cc
+nodist_tests_testHandshake_SOURCES = \
+	tests/stub_StatHist.cc \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc
+tests_testHandshake_LDADD = \
+	anyp/libanyp.la \
+	parser/libparser.la \
+	ip/libip.la \
+	sbuf/libsbuf.la \
+	base/libbase.la \
+	$(top_builddir)/lib/libmiscutil.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testHandshake_LDFLAGS = $(LIBADD_DL)
+
 check_PROGRAMS += tests/testTokenizer
 tests_testTokenizer_SOURCES = \
 	tests/testTokenizer.cc

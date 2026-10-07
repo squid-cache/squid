@@ -33,6 +33,11 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 	<item>
 </itemize>
 
+<sect1>TLS handshake parsing
+<p>Fixed Bug 5562: SSL-Bump now accepts TLS handshake messages split across
+multiple records when continuation records arrive in later reads. Previously,
+these connections could fail with <tt>ERR_PROTOCOL_UNKNOWN</tt>.
+
 <sect1>Helper changes
 <p>
 <descrip>
