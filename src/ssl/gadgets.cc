@@ -259,20 +259,31 @@ static bool replaceCommonName(Security::CertPointer & cert, std::string const &r
     if (cn.length() > 2 && *cn.begin() == '[' && *cn.rbegin() == ']')
         cn = cn.substr(1, cn.size()-2);
 
-    X509_NAME *name = X509_get_subject_name(cert.get());
+    const X509_NAME *subject = X509_get_subject_name(cert.get());
+    if (!subject)
+        return false;
+
+    X509_NAME *name = X509_NAME_dup(subject);
     if (!name)
         return false;
+
     // Remove the CN part:
     int loc = X509_NAME_get_index_by_NID(name, NID_commonName, -1);
-    if (loc >=0) {
-        X509_NAME_ENTRY *tmp = X509_NAME_get_entry(name, loc);
-        X509_NAME_delete_entry(name, loc);
+    if (loc >= 0) {
+        X509_NAME_ENTRY *tmp = X509_NAME_delete_entry(name, loc);
         X509_NAME_ENTRY_free(tmp);
     }
 
     // Add a new CN
-    return X509_NAME_add_entry_by_NID(name, NID_commonName, MBSTRING_ASC,
-                                      (unsigned char *)(cn.c_str()), -1, -1, 0);
+    if (!X509_NAME_add_entry_by_NID(name, NID_commonName, MBSTRING_ASC,
+                                     (unsigned char *)(cn.c_str()), -1, -1, 0)) {
+        X509_NAME_free(name);
+        return false;
+    }
+
+    int ret = X509_set_subject_name(cert.get(), name);
+    X509_NAME_free(name);
+    return ret;
 }
 
 const char *Ssl::CertSignAlgorithmStr[] = {
@@ -301,9 +312,9 @@ static void
 printX509Signature(const Security::CertPointer &cert, std::string &out)
 {
     const ASN1_BIT_STRING *sig = Ssl::X509_get_signature(cert);
-    if (sig && sig->data) {
-        const unsigned char *s = sig->data;
-        for (int i = 0; i < sig->length; ++i) {
+    if (sig && ASN1_STRING_get0_data(sig)) {
+        const unsigned char *s = ASN1_STRING_get0_data(sig);
+        for (int i = 0; i < ASN1_STRING_length(sig); ++i) {
             char hex[3];
             snprintf(hex, sizeof(hex), "%02x", s[i]);
             out.append(hex);
@@ -377,7 +388,7 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
         X509_EXTENSION *ext;
         // Check if the issuer has the Subject Key Identifier extension
         const int indx = X509_get_ext_by_NID(issuerCert.get(), NID_subject_key_identifier, -1);
-        if (indx >= 0 && (ext = X509_get_ext(issuerCert.get(), indx))) {
+        if (indx >= 0 && (ext = const_cast<X509_EXTENSION *>(X509_get_ext(issuerCert.get(), indx)))) {
             issuerKeyId.reset((ASN1_OCTET_STRING *)X509V3_EXT_d2i(ext));
         }
     }
@@ -418,8 +429,7 @@ mimicAuthorityKeyId(Security::CertPointer &cert, Security::CertPointer const &mi
     unsigned char *ext_der = nullptr;
     int ext_len = ASN1_item_i2d((ASN1_VALUE *)theAuthKeyId.get(), &ext_der, ASN1_ITEM_ptr(method->it));
     Ssl::ASN1_OCTET_STRING_Pointer extOct(ASN1_OCTET_STRING_new());
-    extOct.get()->data = ext_der;
-    extOct.get()->length = ext_len;
+    ASN1_STRING_set(extOct.get(), ext_der, ext_len);
     Ssl::X509_EXTENSION_Pointer extAuthKeyId(X509_EXTENSION_create_by_NID(nullptr, NID_authority_key_identifier, 0, extOct.get()));
     if (!extAuthKeyId.get())
         return false;
@@ -471,7 +481,7 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     int nid;
     for (int i = 0; (nid = extensions[i]) != 0; ++i) {
         const int pos = X509_get_ext_by_NID(mimicCert.get(), nid, -1);
-        if (X509_EXTENSION *ext = X509_get_ext(mimicCert.get(), pos)) {
+        if (X509_EXTENSION *ext = const_cast<X509_EXTENSION *>(X509_get_ext(mimicCert.get(), pos))) {
             // Mimic extension exactly.
             if (X509_add_ext(cert.get(), ext, -1))
                 ++added;
@@ -482,7 +492,7 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
                 // that the more stringent requirements are met.
 
                 const int p = X509_get_ext_by_NID(cert.get(), NID_key_usage, -1);
-                if ((ext = X509_get_ext(cert.get(), p)) != nullptr) {
+                if ((ext = const_cast<X509_EXTENSION *>(X509_get_ext(cert.get(), p))) != nullptr) {
                     ASN1_BIT_STRING *keyusage = (ASN1_BIT_STRING *)X509V3_EXT_d2i(ext);
                     ASN1_BIT_STRING_set_bit(keyusage, KeyEncipherment, 1);
 
@@ -495,8 +505,7 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
                                                 (const ASN1_ITEM *)ASN1_ITEM_ptr(method->it));
 
                     ASN1_OCTET_STRING *ext_oct = ASN1_OCTET_STRING_new();
-                    ext_oct->data = ext_der;
-                    ext_oct->length = ext_len;
+                    ASN1_STRING_set(ext_oct, ext_der, ext_len);
                     X509_EXTENSION_set_data(ext, ext_oct);
 
                     ASN1_OCTET_STRING_free(ext_oct);
@@ -518,7 +527,7 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
 SBuf
 Ssl::AsnToSBuf(const ASN1_STRING &buffer)
 {
-    return SBuf(reinterpret_cast<const char *>(buffer.data), buffer.length);
+    return SBuf(reinterpret_cast<const char *>(ASN1_STRING_get0_data(&buffer)), ASN1_STRING_length(&buffer));
 }
 
 /// OpenSSL ASN1_STRING_to_UTF8() wrapper
@@ -547,7 +556,7 @@ Ssl::ParseAsSimpleDomainNameOrIp(const SBuf &text)
 }
 
 std::optional<AnyP::Host>
-Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
+Ssl::ParseCommonNameAt(const X509_NAME &name, const int cnIndex)
 {
     const auto cn = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(&name, cnIndex));
     if (!cn) {
@@ -576,7 +585,7 @@ Ssl::ParseCommonNameAt(X509_NAME &name, const int cnIndex)
 static bool
 addAltNameWithSubjectCn(Security::CertPointer &cert)
 {
-    X509_NAME *name = X509_get_subject_name(cert.get());
+    const X509_NAME *name = X509_get_subject_name(cert.get());
     if (!name)
         return false;
 
@@ -610,7 +619,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     // returns a pointer to the existing subject name. Nothing to clean here.
     if (properties.mimicCert.get()) {
         // Leave subject empty if we cannot extract it from true cert.
-        if (X509_NAME *name = X509_get_subject_name(properties.mimicCert.get())) {
+        if (const X509_NAME *name = X509_get_subject_name(properties.mimicCert.get())) {
             // X509_set_subject_name will call X509_dup for name
             X509_set_subject_name(cert.get(), name);
         }
@@ -656,7 +665,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
     bool useCommonNameAsAltName = true;
     // mimic the alias and possibly subjectAltName
     if (properties.mimicCert.get()) {
-        unsigned char *alStr;
+        const unsigned char *alStr;
         int alLen;
         alStr = X509_alias_get0(properties.mimicCert.get(), &alLen);
         if (alStr) {
@@ -667,7 +676,7 @@ static bool buildCertificate(Security::CertPointer & cert, Ssl::CertificatePrope
         // certificates with CN unrelated to subjectAltNames.
         if (!properties.setCommonName) {
             int pos = X509_get_ext_by_NID(properties.mimicCert.get(), NID_subject_alt_name, -1);
-            X509_EXTENSION *ext=X509_get_ext(properties.mimicCert.get(), pos);
+            X509_EXTENSION *ext = const_cast<X509_EXTENSION *>(X509_get_ext(properties.mimicCert.get(), pos));
             if (ext) {
                 if (X509_add_ext(cert.get(), ext, -1))
                     ++addedExtensions;
@@ -922,20 +931,23 @@ Ssl::WritePrivateKey(Ssl::BIO_Pointer &bio, const Security::PrivateKeyPointer &p
 }
 
 Ssl::UniqueCString
-Ssl::OneLineSummary(X509_NAME &name)
+Ssl::OneLineSummary(const X509_NAME &name)
 {
     return Ssl::UniqueCString(X509_NAME_oneline(&name, nullptr, 0));
 }
 
 bool Ssl::sslDateIsInTheFuture(char const * date)
 {
-    ASN1_UTCTIME tm;
-    tm.flags = 0;
-    tm.type = 23;
-    tm.data = (unsigned char *)date;
-    tm.length = strlen(date);
-
-    return (X509_cmp_current_time(&tm) > 0);
+    ASN1_UTCTIME *tm = ASN1_UTCTIME_new();
+    if (!tm)
+        return false;
+    if (!ASN1_UTCTIME_set_string(tm, date)) {
+        ASN1_UTCTIME_free(tm);
+        return false;
+    }
+    int result = X509_cmp_current_time(tm);
+    ASN1_UTCTIME_free(tm);
+    return (result > 0);
 }
 
 /// Print the time represented by a ASN1_TIME struct to a string using GeneralizedTime format
@@ -945,14 +957,18 @@ static bool asn1timeToGeneralizedTimeStr(ASN1_TIME *aTime, char *buf, int bufLen
     // UTCTime has the form YYMMDDHHMMSS[Z | [+|-]offset]
     // GeneralizedTime has the form YYYYMMDDHHMMSS[Z | [+|-] offset]
 
+    const unsigned char *data = ASN1_STRING_get0_data(aTime);
+    int length = ASN1_STRING_length(aTime);
+    int type = ASN1_STRING_type(aTime);
+
     // length should have space for data plus 2 extra bytes for the two extra year fields
     // plus the '\0' char.
-    if ((aTime->length + 3) > bufLen)
+    if ((length + 3) > bufLen)
         return false;
 
     char *str;
-    if (aTime->type == V_ASN1_UTCTIME) {
-        if (aTime->data[0] > '5') { // RFC 2459, section 4.1.2.5.1
+    if (type == V_ASN1_UTCTIME) {
+        if (data[0] > '5') { // RFC 2459, section 4.1.2.5.1
             buf[0] = '1';
             buf[1] = '9';
         } else {
@@ -960,11 +976,11 @@ static bool asn1timeToGeneralizedTimeStr(ASN1_TIME *aTime, char *buf, int bufLen
             buf[1] = '0';
         }
         str = buf +2;
-    } else // if (aTime->type == V_ASN1_GENERALIZEDTIME)
+    } else // if (type == V_ASN1_GENERALIZEDTIME)
         str = buf;
 
-    memcpy(str, aTime->data, aTime->length);
-    str[aTime->length] = '\0';
+    memcpy(str, data, length);
+    str[length] = '\0';
     return true;
 }
 
@@ -996,8 +1012,8 @@ bool Ssl::certificateMatchesProperties(X509 *cert, CertificateProperties const &
         return true;
 
     if (!properties.setCommonName) {
-        X509_NAME *cert1_name = X509_get_subject_name(cert);
-        X509_NAME *cert2_name = X509_get_subject_name(cert2);
+        const X509_NAME *cert1_name = X509_get_subject_name(cert);
+        const X509_NAME *cert2_name = X509_get_subject_name(cert2);
         if (X509_NAME_cmp(cert1_name, cert2_name) != 0)
             return false;
     } else if (properties.commonName != CommonHostName(cert))
