@@ -235,6 +235,16 @@ protected:
 namespace Configuration {
 /// interprets (and partially applies) squid.conf or equivalent configuration
 void Parse();
+
+/**
+ * A parser for legacy code that uses the global approach.
+ * Only valid when parsing squid.conf.
+ *
+ * Deprecated; code needing access to a ConfigParser should
+ * have it provided to them in their parseFoo() methods.
+ */
+ConfigParser &LegacyParser();
+
 }
 
 #endif /* SQUID_SRC_CONFIGPARSER_H */
