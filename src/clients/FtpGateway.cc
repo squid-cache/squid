@@ -137,7 +137,7 @@ public:
     void completedListing(void);
 
     /// create a data channel acceptor and start listening.
-    void listenForDataChannel(const Comm::ConnectionPointer &conn);
+    void listenForDataChannel(Comm::ConnectionPointer &);
 
     int checkAuth(const HttpHeader * req_hdr);
     void checkUrlpath();
@@ -446,7 +446,7 @@ Ftp::Gateway::loginParser(const SBuf &login, bool escaped)
 }
 
 void
-Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
+Ftp::Gateway::listenForDataChannel(Comm::ConnectionPointer &conn)
 {
     if (!Comm::IsConnOpen(ctrl.conn)) {
         debugs(9, 5, "The control connection to the remote end is closed");
@@ -463,7 +463,7 @@ Ftp::Gateway::listenForDataChannel(const Comm::ConnectionPointer &conn)
 
     /* open the conn if its not already open */
     if (!Comm::IsConnOpen(conn)) {
-        conn->fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, conn->local, conn->flags, note);
+        comm_open_listener(conn, note);
         if (!Comm::IsConnOpen(conn)) {
             debugs(5, DBG_CRITICAL, "ERROR: comm_open_listener failed:" << conn->local << " error: " << errno);
             return;
@@ -1770,6 +1770,7 @@ ftpOpenListenSocket(Ftp::Gateway * ftpState, int fallback)
      */
     Comm::ConnectionPointer temp = new Comm::Connection;
     temp->local = ftpState->ctrl.conn->local;
+    temp->transport = AnyP::PROTO_TCP;
 
     /*
      * REUSEADDR is needed in fallback mode, since the same port is
