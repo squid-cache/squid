@@ -59,7 +59,6 @@ void HttpHeader::putStr(Http::HdrType, const char *) STUB
 void HttpHeader::putAuth(const char *, const char *) STUB
 void HttpHeader::putCc(const HttpHdrCc &) STUB
 void HttpHeader::putContRange(const HttpHdrContRange *) STUB
-void HttpHeader::putRange(const HttpHdrRange *) STUB
 void HttpHeader::putSc(HttpHdrSc *) STUB
 void HttpHeader::putExt(const char *, const char *) STUB
 void HttpHeader::updateOrAddStr(Http::HdrType, const SBuf &) STUB
