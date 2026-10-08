@@ -17,6 +17,11 @@
 #include "http/Stream.h"
 #include "sbuf/Stream.h"
 
+Acl::ConnMark::ConnMark(char const *theType) :
+    type_(theType)
+{
+}
+
 bool
 Acl::ConnMark::empty() const
 {
@@ -75,6 +80,6 @@ Acl::ConnMark::dump() const
 char const *
 Acl::ConnMark::typeString() const
 {
-    return "client_connection_mark";
+    return type_;
 }
 

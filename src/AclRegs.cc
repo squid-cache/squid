@@ -241,8 +241,8 @@ Acl::Init()
     RegisterMaker("transaction_initiator", [](TypeName name)->Node* {return new TransactionInitiator(name);});
 
 #if USE_LIBNETFILTERCONNTRACK
-    RegisterMaker("clientside_mark", [](TypeName)->Node* { return new ConnMark; }); // XXX: Add name parameter to ctor
-    RegisterMaker("client_connection_mark", [](TypeName)->Node* { return new ConnMark; }); // XXX: Add name parameter to ctor
+    RegisterMaker("clientside_mark", [](TypeName name)->Node* { return new ConnMark(name); });
+    RegisterMaker("client_connection_mark", [](TypeName name)->Node* { return new ConnMark(name); });
 #endif
 
 #if USE_OPENSSL
