@@ -97,6 +97,9 @@ public:
     void path(const SBuf &p) {path_=p; touch();}
     const SBuf &path() const;
 
+    void query(const SBuf &p) { query_=p; touch(); }
+    const SBuf &query() const;
+
     /**
      * Merge a relative-path URL into the existing URI details.
      * Implements RFC 3986 section 5.2.3
@@ -191,8 +194,8 @@ private:
 
     Port port_; ///< authority port subcomponent
 
-    // XXX: for now includes query-string.
-    SBuf path_;     ///< URI path segment
+    SBuf path_; ///< URI path component
+    SBuf query_; ///< URI query component
 
     // pre-assembled URI forms
     mutable SBuf authorityHttp_;     ///< RFC 7230 section 5.3.3 authority, maybe without default-port
