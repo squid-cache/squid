@@ -60,6 +60,7 @@ public:
     virtual bool parse(const SBuf &aBuf) = 0;
 
     /** Whether the parser is waiting on more data to complete parsing a message.
+     * The returned value is not meaningful after parse() throws. In other cases:
      * Use to distinguish between incomplete data and error results
      * when parse() returns false.
      */
