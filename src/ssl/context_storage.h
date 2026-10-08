@@ -22,9 +22,6 @@
 
 #include <list>
 #include <map>
-#if HAVE_OPENSSL_SSL_H
-#include <openssl/ssl.h>
-#endif
 
 namespace  Ssl
 {

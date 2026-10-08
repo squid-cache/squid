@@ -21,9 +21,6 @@
 #include <optional>
 #include <string>
 
-#if HAVE_OPENSSL_ASN1_H
-#include <openssl/asn1.h>
-#endif
 #if HAVE_OPENSSL_PEM_H
 #include <openssl/pem.h>
 #endif
