@@ -50,7 +50,7 @@ public:
 
     virtual void reset() = 0; // will have body when http*Clean()s are gone
 
-    void packInto(Packable *, bool full_uri) const;
+    void packInto(Packable *, bool full_uri, const MaskSensitiveInfo) const;
 
     ///< produce a message copy, except for a few connection-specific settings
     virtual Http::Message *clone() const = 0; // TODO rename: not a true copy?
