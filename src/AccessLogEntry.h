@@ -27,7 +27,7 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/gadgets.h"
 #include "ssl/support.h"
 #endif
@@ -124,7 +124,7 @@ public:
         const char *opcode = nullptr;
     } htcp;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     /// logging information specific to the SSL protocol
     class SslDetails
     {
@@ -155,7 +155,7 @@ public:
         struct timeval start_time; ///< The time the master transaction started
         struct timeval trTime; ///< The response time
         const char *extuser = nullptr;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         const char *ssluser = nullptr;
         Security::CertPointer sslClientCert; ///< cert received from the client
 #endif

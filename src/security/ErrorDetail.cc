@@ -18,7 +18,7 @@
 #include "security/Io.h"
 #include "util.h"
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/ErrorDetailManager.h"
 #elif HAVE_LIBGNUTLS
 #if HAVE_GNUTLS_GNUTLS_H
@@ -48,7 +48,7 @@ static const ErrorCodeNames TheErrorCodeNames = {
     {   SQUID_X509_V_ERR_DOMAIN_MISMATCH,
         "SQUID_X509_V_ERR_DOMAIN_MISMATCH"
     },
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     {   X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT,
         "X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT"
     },
@@ -401,7 +401,7 @@ static const ErrorCodeNames TheErrorCodeNames = {
         SSL_ERROR_NONE,
         "SSL_ERROR_NONE"
     },
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
 };
 
 } // namespace Security
@@ -450,7 +450,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode err, const int aSysErrorNo):
     // have a useful errno or a zero errno.
     sysErrorNo(aSysErrorNo)
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     /// Extract and remember errors stored internally by the TLS library.
     if ((lib_error_no = ERR_get_error())) {
         debugs(83, 7, "got 0x" << asHex(lib_error_no));
@@ -471,7 +471,7 @@ Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const CertPointe
     broken_cert = broken;
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 Security::ErrorDetail::ErrorDetail(const ErrorCode anErrorCode, const int anIoErrorNo, const int aSysErrorNo):
     ErrorDetail(anErrorCode, aSysErrorNo)
 {
@@ -504,7 +504,7 @@ Security::ErrorDetail::brief() const
     printErrorCode(os);
 
     if (lib_error_no) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         // TODO: Log ERR_error_string_n() instead, despite length, whitespace?
         // Example: `error:1408F09C:SSL routines:ssl3_get_record:http request`.
         os << "+TLS_LIB_ERR=" << asHex(lib_error_no).upperCase();
@@ -513,7 +513,7 @@ Security::ErrorDetail::brief() const
 #endif
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     // TODO: Consider logging long but human-friendly names (e.g.,
     // SSL_ERROR_SYSCALL).
     if (ioErrorNo)
@@ -534,7 +534,7 @@ SBuf
 Security::ErrorDetail::verbose(const HttpRequestPointer &request) const
 {
     std::optional<SBuf> customFormat;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (const auto errorDetail = Ssl::ErrorDetailsManager::GetInstance().findDetail(error_no, request)) {
         detailEntry = *errorDetail;
         customFormat = detailEntry->detail;
@@ -577,7 +577,7 @@ Security::ErrorDetail::printSubject(std::ostream &os) const
     os << "[Not available]";
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 /// prints X.509 names extracted using Ssl::HasMatchingSubjectName()
 class CommonNamesPrinter: public Ssl::GeneralNameMatcher
 {
@@ -625,20 +625,20 @@ CommonNamesPrinter::itemStream() const
     return os_;
 }
 
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
 
 /// a list of the broken certificates CN and alternate names
 void
 Security::ErrorDetail::printCommonName(std::ostream &os) const
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (const auto cert = certificateToReport()) {
         CommonNamesPrinter printer(os);
         (void)Ssl::HasMatchingSubjectName(*cert, printer);
         if (printer.printed)
             return;
     }
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
     os << "[Not available]";
 }
 
@@ -662,7 +662,7 @@ Security::ErrorDetail::printCaName(std::ostream &os) const
 void
 Security::ErrorDetail::printNotBefore(std::ostream &os) const
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (const auto cert = certificateToReport()) {
         if (const auto tm = X509_getm_notBefore(cert)) {
             // TODO: Add and use an ASN1_TIME printing operator instead.
@@ -672,7 +672,7 @@ Security::ErrorDetail::printNotBefore(std::ostream &os) const
             return;
         }
     }
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
     os << "[Not available]";
 }
 
@@ -680,7 +680,7 @@ Security::ErrorDetail::printNotBefore(std::ostream &os) const
 void
 Security::ErrorDetail::printNotAfter(std::ostream &os) const
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (const auto cert = certificateToReport()) {
         if (const auto tm = X509_getm_notAfter(cert)) {
             // XXX: Reduce code duplication.
@@ -690,7 +690,7 @@ Security::ErrorDetail::printNotAfter(std::ostream &os) const
             return;
         }
     }
-#endif // USE_OPENSSL
+#endif // HAVE_LIBOPENSSL
     os << "[Not available]";
 }
 
@@ -698,7 +698,7 @@ Security::ErrorDetail::printNotAfter(std::ostream &os) const
 void
 Security::ErrorDetail::printErrorCode(std::ostream &os) const
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     // try detailEntry first because it is faster
     if (detailEntry) {
         os << detailEntry->name;
@@ -717,7 +717,7 @@ Security::ErrorDetail::printErrorDescription(std::ostream &os) const
         return;
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (detailEntry) {
         os << detailEntry->descr;
         return;

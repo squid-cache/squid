@@ -25,7 +25,7 @@
 #include "Notes.h"
 #include "security/Context.h"
 #include "security/forward.h"
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/support.h"
 #endif
 #include "store/Disk.h"
@@ -34,7 +34,7 @@
 
 #include <chrono>
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 class sslproxy_cert_sign;
 class sslproxy_cert_adapt;
 #endif
@@ -206,7 +206,7 @@ public:
 #endif
 
         char *diskd;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 
         char *ssl_password;
 #endif
@@ -337,7 +337,7 @@ public:
         int hostStrictVerify;
         int client_dst_passthru;
         int dns_mdns;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         bool logTlsServerHelloDetails;
 #endif
     } onoff;
@@ -384,7 +384,7 @@ public:
         acl_access *htcp_clr;
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         acl_access *ssl_bump;
 #endif
 #if FOLLOW_X_FORWARDED_FOR
@@ -481,7 +481,7 @@ public:
         int rebuild_chunk_percentage;
     } digest;
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 
     struct {
         int unclean_shutdown;
@@ -507,7 +507,7 @@ public:
         // TODO: Remove when FuturePeerContext above becomes PeerContext
         /// \deprecated Legacy storage. Use defaultPeerContext instead.
         Security::ContextPointer *sslContext_;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         char *foreignIntermediateCertsPath;
         acl_access *cert_error;
         sslproxy_cert_sign *cert_sign;

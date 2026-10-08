@@ -37,7 +37,7 @@
 #if USE_AUTH
 #include "auth/UserRequest.h"
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/ErrorDetailManager.h"
 #endif
 
@@ -314,7 +314,7 @@ errorInitialize(void)
         error_stylesheet.appendf("%s",tmpl.text());
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::errorDetailInitialize();
 #endif
 }
@@ -338,7 +338,7 @@ errorClean(void)
 
     error_page_count = 0;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::errorDetailClean();
 #endif
 }

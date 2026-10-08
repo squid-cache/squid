@@ -20,6 +20,6 @@ basic_ncsa_auth_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(CRYPTLIB) \
-	$(SSLLIB) \
 	$(XTRA_LIBS)

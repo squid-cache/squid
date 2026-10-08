@@ -17,7 +17,7 @@ include $(top_srcdir)/src/Common.am
 COMPAT_SSL_ALL_SOURCES = \
 	openssl.h
 
-if ENABLE_SSL
+if ENABLE_LIBOPENSSL
 COMPAT_SSL_SOURCES = $(COMPAT_SSL_ALL_SOURCES)
 else
 COMPAT_SSL_SOURCES =

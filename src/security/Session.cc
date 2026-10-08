@@ -25,12 +25,12 @@
 #define SSL_SESSION_ID_SIZE 32
 #define SSL_SESSION_MAX_SIZE 10*1024
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 static Ipc::MemMap *SessionCache = nullptr;
 static const char *SessionCacheName = "tls_session_cache";
 #endif
 
-#if USE_OPENSSL || HAVE_LIBGNUTLS
+#if HAVE_LIBOPENSSL || HAVE_LIBGNUTLS
 static int
 tls_read_method(int fd, char *buf, int len)
 {
@@ -39,7 +39,7 @@ tls_read_method(int fd, char *buf, int len)
 
     Security::PrepForIo();
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     int i = SSL_read(session, buf, len);
     const auto savedErrno = errno; // zero if SSL_read() does not set it
 
@@ -63,7 +63,7 @@ tls_read_method(int fd, char *buf, int len)
         (void)VALGRIND_MAKE_MEM_DEFINED(buf, i);
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (i > 0 && SSL_pending(session) > 0) {
 #elif HAVE_LIBGNUTLS
     if (i > 0 && gnutls_record_check_pending(session) > 0) {
@@ -82,7 +82,7 @@ tls_write_method(int fd, const char *buf, int len)
     auto session = fd_table[fd].ssl.get();
     debugs(83, 5, "started for session=" << static_cast<void*>(session) << " FD " << fd << " buf.len=" << len);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (!SSL_is_init_finished(session)) {
         debugs(83, 3, "FD " << fd << " is not in TLS init_finished state");
         errno = ENOTCONN;
@@ -92,7 +92,7 @@ tls_write_method(int fd, const char *buf, int len)
 
     Security::PrepForIo();
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     int i = SSL_write(session, buf, len);
     const auto savedErrno = errno; // zero if SSL_write() does not set it
 
@@ -118,7 +118,7 @@ tls_write_method(int fd, const char *buf, int len)
 }
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 Security::SessionPointer
 Security::NewSessionObject(const Security::ContextPointer &ctx)
 {
@@ -139,11 +139,11 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
         return false;
     }
 
-#if USE_OPENSSL || HAVE_LIBGNUTLS
+#if HAVE_LIBOPENSSL || HAVE_LIBGNUTLS
 
     const char *errAction = "with no TLS/SSL library";
     Security::LibErrorCode errCode = 0;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Security::SessionPointer session(Security::NewSessionObject(ctx));
     if (!session) {
         errCode = ERR_get_error();
@@ -168,7 +168,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     if (session) {
         const int fd = conn->fd;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         // without BIO, we would call SSL_set_fd(ssl.get(), fd) instead
         if (BIO *bio = Ssl::Bio::Create(fd, type)) {
             Ssl::Bio::Link(session.get(), bio); // cannot fail
@@ -192,7 +192,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
             return true;
         }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         errCode = ERR_get_error();
         errAction = "failed to initialize I/O";
         (void)opts;
@@ -208,7 +208,7 @@ CreateSession(const Security::ContextPointer &ctx, const Comm::ConnectionPointer
     (void)opts;
     (void)type;
     (void)squidCtx;
-#endif /* USE_OPENSSL || HAVE_LIBGNUTLS */
+#endif /* HAVE_LIBOPENSSL || HAVE_LIBGNUTLS */
     return false;
 }
 
@@ -234,7 +234,7 @@ Security::SessionSendGoodbye(const Security::SessionPointer &s)
 {
     debugs(83, 5, "session=" << (void*)s.get());
     if (s) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         SSL_shutdown(s.get());
 #elif HAVE_LIBGNUTLS
         gnutls_bye(s.get(), GNUTLS_SHUT_RDWR);
@@ -246,7 +246,7 @@ bool
 Security::SessionIsResumed(const Security::SessionPointer &s)
 {
     bool result = false;
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     result = SSL_session_reused(s.get()) == 1;
 #elif HAVE_LIBGNUTLS
     result = gnutls_session_is_resumed(s.get()) != 0;
@@ -259,7 +259,7 @@ void
 Security::MaybeGetSessionResumeData(const Security::SessionPointer &s, Security::SessionStatePointer &data)
 {
     if (!SessionIsResumed(s)) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         // nil is valid for SSL_get1_session(), it cannot fail.
         data.reset(SSL_get1_session(s.get()));
 #elif HAVE_LIBGNUTLS
@@ -280,7 +280,7 @@ void
 Security::SetSessionResumeData(const Security::SessionPointer &s, const Security::SessionStatePointer &data)
 {
     if (data) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         if (!SSL_set_session(s.get(), data.get())) {
             const auto ssl_error = ERR_get_error();
             debugs(83, 3, "session=" << (void*)s.get() << " data=" << (void*)data.get() <<
@@ -315,7 +315,7 @@ isTlsServer()
     return false;
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 static int
 store_session_cb(SSL *, SSL_SESSION *session)
 {
@@ -415,9 +415,9 @@ Security::SetSessionCacheCallbacks(Security::ContextPointer &ctx)
         SSL_CTX_sess_set_get_cb(ctx.get(), get_session_cb);
     }
 }
-#endif /* USE_OPENSSL */
+#endif /* HAVE_LIBOPENSSL */
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 static void
 initializeSessionCache()
 {
@@ -462,7 +462,7 @@ DefineRunnerRegistrator(SharedSessionCacheRr);
 void
 SharedSessionCacheRr::useConfig()
 {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (SessionCache || !isTlsServer()) // no need to configure SSL_SESSION* cache.
         return;
 
@@ -477,7 +477,7 @@ SharedSessionCacheRr::create()
     if (!isTlsServer()) // no need to configure SSL_SESSION* cache.
         return;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (int items = Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot))
         owner = Ipc::MemMap::Init(SessionCacheName, items);
 #endif
