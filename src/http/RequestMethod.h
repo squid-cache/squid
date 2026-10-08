@@ -17,22 +17,25 @@ class SquidConfig;
 
 #include <iosfwd>
 
+namespace Http
+{
+
 /**
  * This class represents an HTTP Request METHOD
  * - i.e. PUT, POST, GET etc.
  * It has a runtime extension facility to allow it to
  * efficiently support new methods
  */
-class HttpRequestMethod
+class RequestMethod
 {
 public:
-    HttpRequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
-    HttpRequestMethod(Http::MethodType const aMethod) : theMethod(aMethod), theImage() {}
-    explicit HttpRequestMethod(const SBuf &);
+    RequestMethod() : theMethod(Http::METHOD_NONE), theImage() {}
+    RequestMethod(Http::MethodType const aMethod) : theMethod(aMethod), theImage() {}
+    explicit RequestMethod(const SBuf &);
 
     void HttpRequestMethodXXX(char const *); // deprecated old c-string to SBuf converter.
 
-    HttpRequestMethod & operator = (Http::MethodType const aMethod) {
+    RequestMethod & operator = (Http::MethodType const aMethod) {
         theMethod = aMethod;
         theImage.clear();
         return *this;
@@ -42,20 +45,20 @@ public:
     explicit operator bool() const { return theMethod != Http::METHOD_NONE; }
 
     bool operator == (Http::MethodType const & aMethod) const { return theMethod == aMethod; }
-    bool operator == (HttpRequestMethod const & aMethod) const {
+    bool operator == (RequestMethod const & aMethod) const {
         return theMethod == aMethod.theMethod &&
                (theMethod != Http::METHOD_OTHER || theImage == aMethod.theImage);
     }
 
     bool operator != (Http::MethodType const & aMethod) const { return theMethod != aMethod; }
-    bool operator != (HttpRequestMethod const & aMethod) const {
+    bool operator != (RequestMethod const & aMethod) const {
         return !operator==(aMethod);
     }
 
     /** Iterate through all HTTP method IDs. */
-    HttpRequestMethod& operator++() {
+    RequestMethod& operator++() {
         // TODO: when this operator is used in more than one place,
-        // replace it with HttpRequestMethods::Iterator API
+        // replace it with RequestMethods::Iterator API
         // XXX: this interface can create Http::METHOD_OTHER without an image
         assert(theMethod < Http::METHOD_ENUM_END);
         theMethod = (Http::MethodType)(1 + (int)theMethod);
@@ -113,11 +116,13 @@ private:
 };
 
 inline std::ostream &
-operator << (std::ostream &os, HttpRequestMethod const &method)
+operator << (std::ostream &os, RequestMethod const &method)
 {
     os << method.image();
     return os;
 }
+
+} // namespace Http
 
 #endif /* SQUID_SRC_HTTP_REQUESTMETHOD_H */
 

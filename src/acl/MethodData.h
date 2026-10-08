@@ -15,19 +15,19 @@
 
 #include <list>
 
-class ACLMethodData : public ACLData<HttpRequestMethod>
+class ACLMethodData : public ACLData<Http::RequestMethod>
 {
     MEMPROXY_CLASS(ACLMethodData);
 
 public:
     ACLMethodData() {}
     ~ACLMethodData() override;
-    bool match(HttpRequestMethod) override;
+    bool match(Http::RequestMethod) override;
     SBufList dump() const override;
     void parse() override;
     bool empty() const override {return values.empty();}
 
-    std::list<HttpRequestMethod> values;
+    std::list<Http::RequestMethod> values;
 
     static int ThePurgeCount; ///< PURGE methods seen by parse()
 };
