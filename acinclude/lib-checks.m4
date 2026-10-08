@@ -31,12 +31,41 @@ AC_DEFUN([SQUID_CHECK_OPENSSL_TLS_METHODS],[
   AH_TEMPLATE(HAVE_OPENSSL_TLS_METHOD, "Define to 1 if the TLS_method() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_OPENSSL_TLS_CLIENT_METHOD, "Define to 1 if the TLS_client_method() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_OPENSSL_TLS_SERVER_METHOD, "Define to 1 if the TLS_server_method() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_OPENSSL_TLS1_2_CLIENT_METHOD, "Define to 1 if the TLSv1_2_client_method() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_TLS_METHODS)
   LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(ssl, TLS_method, AC_DEFINE(HAVE_OPENSSL_TLS_METHOD, 1))
   AC_CHECK_LIB(ssl, TLS_client_method, AC_DEFINE(HAVE_OPENSSL_TLS_CLIENT_METHOD, 1))
   AC_CHECK_LIB(ssl, TLS_server_method, AC_DEFINE(HAVE_OPENSSL_TLS_SERVER_METHOD, 1))
+  AC_CHECK_LIB(ssl, TLSv1_2_client_method, AC_DEFINE(HAVE_OPENSSL_TLS1_2_CLIENT_METHOD, 1))
   SQUID_STATE_ROLLBACK(check_openssl_TLS_METHODS)
+])
+
+dnl Checks whether the OpenSSL API supports setting minimum and maximum TLS versions
+AC_DEFUN([SQUID_CHECK_OPENSSL_TLS_VERSION_LIMITS],[
+  AH_TEMPLATE(HAVE_OPENSSL_TLS_VERSION_LIMITS, "Define to 1 if the OpenSSL API supports setting minimum and maximum TLS versions")
+  SQUID_STATE_SAVE(check_openssl_TLS_VERSION_LIMITS)
+  LIBS="$LIBS $SSLLIB"
+  AC_CACHE_CHECK([whether the OpenSSL API supports TLS version limits],
+    [squid_cv_have_openssl_tls_version_limits],[
+    AC_LINK_IFELSE([
+      AC_LANG_PROGRAM([
+#include <openssl/ssl.h>
+      ],[
+        SSL_CTX *context = nullptr;
+        (void)SSL_CTX_set_min_proto_version(context, TLS1_2_VERSION);
+        (void)SSL_CTX_set_max_proto_version(context, TLS1_2_VERSION);
+      ])
+    ],[
+      squid_cv_have_openssl_tls_version_limits=yes
+    ],[
+      squid_cv_have_openssl_tls_version_limits=no
+    ])
+  ])
+  AS_IF([test "x$squid_cv_have_openssl_tls_version_limits" = "xyes"],[
+    AC_DEFINE(HAVE_OPENSSL_TLS_VERSION_LIMITS, 1)
+  ])
+  SQUID_STATE_ROLLBACK(check_openssl_TLS_VERSION_LIMITS)
 ])
 
 dnl Checks whether the -lcrypto library provides various OpenSSL API functions
@@ -90,6 +119,7 @@ AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
   AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_ID, "Define to 1 if the SSL_SESSION_get_id() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM, "Define to 1 if the SSL_get_client_random() OpenSSL API function exists")
   AH_TEMPLATE(HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY, "Define to 1 if the SSL_SESSION_get_master_key() OpenSSL API function exists")
+  AH_TEMPLATE(HAVE_LIBSSL_SSL_SET_SESSION_TICKET_EXT, "Define to 1 if the SSL_set_session_ticket_ext() OpenSSL API function exists")
   SQUID_STATE_SAVE(check_openssl_libssl_api)
   LIBS="$LIBS $SSLLIB"
   AC_CHECK_LIB(ssl, OPENSSL_init_ssl, AC_DEFINE(HAVE_LIBSSL_OPENSSL_INIT_SSL, 1))
@@ -98,6 +128,7 @@ AC_DEFUN([SQUID_CHECK_LIBSSL_API],[
   AC_CHECK_LIB(ssl, SSL_SESSION_get_id, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_ID, 1))
   AC_CHECK_LIB(ssl, SSL_get_client_random, AC_DEFINE(HAVE_LIBSSL_SSL_GET_CLIENT_RANDOM, 1))
   AC_CHECK_LIB(ssl, SSL_SESSION_get_master_key, AC_DEFINE(HAVE_LIBSSL_SSL_SESSION_GET_MASTER_KEY, 1))
+  AC_CHECK_LIB(ssl, SSL_set_session_ticket_ext, AC_DEFINE(HAVE_LIBSSL_SSL_SET_SESSION_TICKET_EXT, 1))
   SQUID_STATE_ROLLBACK(check_openssl_libssl_api)
 ])
 

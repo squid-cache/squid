@@ -1044,6 +1044,7 @@ SQUID_CHECK_LIB_WORKS(gnutls,[
 ])
 
 SSLLIB=""
+squid_enable_test_handshake=no
 dnl User may specify OpenSSL is needed from a non-standard location
 SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
@@ -1105,6 +1106,20 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     SQUID_CHECK_LIBCRYPTO_API
     SQUID_CHECK_LIBSSL_API
     SQUID_CHECK_OPENSSL_TLS_METHODS
+    SQUID_CHECK_OPENSSL_TLS_VERSION_LIMITS
+
+    squid_have_tls12_client=no
+    AS_IF([test "x$ac_cv_lib_ssl_TLS_client_method" = "xyes" &&
+            test "x$squid_cv_have_openssl_tls_version_limits" = "xyes"],[
+      squid_have_tls12_client=yes
+    ])
+    AS_IF([test "x$ac_cv_lib_ssl_TLSv1_2_client_method" = "xyes"],[
+      squid_have_tls12_client=yes
+    ])
+    AS_IF([test "x$squid_have_tls12_client" = "xyes" &&
+            test "x$ac_cv_lib_ssl_SSL_set_session_ticket_ext" = "xyes"],[
+      squid_enable_test_handshake=yes
+    ])
     SQUID_STATE_SAVE(check_SSL_CTX_get0_certificate)
     LIBS="$LIBS $SSLLIB"
     AC_CHECK_LIB(ssl, SSL_CTX_get0_certificate, [
@@ -1125,7 +1140,9 @@ AS_IF([test "x$with_openssl" = "xyes"],[
   AS_IF([test "x$SSLLIB" = "x"],[AC_MSG_ERROR([Required OpenSSL library not found])])
 ])
 AC_MSG_NOTICE([OpenSSL library support: ${with_openssl:=no} ${LIBOPENSSL_PATH} ${LIBOPENSSL_LIBS}])
+AC_MSG_NOTICE([TLS handshake test enabled: $squid_enable_test_handshake])
 AM_CONDITIONAL(ENABLE_SSL,[ test "x$with_openssl" = "xyes" ])
+AM_CONDITIONAL(ENABLE_TEST_HANDSHAKE,[ test "x$squid_enable_test_handshake" = "xyes" ])
 AC_SUBST(SSLLIB)
 
 # Kerberos support libraries: MIT
