@@ -68,9 +68,6 @@ public:
 
     bool conditional() const; ///< has at least one recognized If-* header
 
-    /// whether the client is likely to be able to handle a 1xx reply
-    bool canHandle1xx() const;
-
     /// \returns a pointer to a local static buffer containing request URI
     /// that honors strip_query_terms and %-encodes unsafe URI characters
     char *canonicalCleanUrl() const;
