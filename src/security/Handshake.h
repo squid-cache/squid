@@ -22,7 +22,8 @@ namespace Security
 class TlsDetails: public RefCountable
 {
 public:
-    typedef RefCount<TlsDetails> Pointer;
+    using Ciphers = std::unordered_set<uint16_t>;
+    using Pointer = RefCount<TlsDetails>;
 
     TlsDetails();
     /// Prints to os stream a human readable form of TlsDetails object
@@ -45,8 +46,6 @@ public:
     /// The client random number
     SBuf clientRandom;
     SBuf sessionId;
-
-    typedef std::unordered_set<uint16_t> Ciphers;
     Ciphers ciphers;
 };
 

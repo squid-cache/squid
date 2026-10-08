@@ -29,7 +29,7 @@
 class Downloader;
 class DownloaderAnswer;
 class AccessLogEntry;
-typedef RefCount<AccessLogEntry> AccessLogEntryPointer;
+using AccessLogEntryPointer = RefCount<AccessLogEntry>;
 
 namespace Security
 {

@@ -53,7 +53,7 @@ Security::PeerConnector::PeerConnector(const Comm::ConnectionPointer &aServerCon
     // watch for external connection closures
     Must(Comm::IsConnOpen(serverConn));
     Must(!fd_table[serverConn->fd].closing());
-    typedef CommCbMemFunT<Security::PeerConnector, CommCloseCbParams> Dialer;
+    using Dialer = CommCbMemFunT<Security::PeerConnector, CommCloseCbParams>;
     closeHandler = JobCallback(9, 5, Dialer, this, Security::PeerConnector::commCloseHandler);
     comm_add_close_handler(serverConn->fd, closeHandler);
 }
@@ -395,16 +395,15 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
     }
 
     Security::CertErrors *errs = nullptr;
-    typedef Ssl::CertValidationResponse::RecvdErrors::const_iterator SVCRECI;
-    for (SVCRECI i = resp.errors.begin(); i != resp.errors.end(); ++i) {
-        debugs(83, 7, "Error item: " << i->error_no << " " << i->error_reason);
+    for (const auto &itr : resp.errors) {
+        debugs(83, 7, "Error item: " << itr.error_no << " " << itr.error_reason);
 
-        assert(i->error_no != SSL_ERROR_NONE);
+        assert(itr.error_no != SSL_ERROR_NONE);
 
         if (!errDetails) {
             bool allowed = false;
             if (check) {
-                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(i->error_no, i->cert, i->error_depth));
+                const auto sslErrors = std::make_unique<Security::CertErrors>(Security::CertError(itr.error_no, itr.cert, itr.error_depth));
                 check->sslErrors = sslErrors.get();
                 if (check->fastCheck().allowed())
                     allowed = true;
@@ -414,26 +413,26 @@ Security::PeerConnector::sslCrtvdCheckForErrors(Ssl::CertValidationResponse cons
             // and the first error will cause the error page
 
             if (allowed) {
-                debugs(83, 3, "bypassing SSL error " << i->error_no << " in " << "buffer");
+                debugs(83, 3, "bypassing SSL error " << itr.error_no << " in " << "buffer");
             } else {
-                debugs(83, 5, "confirming SSL error " << i->error_no);
+                debugs(83, 5, "confirming SSL error " << itr.error_no);
                 Security::CertPointer peerCert(SSL_get_peer_certificate(session.get()));
 
                 // Features/SslServerCertValidator docs do not specify whether
                 // error_cert_ID is an optional helper response field. For now,
                 // to preserve initial implementation behavior, we assume that
                 // it is optional and that it defaults to peerCert.
-                const auto &brokenCert = i->cert ? i->cert : peerCert;
+                const auto &brokenCert = itr.cert ? itr.cert : peerCert;
 
-                const char *aReason = i->error_reason.empty() ? nullptr : i->error_reason.c_str();
-                errDetails = new ErrorDetail(i->error_no, peerCert, brokenCert, aReason);
+                const char *aReason = itr.error_reason.empty() ? nullptr : itr.error_reason.c_str();
+                errDetails = new ErrorDetail(itr.error_no, peerCert, brokenCert, aReason);
             }
         }
 
         if (!errs)
-            errs = new Security::CertErrors(Security::CertError(i->error_no, i->cert, i->error_depth));
+            errs = new Security::CertErrors(Security::CertError(itr.error_no, itr.cert, itr.error_depth));
         else
-            errs->push_back_unique(Security::CertError(i->error_no, i->cert, i->error_depth));
+            errs->push_back_unique(Security::CertError(itr.error_no, itr.cert, itr.error_depth));
     }
 
     return errs;
@@ -467,9 +466,8 @@ Security::PeerConnector::noteWantRead()
     const int fd = serverConnection()->fd;
 
     // read timeout to avoid getting stuck while reading from a silent server
-    typedef CommCbMemFunT<Security::PeerConnector, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall = JobCallback(83, 5,
-                                     TimeoutDialer, this, Security::PeerConnector::commTimeoutHandler);
+    using TimeoutDialer = CommCbMemFunT<Security::PeerConnector, CommTimeoutCbParams>;
+    AsyncCall::Pointer timeoutCall = JobCallback(83, 5, TimeoutDialer, this, Security::PeerConnector::commTimeoutHandler);
     const auto timeout = Comm::MortalReadTimeout(startTime, negotiationTimeout);
     commSetConnTimeout(serverConnection(), timeout, timeoutCall);
 

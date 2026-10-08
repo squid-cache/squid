@@ -26,18 +26,14 @@
 namespace Security {
 
 #if USE_OPENSSL
-typedef std::shared_ptr<SSL_CTX> ContextPointer;
-
+using ContextPointer = std::shared_ptr<SSL_CTX>;
 #elif HAVE_LIBGNUTLS
-typedef std::shared_ptr<struct gnutls_certificate_credentials_st> ContextPointer;
-
+using ContextPointer = std::shared_ptr<struct gnutls_certificate_credentials_st>;
 #else
 // use void* so we can check against nullptr
-typedef std::shared_ptr<void> ContextPointer;
-
+using ContextPointer = std::shared_ptr<void>;
 #endif
 
 } // namespace Security
 
 #endif /* SQUID_SRC_SECURITY_CONTEXT_H */
-
