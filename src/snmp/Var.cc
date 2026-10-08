@@ -51,19 +51,19 @@ Snmp::Var&
 Snmp::Var::operator += (const Var& var)
 {
     switch (type) {
-    case SMI_INTEGER:
+    case ASN_INTEGER:
         setInt(asInt() + var.asInt());
         break;
-    case SMI_GAUGE32:
+    case ASN_GAUGE:
         setGauge(asGauge() + var.asGauge());
         break;
-    case SMI_COUNTER32:
+    case ASN_COUNTER:
         setCounter(asCounter() + var.asCounter());
         break;
-    case SMI_COUNTER64:
+    case ASN_COUNTER64:
         setCounter64(asCounter64() + var.asCounter64());
         break;
-    case SMI_TIMETICKS:
+    case ASN_TIMETICKS:
         setTimeTicks(asTimeTicks() + var.asTimeTicks());
         break;
     default:
@@ -79,19 +79,19 @@ Snmp::Var::operator /= (int num)
 {
     Must(num != 0);
     switch (type) {
-    case SMI_INTEGER:
+    case ASN_INTEGER:
         setInt(asInt() / num);
         break;
-    case SMI_GAUGE32:
+    case ASN_GAUGE:
         setGauge(asGauge() / num);
         break;
-    case SMI_COUNTER32:
+    case ASN_COUNTER:
         setCounter(asCounter() / num);
         break;
-    case SMI_COUNTER64:
+    case ASN_COUNTER64:
         setCounter64(asCounter64() / num);
         break;
-    case SMI_TIMETICKS:
+    case ASN_TIMETICKS:
         setTimeTicks(asTimeTicks() / num);
         break;
     default:
@@ -106,15 +106,15 @@ bool
 Snmp::Var::operator < (const Var& var) const
 {
     switch (type) {
-    case SMI_INTEGER:
+    case ASN_INTEGER:
         return asInt() < var.asInt();
-    case SMI_GAUGE32:
+    case ASN_GAUGE:
         return asGauge() < var.asGauge();
-    case SMI_COUNTER32:
+    case ASN_COUNTER:
         return asCounter() < var.asCounter();
-    case SMI_COUNTER64:
+    case ASN_COUNTER64:
         return asCounter64() < var.asCounter64();
-    case SMI_TIMETICKS:
+    case ASN_TIMETICKS:
         return asTimeTicks() < var.asTimeTicks();
     default:
         debugs(49, DBG_CRITICAL, "ERROR: Unsupported type: " << type);
@@ -128,15 +128,15 @@ bool
 Snmp::Var::operator > (const Var& var) const
 {
     switch (type) {
-    case SMI_INTEGER:
+    case ASN_INTEGER:
         return asInt() > var.asInt();
-    case SMI_GAUGE32:
+    case ASN_GAUGE:
         return asGauge() > var.asGauge();
-    case SMI_COUNTER32:
+    case ASN_COUNTER:
         return asCounter() > var.asCounter();
-    case SMI_COUNTER64:
+    case ASN_COUNTER64:
         return asCounter64() > var.asCounter64();
-    case SMI_TIMETICKS:
+    case ASN_TIMETICKS:
         return asTimeTicks() > var.asTimeTicks();
     default:
         debugs(49, DBG_CRITICAL, "ERROR: Unsupported type: " << type);
@@ -190,13 +190,13 @@ Snmp::Var::clearValue()
 bool
 Snmp::Var::isNull() const
 {
-    return type == SMI_NULLOBJ;
+    return type == ASN_NULL;
 }
 
 int
 Snmp::Var::asInt() const
 {
-    Must(type == SMI_INTEGER);
+    Must(type == ASN_INTEGER);
     Must(val.integer != nullptr && val_len == sizeof(int));
     return *val.integer;
 }
@@ -204,7 +204,7 @@ Snmp::Var::asInt() const
 unsigned int
 Snmp::Var::asGauge() const
 {
-    Must(type == SMI_GAUGE32);
+    Must(type == ASN_GAUGE);
     Must(val.integer != nullptr && val_len == 4);
     return *reinterpret_cast<unsigned int*>(val.integer);
 }
@@ -212,7 +212,7 @@ Snmp::Var::asGauge() const
 int
 Snmp::Var::asCounter() const
 {
-    Must(type == SMI_COUNTER32);
+    Must(type == ASN_COUNTER);
     Must(val.integer != nullptr && val_len == 4);
     return *reinterpret_cast<int*>(val.integer);
 }
@@ -220,7 +220,7 @@ Snmp::Var::asCounter() const
 long long int
 Snmp::Var::asCounter64() const
 {
-    Must(type == SMI_COUNTER64);
+    Must(type == ASN_COUNTER64);
     Must(val.integer != nullptr && val_len == 8);
     return *reinterpret_cast<long long int*>(val.integer);
 }
@@ -228,7 +228,7 @@ Snmp::Var::asCounter64() const
 unsigned int
 Snmp::Var::asTimeTicks() const
 {
-    Must(type == SMI_TIMETICKS);
+    Must(type == ASN_TIMETICKS);
     Must(val.integer != nullptr && val_len == sizeof(unsigned int));
     return *reinterpret_cast<unsigned int*>(val.integer);
 }
@@ -236,7 +236,7 @@ Snmp::Var::asTimeTicks() const
 Range<const oid*>
 Snmp::Var::asObject() const
 {
-    Must(type == SMI_OBJID);
+    Must(type == ASN_OBJECT_ID);
     Must(val_len % sizeof(oid) == 0);
     int length = val_len / sizeof(oid);
     Must(val.objid != nullptr && length > 0);
@@ -246,7 +246,7 @@ Snmp::Var::asObject() const
 Range<const u_char*>
 Snmp::Var::asString() const
 {
-    Must(type == SMI_STRING);
+    Must(type == ASN_OCTET_STR);
     Must(val.string != nullptr && val_len > 0);
     return Range<const u_char*>(val.string, val.string + val_len);
 }
@@ -254,43 +254,43 @@ Snmp::Var::asString() const
 void
 Snmp::Var::setInt(int value)
 {
-    setValue(&value, sizeof(value), SMI_INTEGER);
+    setValue(&value, sizeof(value), ASN_INTEGER);
 }
 
 void
 Snmp::Var::setCounter(int value)
 {
-    setValue(&value, sizeof(value), SMI_COUNTER32);
+    setValue(&value, sizeof(value), ASN_COUNTER);
 }
 
 void
 Snmp::Var::setGauge(unsigned int value)
 {
-    setValue(&value, sizeof(value), SMI_GAUGE32);
+    setValue(&value, sizeof(value), ASN_GAUGE);
 }
 
 void
 Snmp::Var::setString(const Range<const u_char*>& string)
 {
-    setValue(string.start, string.size(), SMI_STRING);
+    setValue(string.start, string.size(), ASN_OCTET_STR);
 }
 
 void
 Snmp::Var::setObject(const Range<const oid*>& object)
 {
-    setValue(object.start, object.size() * sizeof(oid), SMI_OBJID);
+    setValue(object.start, object.size() * sizeof(oid), ASN_OBJECT_ID);
 }
 
 void
 Snmp::Var::setCounter64(long long int counter)
 {
-    setValue(&counter, sizeof(counter), SMI_COUNTER64);
+    setValue(&counter, sizeof(counter), ASN_COUNTER64);
 }
 
 void
 Snmp::Var::setTimeTicks(unsigned int ticks)
 {
-    setValue(&ticks, sizeof(ticks), SMI_TIMETICKS);
+    setValue(&ticks, sizeof(ticks), ASN_TIMETICKS);
 }
 
 void
@@ -342,14 +342,12 @@ Snmp::Var::unpack(const Ipc::TypedMsgHdr& msg)
     clearName();
     clearValue();
     name_length = msg.getInt();
-    Must(name_length >= 0);
     if (name_length > 0) {
         name = static_cast<oid*>(xmalloc(name_length * sizeof(oid)));
         msg.getFixed(name, name_length * sizeof(oid));
     }
     msg.getPod(type);
     val_len = msg.getInt();
-    Must(val_len >= 0);
     if (val_len > 0) {
         val.string = static_cast<u_char*>(xmalloc(val_len));
         msg.getFixed(val.string, val_len);
