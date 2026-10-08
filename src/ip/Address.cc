@@ -14,7 +14,6 @@
 #include "ip/tools.h"
 #include "util.h"
 
-#include <cassert>
 #include <cstring>
 #if HAVE_ARPA_INET_H
 /* for inet_ntoa() */
