@@ -23,8 +23,6 @@ class ConnMark : public Acl::Node
     MEMPROXY_CLASS(ConnMark);
 
 public:
-    explicit ConnMark(char const *theType);
-
     /* Acl::Node API */
     char const *typeString() const override;
     void parse() override;
@@ -33,7 +31,6 @@ public:
     bool empty() const override;
 
 private:
-    char const *type_; ///< registered "acl" directive name (e.g., clientside_mark)
     std::vector<Ip::NfMarkConfig> marks; ///< marks/masks in configured order
 };
 
