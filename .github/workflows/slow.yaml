@@ -87,7 +87,7 @@ jobs:
           path: "**/*.log"
 
   macos:
-    runs-on: macos-14
+    runs-on: macos-26
     name: macos
 
     steps:
