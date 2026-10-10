@@ -191,8 +191,8 @@ Acl::Init()
     // of the return expression inside lambda is not Node* but AclFoo* while
     // Maker is defined to return Node*.
 
-    RegisterMaker("all-of", [](TypeName)->Node* { return new AllOf; }); // XXX: Add name parameter to ctor
-    RegisterMaker("any-of", [](TypeName)->Node* { return new AnyOf; }); // XXX: Add name parameter to ctor
+    RegisterMaker("all-of", [](TypeName)->Node* { return new AllOf; });
+    RegisterMaker("any-of", [](TypeName)->Node* { return new AnyOf; });
     RegisterMaker("random", [](TypeName name)->Node* { return new ACLRandom(name); });
     RegisterMaker("time", [](TypeName name)->Node* { return new FinalizedParameterizedNode<CurrentTimeCheck>(name, new ACLTimeData); });
     RegisterMaker("browser", [](TypeName name)->Node* { return new FinalizedParameterizedNode<RequestHeaderCheck<Http::HdrType::USER_AGENT> >(name, new ACLRegexData); });
@@ -201,14 +201,14 @@ Acl::Init()
     RegisterMaker("dstdom_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<DestinationDomainCheck>(name, new ACLRegexData); });
     FinalizedParameterizedNode<DestinationDomainCheck>::PreferAllocatorLabelPrefix("dstdomain+");
 
-    RegisterMaker("dst", [](TypeName)->Node* { return new ACLDestinationIP; }); // XXX: Add name parameter to ctor
+    RegisterMaker("dst", [](TypeName)->Node* { return new ACLDestinationIP; });
     RegisterMaker("hier_code", [](TypeName name)->Node* { return new FinalizedParameterizedNode<HierCodeCheck>(name, new ACLHierCodeData); });
     RegisterMaker("rep_header", [](TypeName name)->Node* { return new FinalizedParameterizedNode<HttpRepHeaderCheck>(name, new ACLHTTPHeaderData); });
     RegisterMaker("req_header", [](TypeName name)->Node* { return new FinalizedParameterizedNode<HttpReqHeaderCheck>(name, new ACLHTTPHeaderData); });
     RegisterMaker("http_status", [](TypeName name)->Node* { return new ACLHTTPStatus(name); });
     RegisterMaker("maxconn", [](TypeName name)->Node* { return new ACLMaxConnection(name); });
     RegisterMaker("method", [](TypeName name)->Node* { return new FinalizedParameterizedNode<MethodCheck>(name, new ACLMethodData); });
-    RegisterMaker("localip", [](TypeName)->Node* { return new ACLLocalIP; }); // XXX: Add name parameter to ctor
+    RegisterMaker("localip", [](TypeName)->Node* { return new ACLLocalIP; });
     RegisterMaker("localport", [](TypeName name)->Node* { return new FinalizedParameterizedNode<LocalPortCheck>(name, new ACLIntRange); });
     RegisterMaker("myportname", [](TypeName name)->Node* { return new FinalizedParameterizedNode<MyPortNameCheck>(name, new ACLStringData); });
 
@@ -225,7 +225,7 @@ Acl::Init()
     RegisterMaker("srcdom_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<SourceDomainCheck>(name, new ACLRegexData); });
     FinalizedParameterizedNode<SourceDomainCheck>::PreferAllocatorLabelPrefix("srcdomain+");
 
-    RegisterMaker("src", [](TypeName)->Node* { return new ACLSourceIP; }); // XXX: Add name parameter to ctor
+    RegisterMaker("src", [](TypeName)->Node* { return new ACLSourceIP; });
     RegisterMaker("url_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<UrlCheck>(name, new ACLRegexData); });
     RegisterMaker("urllogin", [](TypeName name)->Node* { return new FinalizedParameterizedNode<UrlLoginCheck>(name, new ACLRegexData); });
     RegisterMaker("urlpath_regex", [](TypeName name)->Node* { return new FinalizedParameterizedNode<UrlPathCheck>(name, new ACLRegexData); });
@@ -241,8 +241,8 @@ Acl::Init()
     RegisterMaker("transaction_initiator", [](TypeName name)->Node* {return new TransactionInitiator(name);});
 
 #if USE_LIBNETFILTERCONNTRACK
-    RegisterMaker("clientside_mark", [](TypeName)->Node* { return new ConnMark; }); // XXX: Add name parameter to ctor
-    RegisterMaker("client_connection_mark", [](TypeName)->Node* { return new ConnMark; }); // XXX: Add name parameter to ctor
+    RegisterMaker("clientside_mark", [](TypeName)->Node* { return new ConnMark; });
+    RegisterMaker("client_connection_mark", [](TypeName)->Node* { return new ConnMark; });
 #endif
 
 #if USE_OPENSSL
