@@ -243,9 +243,9 @@ public:
     };
 
     /// initialize shared memory
-    static Owner *Init(const SBuf &path, const int slotLimit);
+    static Owner *Init(const SBuf &path, const char *const machineId, const int slotLimit);
 
-    StoreMap(const SBuf &aPath);
+    StoreMap(const SBuf &aPath, const char *const machineId);
 
     /// computes map entry anchor position for a given entry key
     sfileno fileNoByKey(const cache_key *const key) const;

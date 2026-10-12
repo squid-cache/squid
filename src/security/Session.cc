@@ -27,7 +27,7 @@
 
 #if USE_OPENSSL
 static Ipc::MemMap *SessionCache = nullptr;
-static const char *SessionCacheName = "tls_session_cache";
+static const char *SessionCacheName = "tls";
 #endif
 
 #if USE_OPENSSL || HAVE_LIBGNUTLS
@@ -428,7 +428,7 @@ initializeSessionCache()
 
     int configuredItems = ::Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot);
     if (IamWorkerProcess() && configuredItems)
-        SessionCache = new Ipc::MemMap(SessionCacheName);
+        SessionCache = new Ipc::MemMap(SessionCacheName, "M010");
     else {
         SessionCache = nullptr;
         return;
@@ -479,7 +479,7 @@ SharedSessionCacheRr::create()
 
 #if USE_OPENSSL
     if (int items = Config.SSL.sessionCacheSize / sizeof(Ipc::MemMap::Slot))
-        owner = Ipc::MemMap::Init(SessionCacheName, items);
+        owner = Ipc::MemMap::Init(SessionCacheName, "M010", items);
 #endif
 }
 
