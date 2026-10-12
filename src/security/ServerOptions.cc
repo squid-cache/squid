@@ -239,7 +239,7 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
             return false;
         }
 
-        for (auto cert : keys.chain) {
+        for (const auto &cert : keys.chain) {
             if (SSL_CTX_add_extra_chain_cert(t.get(), cert.get())) {
                 // increase the certificate lock
                 X509_up_ref(cert.get());
@@ -251,9 +251,20 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
 
 #elif HAVE_LIBGNUTLS
         for (auto &keys : certs) {
-            gnutls_x509_crt_t crt = keys.cert.get();
             gnutls_x509_privkey_t xkey = keys.pkey.get();
-            const auto x = gnutls_certificate_set_x509_key(t.get(), &crt, 1, xkey);
+
+            const auto certCount = 1 + keys.chain.size();
+            auto crt = new gnutls_x509_crt_t[certCount];
+            crt[0] = keys.cert.get();
+            if (certCount > 1) {
+                int i = 1;
+                for (const auto &cert : keys.chain) {
+                    crt[i++] = cert.get(); // gnutls_x509_crt_t is a raw-pointer
+                }
+            }
+
+            const auto x = gnutls_certificate_set_x509_key(t.get(), crt, certCount, xkey);
+            delete[] crt;
             if (x != GNUTLS_E_SUCCESS) {
                 SBuf whichFile = keys.certFile;
                 if (keys.certFile != keys.privateKeyFile) {
@@ -263,7 +274,6 @@ Security::ServerOptions::createStaticServerContext(AnyP::PortCfg &)
                 debugs(83, DBG_CRITICAL, "ERROR: Failed to initialize server context with keys from " << whichFile << ": " << Security::ErrorString(x));
                 return false;
             }
-            // XXX: add cert chain to the context
         }
 #endif
 
