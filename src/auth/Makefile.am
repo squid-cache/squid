@@ -10,6 +10,7 @@ include $(top_srcdir)/src/Common.am
 SUBDIRS = $(AUTH_MODULES)
 DIST_SUBDIRS = \
 	basic \
+	bearer \
 	digest \
 	negotiate \
 	ntlm
