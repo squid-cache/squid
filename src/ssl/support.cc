@@ -508,10 +508,6 @@ Ssl::ConfigurePeerVerification(Security::ContextPointer &ctx, const Security::Pa
         debugs(83, DBG_IMPORTANT, "WARNING: UPGRADE: The DONT_VERIFY_PEER flag is deprecated. Remove the clientca= option to disable client certificates.");
         mode = SSL_VERIFY_NONE;
     }
-    else if (flags & SSL_FLAG_DELAYED_AUTH) {
-        debugs(83, DBG_PARSE_NOTE(3), "not requesting client certificates until ACL processing requires one");
-        mode = SSL_VERIFY_NONE;
-    }
     else if (flags & SSL_FLAG_CONDITIONAL_AUTH) {
         debugs(83, DBG_PARSE_NOTE(3), "will request the client certificate but ignore its absence");
         mode = SSL_VERIFY_PEER;
