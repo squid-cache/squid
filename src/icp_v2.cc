@@ -578,9 +578,10 @@ void
 icp_common_t::handleReply(char *buf, Ip::Address &from)
 {
     if (neighbors_do_private_keys && reqnum == 0) {
-        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
-        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Disabling use of private keys");
-        neighbors_do_private_keys = 0;
+        static uint64_t zerosSeen = 0;
+        const auto debugLevel = (!zerosSeen++) ? DBG_CRITICAL : 2;
+        debugs(12, debugLevel, "ERROR: Ignoring unexpected ICP reply with zero reqnum from " << from);
+        return;
     }
 
     const auto url = icpGetUrl(from, buf, *this);
