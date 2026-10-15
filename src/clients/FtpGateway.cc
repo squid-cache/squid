@@ -81,7 +81,6 @@ struct GatewayFlags {
     bool try_slash_hack;
     bool put;
     bool put_mkdir;
-    bool listformat_unknown;
     bool listing;
     bool completed_forwarding;
 };
@@ -768,7 +767,7 @@ Ftp::Gateway::htmlifyListEntry(const char *line, PackableStream &html)
     debugs(9, 7, "line={" << line << "}");
 
     if (strlen(line) > 1024) {
-        html << "<tr><td colspan=\"5\">" << line << "</td></tr>\n";
+        html << "<tr><td colspan=\"5\">" << html_quote(line) << "</td></tr>\n";
         return true;
     }
 
@@ -780,13 +779,7 @@ Ftp::Gateway::htmlifyListEntry(const char *line, PackableStream &html)
 
     ftpListParts *parts = ftpListParseParts(line, flags);
     if (!parts) {
-        html << "<tr class=\"entry\"><td colspan=\"5\">" << line << "</td></tr>\n";
-
-        const char *p;
-        for (p = line; *p && xisspace(*p); ++p);
-        if (*p && !xisspace(*p))
-            flags.listformat_unknown = 1;
-
+        html << "<tr class=\"entry\"><td colspan=\"5\">" << html_quote(line) << "</td></tr>\n";
         return true;
     }
 
