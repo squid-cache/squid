@@ -22,8 +22,8 @@ digest_edirectory_auth_LDADD = \
 	$(COMPAT_LIB) \
 	$(LIBLDAP_LIBS) \
 	$(LIBNETTLE_LIBS) \
+	$(LIBOPENSSL_LIBS) \
 	$(CRYPTLIB) \
-	$(SSLLIB) \
 	$(XTRA_LIBS)
 
 EXTRA_DIST= required.m4

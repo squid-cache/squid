@@ -1,0 +1,17 @@
+## Copyright (C) 1996-2026 The Squid Software Foundation and contributors
+##
+## Squid software is distributed under GPLv2+ license and includes
+## contributions from numerous individuals and organizations.
+## Please see the COPYING and CONTRIBUTORS files for details.
+##
+
+srcdir=`dirname $0`
+
+# Everything is supposed to work when OpenSSL is not available.
+. $srcdir/buildtests/layer-02-maximus.opts
+
+DISTCHECK_CONFIGURE_FLAGS=`
+  echo "$DISTCHECK_CONFIGURE_FLAGS" |
+  sed -e 's/with-openssl/without-openssl/g' \
+      -e 's/enable-ssl-crtd/disable-ssl-crtd/g'
+`

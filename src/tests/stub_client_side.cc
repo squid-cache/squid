@@ -42,7 +42,7 @@ void ConnStateData::swanSong() STUB
 void ConnStateData::quitAfterError(HttpRequest *) STUB
 NotePairs::Pointer ConnStateData::notes() STUB_RETVAL(NotePairs::Pointer())
 void ConnStateData::fillConnectionLevelDetails(ACLFilledChecklist &) const STUB
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 void ConnStateData::httpsPeeked(PinnedIdleContext) STUB
 void ConnStateData::getSslContextStart() STUB
 void ConnStateData::getSslContextDone(Security::ContextPointer &) STUB

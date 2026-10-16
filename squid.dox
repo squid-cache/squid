@@ -2070,6 +2070,7 @@ PREDEFINED             = __cplusplus \
                          ICAP_CLIENT \
                          HAVE_LIBHEIMDAL_KRB5 \
                          HAVE_LIBMIT_KRB5 \
+                         HAVE_LIBOPENSSL \
                          LINUX_NETFILTER \
                          SQUID_SNMP \
                          USE_ADAPTATION \
@@ -2090,14 +2091,12 @@ PREDEFINED             = __cplusplus \
                          USE_IPV6 \
                          USE_KQUEUE \
                          USE_LOADABLE_MODULES \
-                         USE_OPENSSL \
                          USE_POLL \
                          USE_QOS_TOS \
                          USE_SELECT \
                          USE_SOLARIS_KRB5 \
                          USE_SQUID_EUI \
                          USE_SSL_CRTD \
-                         USE_OPENSSL \
                          USE_UNLINKD \
                          USE_WCCP \
                          USE_WCCPv2 \

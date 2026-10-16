@@ -36,7 +36,7 @@ public:
     void record(std::ostream &) const;
 
 private:
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     void getClientRandom(const Connection &sconn);
     void getSessionId(const Session &session);
     void getMasterKey(const Session &session);

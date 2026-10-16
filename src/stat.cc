@@ -53,7 +53,7 @@
 #if USE_DELAY_POOLS
 #include "DelayId.h"
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/support.h"
 #endif
 
@@ -1821,7 +1821,7 @@ statClientRequests(StoreEntry * s)
                 p = http->request->extacl_user.termedBuf();
             }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         if (!p && conn != nullptr && Comm::IsConnOpen(conn->clientConnection))
             p = sslGetUserEmail(fd_table[conn->clientConnection->fd].ssl.get());
 #endif

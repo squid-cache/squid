@@ -36,7 +36,7 @@ public:
     /// \param[out] total time taken for all ICAP processing
     void processingTime(struct timeval &total) const;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     String ssluser; ///< the username from SSL
 #endif
     LogTags logType; ///< the squid request status (TCP_MISS etc)

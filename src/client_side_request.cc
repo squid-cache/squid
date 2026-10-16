@@ -70,7 +70,7 @@
 #include "adaptation/icap/History.h"
 #endif
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/ServerBump.h"
 #include "ssl/support.h"
 #endif
@@ -91,7 +91,7 @@ CBDATA_CLASS_INIT(ClientRequestContext);
 /* Local functions */
 /* other */
 static void clientAccessCheckDoneWrapper(Acl::Answer, void *);
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 static void sslBumpAccessCheckDoneWrapper(Acl::Answer, void *);
 #endif
 static int clientHierarchical(ClientHttpRequest * http);
@@ -136,7 +136,7 @@ ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) :
         al->proxyProtocolHeader = aConn->proxyProtocolHeader();
         al->updateError(aConn->bareError);
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         if (aConn->clientConnection != nullptr && aConn->clientConnection->isOpen()) {
             if (auto ssl = fd_table[aConn->clientConnection->fd].ssl.get())
                 al->cache.sslClientCert.resetWithoutLocking(SSL_get_peer_certificate(ssl));
@@ -670,7 +670,7 @@ ClientHttpRequest::noteAdaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
     Adaptation::Icap::History::Pointer ih = request->icapHistory();
     if (ih != nullptr) {
         if (getConn() != nullptr && getConn()->clientConnection != nullptr) {
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
             if (getConn()->clientConnection->isOpen()) {
                 ih->ssluser = sslGetUserEmail(fd_table[getConn()->clientConnection->fd].ssl.get());
             }
@@ -1201,7 +1201,7 @@ ClientRequestContext::checkNoCacheDone(const Acl::Answer &answer)
     http->doCallouts();
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 bool
 ClientRequestContext::sslBumpAccessCheck()
 {
@@ -1317,7 +1317,7 @@ ClientHttpRequest::processRequest()
 
     const bool untouchedConnect = request->method == Http::METHOD_CONNECT && !redirect.status;
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     if (untouchedConnect && sslBumpNeeded()) {
         assert(!request->flags.forceTunnel);
         sslBumpStart();
@@ -1348,7 +1348,7 @@ ClientHttpRequest::httpStart()
     clientStreamRead(node, this, node->readBuffer);
 }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 
 void
 ClientHttpRequest::sslBumpNeed(Ssl::BumpMode mode)
@@ -1669,7 +1669,7 @@ ClientHttpRequest::doCallouts()
         }
     }
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     // Even with calloutContext->error, we call sslBumpAccessCheck() to decide
     // whether SslBump applies to this transaction. If it applies, we will
     // attempt to bump the client to serve the error.
@@ -1686,7 +1686,7 @@ ClientHttpRequest::doCallouts()
         SBuf storeUriBuf(request->storeId());
         const char *storeUri = storeUriBuf.c_str();
         StoreEntry *e = storeCreateEntry(storeUri, storeUri, request->flags, request->method);
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         if (sslBumpNeeded()) {
             // We have to serve an error, so bump the client first.
             sslBumpNeed(Ssl::bumpClientFirst);

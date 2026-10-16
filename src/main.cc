@@ -96,7 +96,7 @@
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
 #include "ssl/context_storage.h"
 #include "ssl/helper.h"
 #endif
@@ -635,7 +635,7 @@ mainHandleCommandLineOption(const int optId, const char *optValue)
         printf("Service Name: " SQUIDSBUFPH "\n", SQUIDSBUFPRINT(service_name));
         if (strlen(SQUID_BUILD_INFO))
             printf("%s\n",SQUID_BUILD_INFO);
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
         printf("\nThis binary uses %s. ", OpenSSL_version(OPENSSL_VERSION));
 #if OPENSSL_VERSION_MAJOR < 3
         printf("For legal restrictions on distribution see https://www.openssl.org/source/license.html\n\n");
@@ -810,7 +810,7 @@ mainReconfigureStart(void)
     // Initiate asynchronous closing sequence
     serverConnectionsClose();
     icpClosePorts();
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::TheGlobalContextStorage().reconfigureStart();
 #endif
 #if USE_AUTH
@@ -910,7 +910,7 @@ mainReconfigureFinish(void *)
 #if USE_SSL_CRTD
     Ssl::Helper::Reconfigure();
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::CertValidationHelper::Reconfigure();
 #endif
 
@@ -1095,7 +1095,7 @@ mainInitialize(void)
     Ssl::Helper::Init();
 #endif
 
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::CertValidationHelper::Init();
 #endif
 
@@ -1396,7 +1396,7 @@ RegisterModules()
 #if USE_HTCP
     CallRunnerRegistrator(HtcpRr);
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     CallRunnerRegistrator(sslBumpCfgRr);
 #endif
 
@@ -2010,7 +2010,7 @@ SquidShutdown()
 #if USE_SSL_CRTD
     Ssl::Helper::Shutdown();
 #endif
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     Ssl::CertValidationHelper::Shutdown();
 #endif
     redirectShutdown();

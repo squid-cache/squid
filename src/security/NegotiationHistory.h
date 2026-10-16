@@ -40,7 +40,7 @@ private:
     AnyP::ProtocolVersion helloVersion_; ///< The TLS version of the hello message
     AnyP::ProtocolVersion supportedVersion_; ///< The maximum supported TLS version
     AnyP::ProtocolVersion version_; ///< The negotiated TLS version
-#if USE_OPENSSL
+#if HAVE_LIBOPENSSL
     const SSL_CIPHER *cipher; ///< The negotiated cipher
 #endif
 };
