@@ -14,7 +14,7 @@
 #if SQUID_SNMP
 
 #include "cache_snmp.h"
-#include "snmp_vars.h"
+#include "compat/netsnmp.h"
 
 variable_list *snmp_confFn(variable_list *, snint *);
 variable_list *snmp_sysFn(variable_list *, snint *);

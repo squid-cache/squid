@@ -18,14 +18,11 @@
 #include "helper.h"
 #include "mgr/Registration.h"
 #include "snmp_agent.h"
+#include "snmp_core.h"
 #include "SquidConfig.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "util.h"
-
-#if SQUID_SNMP
-#include "snmp_core.h"
-#endif
 
 bool Dns::ResolveClientAddressesAsap = false;
 
@@ -715,62 +712,47 @@ fqdncache_init(void)
 variable_list *
 snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_netFqdnFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
+    size_t value = 0;
+    auto type = ASN_COUNTER; // most of these are Counter32
     switch (Var->name[LEN_SQ_NET + 1]) {
 
     case FQDN_ENT:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      fqdncacheCount(),
-                                      SMI_GAUGE32);
+        value = fqdncacheCount();
+        type = ASN_GAUGE;
         break;
 
     case FQDN_REQ:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      FqdncacheStats.requests,
-                                      SMI_COUNTER32);
+        value = FqdncacheStats.requests;
         break;
 
     case FQDN_HITS:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      FqdncacheStats.hits,
-                                      SMI_COUNTER32);
-        break;
-
-    case FQDN_PENDHIT:
-        /* this is now worthless */
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      0,
-                                      SMI_GAUGE32);
+        value = FqdncacheStats.hits;
         break;
 
     case FQDN_NEGHIT:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      FqdncacheStats.negative_hits,
-                                      SMI_COUNTER32);
+        value = FqdncacheStats.negative_hits;
         break;
 
     case FQDN_MISS:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      FqdncacheStats.misses,
-                                      SMI_COUNTER32);
+        value = FqdncacheStats.misses;
         break;
 
+    // deprecated OIDs, do not produce an error, just value=0
+    case FQDN_PENDHIT:
     case FQDN_GHBN:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      0, /* deprecated */
-                                      SMI_COUNTER32);
         break;
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        break;
+        return nullptr;
     }
 
-    return Answer;
+    variable_list *Answer = nullptr;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value, sizeof(value));
 }
 
 #endif /*SQUID_SNMP */
