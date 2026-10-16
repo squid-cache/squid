@@ -11,7 +11,6 @@
 #include "squid.h"
 #include "hash.h"
 
-#include <cassert>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
