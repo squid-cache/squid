@@ -31,7 +31,6 @@ typedef enum {
 #if ICAP_CLIENT
     CLF_ICAP_SQUID,
 #endif
-    CLF_REFERER,
     CLF_SQUID,
     CLF_USERAGENT,
     CLF_NONE
@@ -45,9 +44,6 @@ void SquidIcap(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Display log details in useragent format.
 void SquidUserAgent(const AccessLogEntryPointer &al, Logfile * logfile);
-
-/// Display log details in Squid old refererlog format.
-void SquidReferer(const AccessLogEntryPointer &al, Logfile * logfile);
 
 /// Log with a local custom format
 void SquidCustom(const AccessLogEntryPointer &al, CustomLog * log);
