@@ -6,6 +6,10 @@
  * Please see the COPYING and CONTRIBUTORS files for details.
  */
 
-#include "squid.h"
-#include "AsyncEngine.h"
+#ifndef SQUID_SRC_ENGINES_FORWARD_H
+#define SQUID_SRC_ENGINES_FORWARD_H
 
+class AsyncEngine;
+class EventLoop;
+
+#endif /* SQUID_SRC_ENGINES_FORWARD_H */
