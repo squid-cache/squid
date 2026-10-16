@@ -140,7 +140,6 @@ public:
     void putAuth(const char *auth_scheme, const char *realm);
     void putCc(const HttpHdrCc &cc);
     void putContRange(const HttpHdrContRange * cr);
-    void putRange(const HttpHdrRange * range);
     void putSc(HttpHdrSc *sc);
     void putExt(const char *name, const char *value);
 

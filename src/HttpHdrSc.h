@@ -30,7 +30,6 @@ public:
     void packInto(Packable * p) const;
     void updateStats(StatHist *) const;
     HttpHdrScTarget * getMergedTarget(const char *ourtarget); // TODO: make const?
-    void setMaxAge(char const *target, int max_age);
 
 private:
     HttpHdrScTarget * findTarget (const char *target);
@@ -42,7 +41,6 @@ private:
 void httpHdrScStatDumper(StoreEntry * sentry, int idx, double val, double size, int count);
 void httpHdrScInitModule (void);
 HttpHdrSc *httpHdrScParseCreate(String const &);
-void httpHdrScSetMaxAge(HttpHdrSc *, char const *, int);
 
 http_hdr_sc_type &operator++(http_hdr_sc_type &);
 #endif /* SQUID_SRC_HTTPHDRSC_H */
