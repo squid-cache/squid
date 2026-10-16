@@ -486,6 +486,7 @@ public:
     struct {
         int unclean_shutdown;
         char *ssl_engine;
+        char *ssl_provider;
         int session_ttl;
         size_t sessionCacheSize;
         char *certSignHash;
