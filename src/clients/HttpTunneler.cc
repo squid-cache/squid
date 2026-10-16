@@ -281,6 +281,7 @@ Http::Tunneler::handleResponse(const bool eof)
     auto parsedOk = hp->parse(readBuf); // may be refined below
     readBuf = hp->remaining();
     if (hp->needsMoreData()) {
+        Assure(!parsedOk);
         if (!eof) {
             if (readBuf.length() >= SQUID_TCP_SO_RCVBUF) {
                 bailOnResponseError("huge CONNECT response from peer", nullptr);

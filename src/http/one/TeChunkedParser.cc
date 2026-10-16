@@ -46,6 +46,13 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
 {
     buf_ = aBuf; // sync buffers first so calls to remaining() work properly if nothing done.
 
+    // Only parseTrailerSection() can reach HTTP_PARSE_DONE stage (via
+    // grabMimeBlock()). When it does, we either return true or throw. In either
+    // case, we must not be called again as we cannot make further progress.
+    // XXX: This assertion cannot catch buggy post-throw calls if we throw
+    // before reaching HTTP_PARSE_DONE.
+    Assure(parsingStage_ != HTTP_PARSE_DONE);
+
     if (buf_.isEmpty()) // nothing to do (yet)
         return false;
 
@@ -69,13 +76,13 @@ Http::One::TeChunkedParser::parse(const SBuf &aBuf)
         if (parsingStage_ == Http1::HTTP_PARSE_CHUNK && !parseChunkBody(tok))
             return false;
 
-        if (parsingStage_ == Http1::HTTP_PARSE_MIME && !grabMimeBlock("Trailers", 64*1024 /* 64KB max */))
+        if (parsingStage_ == Http1::HTTP_PARSE_MIME && !parseTrailerSection())
             return false;
 
         // loop for as many chunks as we can
     } while (parsingStage_ == Http1::HTTP_PARSE_CHUNK_SZ && parseChunkSize(tok));
 
-    return !needsMoreData() && !needsMoreSpace();
+    return !needsMoreData();
 }
 
 bool
@@ -83,6 +90,22 @@ Http::One::TeChunkedParser::needsMoreSpace() const
 {
     assert(theOut);
     return parsingStage_ == Http1::HTTP_PARSE_CHUNK && !theOut->hasPotentialSpace();
+}
+
+/// RFC 9112 section 7.1.2:
+/// trailer-section = *( field-line CRLF )
+bool
+Http::One::TeChunkedParser::parseTrailerSection()
+{
+    // grabMimeBlock() uses our parent class error reporting approach: Errors
+    // are detected using a `!parse() && !needsMoreData()` condition. Convert
+    // that to our approach (expected by our users) where `!parse()` means "need
+    // more data or space" while all errors are reported via C++ exceptions.
+    if (grabMimeBlock("Trailers", 64*1024))
+        return true;
+    if (needsMoreData())
+        return false;
+    throw TextException("malformed trailer-section in chunked encoding", Here());
 }
 
 /// RFC 7230 section 4.1 chunk-size
@@ -214,10 +237,12 @@ Http::One::TeChunkedParser::parseChunkBody(Tokenizer &tok)
 
     if (theLeftBodySize == 0)
         return parseChunkEnd(tok);
-    else
-        Must(needsMoreData() || needsMoreSpace());
 
-    return true;
+    // Received input lacks some of the current chunk bytes (i.e. `availSize <
+    // theLeftBodySize` before `theLeftBodySize` decrement above), and/or
+    // `theOut` could not grow to accommodate received input bytes that belong
+    // to the current chunk (i.e. `safeSize < availSize`).
+    return false;
 }
 
 bool
