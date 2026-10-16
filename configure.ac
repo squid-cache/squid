@@ -5,6 +5,27 @@
 ## Please see the COPYING and CONTRIBUTORS files for details.
 ##
 
+#
+# Table of Contents:
+#
+# 1. Autoconf initialization
+#
+# 2. Toolchain detection
+#
+# 3. Build Environment detection
+#
+# 4. Feature detection
+#
+# 5. Library detection
+#
+# 6. Autoconf finalization
+#
+# TODO: move checks that are out of their intended section.
+#
+
+#
+# Section 1: Autoconf initialization
+#
 AC_INIT([Squid Web Proxy],[8.0.0-VCS],[https://bugs.squid-cache.org/],[squid])
 AC_PREREQ(2.61)
 AC_CONFIG_HEADERS([include/autoconf.h])
@@ -20,6 +41,76 @@ AM_INIT_AUTOMAKE([1.14 tar-ustar nostdinc subdir-objects dist-xz])
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
+# TODO: move any more logic here
+
+#
+# Section 2: Toolchain detection
+#
+# Locate the binaries needed to compile, distribute and install Squid.
+#
+# Identify any special parameters need to run the tools correctly.
+# For example; "rm" vs "rm -f", "ar" vs "ar r", "grep -E" vs "egrep", or "-std=17"
+#
+# Does not check for availability of optional settings. That happens in section 3.
+#
+# User override should be provided as ./configure VARIABLE="VALUE"
+#
+
+# TODO: move logic here
+
+#
+# Section 3: Build Environment detection
+#
+# Check for which OS we are building on.
+#
+# Check for any OS-specific types, system includes, and toolchain
+# options needed for tests in later sections to be run.
+#
+# Check user-provided settings for custom integration with the
+# OS to be installed on.
+#
+# Settings found in this section will determine which components are
+# able to be detected in later sections.
+#
+# All tests in later sections should be able to include "compat/"
+# files and use their definitions.
+#
+# User settings should be provided as --with-default-LABEL=VALUE.
+#
+
+# TODO: move logic here
+
+#
+# Section 4: Feature detection
+#
+# Check which features can be built.
+#
+# User settings should be provided as --(en/dis)able-FEATURE[=LIST]
+#
+# Where LIST is a whitespace separated list of module or helper names
+# to build, (if any).
+#
+
+# TODO: move logic here
+
+#
+# Section 5: Library detection
+#
+# Check for all libraries used by Squid.
+#
+# User settings should be provided as --with(out)-LIBRARY[=PATH]
+#
+#
+# A library may be required by an --enable-FEATURE or --with-LIBRARY
+# user configuration.
+
+# TODO: move logic here
+
+#
+# XXX: Legacy configure.ac layout to move around
+#
+
+# TODO: sort alphabetically, move library specific files to the libray section.
 m4_include([acinclude/ax_with_prog.m4])
 m4_include([acinclude/init.m4])
 m4_include([acinclude/squid-util.m4])
@@ -34,6 +125,8 @@ m4_include([acinclude/lib-checks.m4])
 m4_include([acinclude/ax_cxx_compile_stdcxx.m4])
 m4_include([acinclude/win32-sspi.m4])
 
+dnl XXX: Do not change and, hence, do not save user-controlled variables.
+dnl TODO: Remove the corresponding code or refactor it to set AM_*FLAGS where still warranted.
 PRESET_CFLAGS="$CFLAGS"
 PRESET_CXXFLAGS="$CXXFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
@@ -282,6 +375,8 @@ AC_ARG_WITH(swapdir,
 ])
 AC_SUBST(DEFAULT_SWAP_DIR)
 
+dnl BUG: auto-tools are not supposed to change user (C/CPP/CXX/LD)FLAGS variables.
+dnl TODO: set AM_*FLAGS instead
 dnl Set Default CFLAGS
 AS_IF([test "x$PRESET_CFLAGS" = "x"],[
   AS_IF([test "$squid_cv_compiler" = "gcc"],[
@@ -2435,7 +2530,6 @@ AC_MSG_NOTICE([Multi-Language support enabled: ${enable_auto_locale:=yes}])
 SQUID_DEFINE_BOOL(USE_ERR_LOCALES,$enable_auto_locale,
    [Use multi-language support on error pages])
 
-
 dnl Need the debugging version of malloc if available
 XTRA_OBJS=''
 AS_IF([test "x$ac_cv_lib_malloc_main" = "xyes"],[
@@ -2454,6 +2548,10 @@ AC_SUBST(XTRA_LIBS)
 
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
+
+#
+# Section 6. Autoconf finalization
+#
 
 # Prerequisite: CXXFLAGS have been finalized.
 AC_ARG_VAR([BUILDCXXFLAGS],[C++ compiler flags for building compile-time tools. e.g. cf_gen])
