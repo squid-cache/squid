@@ -25,8 +25,11 @@ BEGIN {
         nspath = ""
 }
 
-# when namespace is encountered store it
+# Remember the name of the last namespace encountered before the enum.
+# XXX: We should remember the name(s) of the namespace(s) surrounding the enum
+# instead. TODO: Replace this C++ parsing hack with a command-line parameter.
 /^namespace *[a-zA-Z]+/	{
+	if (type) next
 	nspath = tolower($2) "/"		# nested folder
 	namespace = $2				# code namespace reconstruct
 	next
