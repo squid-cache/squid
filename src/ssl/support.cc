@@ -874,7 +874,14 @@ ssl_get_attribute(X509_NAME * name, const char *attribute_name)
             debugs(83, DBG_IMPORTANT, "WARNING: Unknown SSL attribute name '" << attribute_name << "'");
             return nullptr;
         }
-        X509_NAME_get_text_by_NID(name, nid, buffer, sizeof(buffer));
+        int pos = -1;
+        pos = X509_NAME_get_index_by_NID(name, nid, pos);
+        if (pos < 0) {
+            debugs(83, 3, (pos == -2 ? "Invalid" : "Missing") << " SSL attribute name '" << attribute_name << "'");
+            return nullptr;
+        }
+        auto str = X509_NAME_ENTRY_get_data(X509_NAME_get_entry(name, pos));
+        xstrncpy(buffer, reinterpret_cast<const char *>(ASN1_STRING_get0_data(str)), sizeof(buffer));
     }
 
     return *buffer ? buffer : nullptr;
