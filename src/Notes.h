@@ -205,6 +205,7 @@ public:
     };
     typedef std::vector<Entry::Pointer> Entries;      ///< The key/value pair entries
     typedef std::vector<SBuf> Names;
+    typedef Entries::const_iterator const_iterator; ///< iterates over the notes list
 
     NotePairs() {}
     NotePairs &operator=(NotePairs const &) = delete;
@@ -264,6 +265,11 @@ public:
     /// If delimiters are provided, returns another Entries, converting each single multi-token
     /// pair to multiple single-token pairs; returns existing entries otherwise.
     const Entries &expandListEntries(const CharacterSet *delimiters) const;
+
+    /// points to the first argument
+    const_iterator begin() const { return entries.cbegin(); }
+    /// points to the end of list
+    const_iterator end() const { return entries.cend(); }
 
 private:
     Entries entries; ///< The key/value pair entries

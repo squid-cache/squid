@@ -277,7 +277,7 @@ class ConnStateData;
 /**
  * Updates ConnStateData ids and HttpRequest notes from helpers received notes.
  */
-void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes);
+void UpdateRequestNotes(ConnStateData *csd, HttpRequest &request, NotePairs const &notes , const SBufList &clientConnectionTags);
 
 /// \returns listening/*_port address used by the client connection (or nil)
 /// nil parameter(s) indicate missing caller information and are handled safely
