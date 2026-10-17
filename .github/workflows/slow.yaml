@@ -115,7 +115,7 @@ jobs:
         id: test-builds
         run: |
           eval `brew shellenv`
-          PKG_CONFIG_PATH="`ls $HOMEBREW_PREFIX/Cellar/openssl@3/*/lib/pkgconfig`:$HOMEBREW_PREFIX/lib/pkgconfig"
+          PKG_CONFIG_PATH="`ls -d $HOMEBREW_PREFIX/Cellar/openssl@3/*/lib/pkgconfig`:$HOMEBREW_PREFIX/lib/pkgconfig"
           PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
           PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
           export PKG_CONFIG_PATH

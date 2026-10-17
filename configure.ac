@@ -1049,7 +1049,31 @@ SQUID_OPTIONAL_LIB(openssl,[OpenSSL],[LIBOPENSSL])
 AH_TEMPLATE(USE_OPENSSL,[OpenSSL support is available])
 ## OpenSSL is default disable due to licensing issues on some OS
 AS_IF([test "x$with_openssl" = "xyes"],[
+  SQUID_STATE_SAVE(squid_openssl_state)
+
+  # auto-detect using pkg-config
+  PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
+    ## For some OS pkg-config is broken or unavailable.
+    ## Detect libraries the hard way.
+
+    # Windows MinGW has some special libraries ...
+    AS_IF([test "x$squid_host_os" = "xmingw"],[
+      LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
+      AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
+    ])
+
+    AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
+      AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
+    ],$LIBOPENSSL_LIBS)
+    AC_CHECK_LIB(ssl,[SSL_CTX_new],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
+      AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
+    ],$LIBOPENSSL_LIBS)
+  ])
+
   CPPFLAGS="$LIBOPENSSL_CFLAGS $CPPFLAGS"
+  # User may have provided a custom location for OpenSSL. Otherwise...
+  LIBS="$LIBS $LIBOPENSSL_PATH"
+
   AC_CHECK_HEADERS( \
     openssl/asn1.h \
     openssl/bio.h \
@@ -1070,29 +1094,6 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     openssl/txt_db.h \
     openssl/pem.h \
   )
-
-  # User may have provided a custom location for OpenSSL. Otherwise...
-  SQUID_STATE_SAVE(squid_openssl_state)
-  LIBS="$LIBS $LIBOPENSSL_PATH"
-
-  # auto-detect using pkg-config
-  PKG_CHECK_MODULES([LIBOPENSSL],[openssl],,[
-    ## For some OS pkg-config is broken or unavailable.
-    ## Detect libraries the hard way.
-
-    # Windows MinGW has some special libraries ...
-    AS_IF([test "x$squid_host_os" = "xmingw"],[
-      LIBOPENSSL_LIBS='-lssleay32 -leay32 -lgdi32 $LIBOPENSSL_LIBS'
-      AC_MSG_NOTICE([Windows OpenSSL library support: yes -lssleay32 -leay32 -lgdi32])
-    ])
-
-    AC_CHECK_LIB(crypto,[CRYPTO_new_ex_data],[LIBOPENSSL_LIBS="-lcrypto $LIBOPENSSL_LIBS"],[
-      AC_MSG_ERROR([library 'crypto' is required for OpenSSL])
-    ],$LIBOPENSSL_LIBS)
-    AC_CHECK_LIB(ssl,[SSL_CTX_new],[LIBOPENSSL_LIBS="-lssl $LIBOPENSSL_LIBS"],[
-      AC_MSG_ERROR([library 'ssl' is required for OpenSSL])
-    ],$LIBOPENSSL_LIBS)
-  ])
 
   SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
