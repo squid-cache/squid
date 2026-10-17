@@ -12,19 +12,79 @@
 # version 2 or later. For the licensing terms, see the file COPYING that
 # came with Squid.
 #
-# This is a dummy NTLM authentication module for Squid.
-# It performs the NTLM challenge, but then it doesn't verify the
-# user's credentials, it just takes the client's domain and username
-# at face value.
-# It's included mostly for demonstration purposes.
-#
+
 # TODO: use command-line arguments
-
-#use MIME::Base64;
-
-$|=1;
 #$authdomain="your_domain_goes_here";
 $challenge="deadbeef";
+
+=pod
+
+=head1 NAME
+
+ ntlm_fake_auth - Fake NTLM Authentication
+
+=head1 SYNOPSIS
+
+ ntlm_fake_auth
+
+=head1 DESCRIPTION
+
+This is a dummy NTLM authentication module for Squid.
+
+It performs the NTLM challenge, but then it does not verify the
+user credentials, it just takes the client domain and username
+at face value.
+
+It is included mostly for demonstration purposes.
+
+=head1 AUTHOR
+
+This program and documentation was written by
+I<Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>>
+
+=head1 COPYRIGHT
+
+ * Copyright (C) 1996-2026 The Squid Software Foundation and contributors
+ *
+ * Squid software is distributed under GPLv2+ license and includes
+ * contributions from numerous individuals and organizations.
+ * Please see the COPYING and CONTRIBUTORS files for details.
+
+Copyright (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
+Distributed freely under the terms of the GNU General Public License,
+version 2 or later. For the licensing terms, see the file COPYING that
+came with Squid.
+
+=head1 QUESTIONS
+
+Questions on the usage of this program can be sent to the
+I<Squid Users mailing list <squid-users@lists.squid-cache.org>>
+
+=head1 REPORTING BUGS
+
+Bug reports need to be made in English.
+See https://wiki.squid-cache.org/SquidFaq/BugReporting for details
+of what you need to include with your bug report.
+
+Report bugs or bug fixes using https://bugs.squid-cache.org/ .
+
+Report serious security bugs to
+I<Squid Bugs <squid-bugs@lists.squid-cache.org>>.
+
+Report ideas for new improvements to the
+I<Squid Developers mailing list <squid-dev@lists.squid-cache.org>>.
+
+=head1 SEE ALSO
+
+squid (8), GPL (7),
+
+The Squid FAQ wiki https://wiki.squid-cache.org/SquidFaq
+
+The Squid Configuration Manual https://www.squid-cache.org/Doc/config/
+
+=cut
+
+$|=1;
 
 $authdomain=$ARGV[0] if ($#ARGV >=0);
 

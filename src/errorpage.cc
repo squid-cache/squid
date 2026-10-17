@@ -581,10 +581,12 @@ ErrorDynamicPageInfo::ErrorDynamicPageInfo(const int anId, const char *aName, co
         filenameOrUri = page_name;
     }
 
+    const auto looksLikeUrl = [](const char * const name) { return name && strchr(name, ':'); };
+
     // Guessed uri, filename, or both values may be nil or malformed.
     // They are validated later.
     if (!page_redirect) {
-        if (filenameOrUri && strchr(filenameOrUri, ':')) // looks like a URL
+        if (looksLikeUrl(filenameOrUri))
             uri = filenameOrUri;
         else
             filename = filenameOrUri;
@@ -617,15 +619,15 @@ ErrorDynamicPageInfo::ErrorDynamicPageInfo(const int anId, const char *aName, co
         // out of range
         debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " is not valid on '" << page_name << "'");
         self_destruct();
-    } else if ( /* >= 200 && */ info->page_redirect < 300 && strchr(&(page_name[4]), ':')) {
+    } else if ( /* >= 200 && */ info->page_redirect < 300 && looksLikeUrl(filenameOrUri)) {
         // 2xx require a local template file
         debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a template on '" << page_name << "'");
         self_destruct();
-    } else if (info->page_redirect >= 300 && info->page_redirect <= 399 && !strchr(&(page_name[4]), ':')) {
+    } else if (info->page_redirect >= 300 && info->page_redirect <= 399 && !looksLikeUrl(filenameOrUri)) {
         // 3xx require an absolute URL
         debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a URL on '" << page_name << "'");
         self_destruct();
-    } else if (info->page_redirect >= 400 /* && <= 599 */ && strchr(&(page_name[4]), ':')) {
+    } else if (info->page_redirect >= 400 /* && <= 599 */ && looksLikeUrl(filenameOrUri)) {
         // 4xx/5xx require a local template file
         debugs(0, DBG_CRITICAL, "FATAL: status " << info->page_redirect << " requires a template on '" << page_name << "'");
         self_destruct();
