@@ -577,10 +577,11 @@ doV2Query(const int fd, Ip::Address &from, const char * const buf, icp_common_t 
 void
 icp_common_t::handleReply(char *buf, Ip::Address &from)
 {
-    if (neighbors_do_private_keys && reqnum == 0) {
-        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
-        debugs(12, DBG_CRITICAL, "icpHandleIcpV2: Disabling use of private keys");
-        neighbors_do_private_keys = 0;
+    if (reqnum == 0) {
+        static auto debugLevel = DBG_CRITICAL;
+        debugs(12, debugLevel, "ERROR: Ignoring unexpected ICP reply with zero reqnum from " << from);
+        debugLevel = 2;
+        return;
     }
 
     const auto url = icpGetUrl(from, buf, *this);
