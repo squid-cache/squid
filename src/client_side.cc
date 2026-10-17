@@ -2789,7 +2789,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     // established CONNECT tunnel with the client or an intercepted TCP (and
     // presumably TLS) connection from the client. Expect TLS Client Hello.
     const auto insideConnectTunnel = receivedFirstByte_;
-    debugs(33, 5, (insideConnectTunnel ? "post-CONNECT " : "raw TLS ") << clientConnection);
+    debugs(33, 5, (insideConnectTunnel ? "post-CONNECT " : "raw TLS ") << clientConnection << " with " << inBuf.length() << " buffered bytes");
 
     tlsConnectHostOrIp = request->url.hostOrIp();
     tlsConnectPort = request->url.port();
@@ -2816,9 +2816,18 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     // commSetConnTimeout() was called for this request before we switched.
     // Fix timeout to request_start_timeout
     resetReadTimeout(Config.Timeout.request_start_timeout);
-    // Also reset receivedFirstByte_ flag to allow this timeout work in the case we have
-    // a bumped "connect" request on non transparent port.
-    receivedFirstByte_ = false;
+
+    if (insideConnectTunnel) {
+        // receivedFirstByte_ drives read timeout decisions. Reset it here
+        // because we use the same request_start_timeout for the very first TCP
+        // byte and the first [presumably TLS] byte insideConnectTunnel. The new
+        // value is not just `false` because we want to accommodate rare clients
+        // that send post-CONNECT bytes without waiting for our CONNECT reply.
+        receivedFirstByte_ = !inBuf.isEmpty();
+    } else {
+        Assure(!receivedFirstByte_);
+    }
+
     // Get more data to peek at Tls
     parsingTlsHandshake = true;
 
@@ -2828,6 +2837,7 @@ ConnStateData::switchToHttps(ClientHttpRequest *http, Ssl::BumpMode bumpServerMo
     if (insideConnectTunnel)
         preservingClientData_ = shouldPreserveClientData();
 
+    // XXX: If receivedFirstByte_ is true, we should parse what we have first.
     readSomeData();
 }
 
@@ -2836,8 +2846,6 @@ ConnStateData::parseTlsHandshake()
 {
     Must(parsingTlsHandshake);
 
-    assert(!inBuf.isEmpty());
-    receivedFirstByte();
     fd_note(clientConnection->fd, "Parsing TLS handshake");
 
     // stops being nil if we fail to parse the handshake
@@ -2845,9 +2853,18 @@ ConnStateData::parseTlsHandshake()
 
     try {
         if (!tlsParser.parseHello(inBuf)) {
-            // need more data to finish parsing
-            readSomeData();
-            return;
+            debugs(33, 5, "need more data; buffered TLS handshake bytes: " << inBuf.length());
+
+            // Keep in sync with a similar check in parseRequests().
+            Assure(isOpen());
+            if (!commIsHalfClosed(clientConnection->fd)) {
+                readSomeData();
+                return;
+            }
+
+            static const auto d = MakeNamedErrorDetail("TLS_ACCEPT_HALF_CLOSURE");
+            parseErrorDetails = d;
+            // fall through to error handling
         }
     }
     catch (const TextException &ex) {
