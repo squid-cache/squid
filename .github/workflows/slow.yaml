@@ -16,6 +16,11 @@ on:
 
   # allows to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        required: true
+        default: 'auto'
 
 concurrency:
   # Cancel ongoing tests in case of push to staging branch.
@@ -65,6 +70,8 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.19
@@ -101,6 +108,8 @@ jobs:
 
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Run test-builds
         id: test-builds
@@ -161,6 +170,8 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.19
@@ -222,6 +233,8 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Run test-builds
         id: test-builds
