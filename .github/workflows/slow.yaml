@@ -16,6 +16,11 @@ on:
 
   # allows to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        required: true
+        default: 'auto'
 
 concurrency:
   # Cancel ongoing tests in case of push to staging branch.
@@ -65,6 +70,8 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.19
@@ -96,17 +103,19 @@ jobs:
           brew install \
             automake coreutils cppunit gawk \
             gnu-getopt gnu-sed grep libtool \
-            make cyrus-sasl
+            make cyrus-sasl openssl@3
             # openldap openssl # already provided by github workers base-image
 
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Run test-builds
         id: test-builds
         run: |
           eval `brew shellenv`
-          PKG_CONFIG_PATH="$HOMEBREW_PREFIX/lib/pkgconfig"
+          PKG_CONFIG_PATH="`ls -d $HOMEBREW_PREFIX/Cellar/openssl@3/*/lib/pkgconfig`:$HOMEBREW_PREFIX/lib/pkgconfig"
           PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/openldap/lib/pkgconfig"
           PKG_CONFIG_PATH="$PKG_CONFIG_PATH:$HOMEBREW_PREFIX/opt/cyrus-sasl/lib/pkgconfig"
           export PKG_CONFIG_PATH
@@ -161,6 +170,8 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.19
@@ -222,6 +233,8 @@ jobs:
     steps:
       - name: Checkout Sources
         uses: actions/checkout@v4
+        with:
+          branch: ${{ inputs.branch }}
 
       - name: Run test-builds
         id: test-builds
