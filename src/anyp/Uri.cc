@@ -1099,7 +1099,6 @@ AnyP::Uri::cleanup(const char *uri)
             choppedUri = xstrndup(uri, pos + 1);
         cleanedUri = xstrndup(rfc1738_do_escape(choppedUri ? choppedUri : uri,
                                                 RFC1738_ESCAPE_UNESCAPED), MAX_URL);
-        cleanedUri[pos] = '\0';
         xfree(choppedUri);
         break;
     }
