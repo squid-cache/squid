@@ -1126,9 +1126,13 @@ bool Adaptation::Icap::ModXact::expectIcapTrailers() const
     String trailers;
     const bool promisesToSendTrailer = icapReply->header.getByIdIfPresent(Http::HdrType::TRAILER, &trailers);
     const bool supportsTrailers = icapReply->header.hasListMember(Http::HdrType::ALLOW, "trailers", ',');
-    // ICAP Trailer specs require us to reject transactions having either Trailer
-    // header or Allow:trailers
-    Must((promisesToSendTrailer == supportsTrailers) || (!promisesToSendTrailer && supportsTrailers));
+
+    // ICAP Trailer extension specification says that "a client receiving a
+    // Trailer header field without Allow/trailers in a response MAY treat the
+    // response as syntactically malformed", and that is how we treat it here.
+    if (promisesToSendTrailer && !supportsTrailers)
+        throw TextException("ICAP response with an unsupported trailer", Here());
+
     if (promisesToSendTrailer && !trailers.size())
         debugs(93, DBG_IMPORTANT, "ERROR: ICAP Trailer response header field must not be empty (salvaged)");
     return promisesToSendTrailer;
