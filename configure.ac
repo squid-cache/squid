@@ -1095,8 +1095,6 @@ AS_IF([test "x$with_openssl" = "xyes"],[
 
   SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
 
-  LIBS="$LIBS $LIBOPENSSL_PATH"
-
   AS_IF([test "x$LIBOPENSSL_LIBS" != "x"],[
     CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
     SSLLIB="$LIBOPENSSL_PATH $LIBOPENSSL_LIBS $SSLLIB"
