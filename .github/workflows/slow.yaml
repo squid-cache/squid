@@ -97,7 +97,7 @@ jobs:
             automake coreutils cppunit gawk \
             gnu-getopt gnu-sed grep libtool \
             make cyrus-sasl openssl@3
-            # openldap openssl # already provided by github workers base-image
+            # openldap and openssl@4 are provided by github workers base-image
 
       - name: Checkout Sources
         uses: actions/checkout@v4
