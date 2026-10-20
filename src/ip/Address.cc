@@ -12,6 +12,7 @@
 #include "debug/Stream.h"
 #include "ip/Address.h"
 #include "ip/tools.h"
+#include "sbuf/Stream.h"
 #include "util.h"
 
 #include <cassert>
@@ -1045,3 +1046,44 @@ Ip::Address::getInAddr(struct in_addr &buf) const
     return false;
 }
 
+Ip::AddressText::AddressText(const Address &ip) :
+    ip_(ip)
+{}
+
+std::ostream&
+Ip::AddressText::print(std::ostream& os) const
+{
+    if (printBrackets_ && ip_.isIPv6())
+        os << '[';
+
+    /* some external code may have blindly memset a parent. */
+    /* that's okay, our default is known */
+    if ( ip_.isAnyAddr() ) {
+        if (ip_.isIPv6())
+            os << "::";
+        if (ip_.isIPv4())
+            os << "0.0.0.0";
+    } else {
+
+        char buf[INET6_ADDRSTRLEN];
+        if (ip_.isIPv6()) {
+            inet_ntop(AF_INET6, &ip_.mSocketAddr_.sin6_addr, buf, INET6_ADDRSTRLEN);
+        } else if (ip_.isIPv4()) {
+            struct in_addr tmp;
+            ip_.getInAddr(tmp);
+            inet_ntop(AF_INET, &tmp, buf, INET6_ADDRSTRLEN);
+        } else {
+            debugs(14, DBG_CRITICAL, "corrupted IP address details");
+            assert(false);
+        }
+        os << buf;
+    }
+
+    if (printBrackets_ && ip_.isIPv6())
+        os << ']';
+
+    if (printPort_ && ip_.port() != 0)
+        os << ":" << ip_.port();
+
+    return os;
+}
