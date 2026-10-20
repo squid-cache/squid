@@ -1072,8 +1072,6 @@ AS_IF([test "x$with_openssl" = "xyes"],[
 
   CPPFLAGS="$LIBOPENSSL_CFLAGS $CPPFLAGS"
   # User may have provided a custom location for OpenSSL. Otherwise...
-  LIBS="$LIBS $LIBOPENSSL_PATH"
-
   AC_CHECK_HEADERS( \
     openssl/asn1.h \
     openssl/bio.h \
@@ -1096,6 +1094,8 @@ AS_IF([test "x$with_openssl" = "xyes"],[
   )
 
   SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
+
+  LIBS="$LIBS $LIBOPENSSL_PATH"
 
   AS_IF([test "x$LIBOPENSSL_LIBS" != "x"],[
     CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
