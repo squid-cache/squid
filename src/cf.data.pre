@@ -6122,6 +6122,18 @@ DOC_START
 		requests on the same client connection. A helper may update
 		the TAG during subsequent requests by returning a new kv-pair.
 
+	Squid performs several `value` adjustments, in the following order:
+
+	1. Inside all double-quoted substrings, two-byte `\<C>` sequences are
+	   replaced with the corresponding character `C` except `\r` and `\n`
+	   sequences are replaced with ASCII CR and LF characters, respectively. The
+	   double quotes surrounding such substrings are removed. The fine details
+	   of this processing are not documented here and may change. Avoid
+	   triggering these adjustments (beyond the removal of a single leading and
+	   a single trailing quote character). They may be deprecated.
+
+	2. If the original value started with a quote, then Squid assumes the value
+	   is pct-encoded and decodes it (after processing summarized in item 1).
 
 	Helper messages contain the channel-ID part if and only if the
 	url_rewrite_children directive specifies positive concurrency. As a
