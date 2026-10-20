@@ -1071,7 +1071,7 @@ AS_IF([test "x$with_openssl" = "xyes"],[
   ])
 
   CPPFLAGS="$LIBOPENSSL_CFLAGS $CPPFLAGS"
-  # User may have provided a custom location for OpenSSL. Otherwise...
+
   AC_CHECK_HEADERS( \
     openssl/asn1.h \
     openssl/bio.h \
