@@ -1093,7 +1093,7 @@ AS_IF([test "x$with_openssl" = "xyes"],[
     openssl/pem.h \
   )
 
-  SQUID_STATE_ROLLBACK(squid_openssl_state) #de-pollute LIBS
+  SQUID_STATE_ROLLBACK(squid_openssl_state)
 
   AS_IF([test "x$LIBOPENSSL_LIBS" != "x"],[
     CXXFLAGS="$LIBOPENSSL_CFLAGS $CXXFLAGS"
