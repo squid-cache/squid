@@ -22,6 +22,7 @@
 #include "MemBuf.h"
 #include "mime_header.h"
 #include "RequestFlags.h"
+#include "rfc1738.h"
 #include "Store.h"
 #include "StoreClient.h"
 #include "tools.h"
@@ -343,7 +344,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
     rep->setHeaders(Http::scFound, nullptr, "text/html", mb->length(), 0, squid_curtime);
 
     if (min_url) {
-        rep->header.putStr(Http::HdrType::LOCATION, min_url);
+        // min_url is a copy of url_entry::url which is currently escaped (via AnyP::Uri::absolute())
+        rep->header.putStr(Http::HdrType::LOCATION, min_url); // no rfc1738_escape()
         safe_free(min_url);
     }
 

@@ -1358,7 +1358,7 @@ ErrorState::BuildHttpReply()
 
         if (request) {
             auto location = compile(urlTemplate, true, true);
-            rep->header.putStr(Http::HdrType::LOCATION, location.c_str());
+            rep->header.putStr(Http::HdrType::LOCATION, rfc1738_escape(location.c_str()));
         }
 
         httpHeaderPutStrf(&rep->header, Http::HdrType::X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");

@@ -512,6 +512,7 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
     } else
         absUrl = hdrUrl;
 
+    // XXX: hdrUrl is encoded but purgeEntriesByUrl() assumes a decoded URI.
     purgeEntriesByUrl(req, absUrl);
 }
 

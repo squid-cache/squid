@@ -21,6 +21,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "rfc1738.h"
 #include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
@@ -210,7 +211,8 @@ HttpReply::redirect(Http::StatusCode status, const char *loc)
     hdr->putStr(Http::HdrType::SERVER, visible_appname_string);
     hdr->putTime(Http::HdrType::DATE, squid_curtime);
     hdr->putInt64(Http::HdrType::CONTENT_LENGTH, 0);
-    hdr->putStr(Http::HdrType::LOCATION, loc);
+    // TODO: Add HttpHeader::putLocation() and use it for this and similar calls.
+    hdr->putStr(Http::HdrType::LOCATION, rfc1738_escape(loc));
     date = squid_curtime;
     content_length = 0;
 }

@@ -1080,6 +1080,9 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
             }
         } else {
             // URL-rewrite wanted. Ew.
+            // XXX: urlNote is raw/decoded URI but the following code
+            // * compares urlNote with encoded http->uri (set via effectiveRequestUri()/AnyP::Uri::absolutePath())
+            // * feeds urlNote to AnyP::Uri::parse() that assumes encoded URI (e.g., stops parsing at CRLF)
             urlNote = reply.notes.findFirst("rewrite-url");
 
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
