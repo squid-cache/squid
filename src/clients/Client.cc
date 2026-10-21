@@ -512,7 +512,10 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
     } else
         absUrl = hdrUrl;
 
-    // XXX: hdrUrl is encoded but purgeEntriesByUrl() assumes a decoded URI.
+    // XXX: When absUrl is received hdrUrl, it may be pct-encoded differently
+    // than the encoding used by effectiveRequestUri(). The latter encoding is
+    // effectively assumed by purgeEntriesByUrl() for its URI parameter because
+    // we normally use effectiveRequestUri() to generate Store keys.
     purgeEntriesByUrl(req, absUrl);
 }
 
