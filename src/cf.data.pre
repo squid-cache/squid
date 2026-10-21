@@ -2541,10 +2541,6 @@ DOC_START
 				 this option is not set.
 
 	   sslflags=	Various flags modifying the use of SSL:
-			    DELAYED_AUTH
-				Don't request client certificates
-				immediately, but wait until acl processing
-				requires a certificate (not yet implemented).
 			    CONDITIONAL_AUTH
 				Request a client certificate during the TLS
 				handshake, but ignore certificate absence in
