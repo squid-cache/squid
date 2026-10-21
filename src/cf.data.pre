@@ -9018,7 +9018,7 @@ DOC_START
 	Alternatively you can tell Squid to reset the TCP connection
 	by specifying TCP_RESET.
 
-	Or you can specify an error URL or URL pattern. The browsers will
+	Or you can specify an error URL pattern. The browsers will
 	get redirected to the specified URL after formatting tags have
 	been replaced. Redirect will be done with 302 or 307 according to
 	HTTP/1.1 specs. A different 3xx code may be specified by prefixing
@@ -9046,6 +9046,17 @@ DOC_START
 		%w	- Admin email from squid.conf
 		%x	- Error name
 		%%	- Literal percent (%) code
+
+	When substituting the above single-letter format tags in a URL pattern,
+	Squid pct-encodes substitution values. Squid does not encode the non-tag
+	portions of the URL pattern. Admins have to be extra careful with error URL
+	patterns because Squid does not validate pattern substitution result against
+	URL syntax rules and, hence, does not warn about URL syntax violations when
+	using that result for the HTTP Location response header value.
+
+	If your error URL pattern contains `%` characters that are not meant to be
+	interpreted as the beginning of a single-letter format tags above, replace
+	them with `%%`.
 
 DOC_END
 

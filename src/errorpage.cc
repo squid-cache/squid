@@ -1200,11 +1200,13 @@ ErrorState::compileLegacyCode(Build &build)
     case 'U':
         /* Using the fake-https version of absolute-URI so error pages see https:// */
         /* even when the url-path cannot be shown as more than '*' */
-        if (request)
+        if (request) {
             p = urlCanonicalFakeHttps(request.getRaw());
-        else if (url)
+            no_urlescape = 1; // urlCanonicalFakeHttps() pct-encodes; keep in sync with Bug 5523 fix
+        } else if (url) {
+            // TODO: Set no_urlescape or explain why we should not.
             p = url;
-        else if (!building_deny_info_url)
+        } else if (!building_deny_info_url)
             p = "[no URL]";
         break;
 
@@ -1212,9 +1214,11 @@ ErrorState::compileLegacyCode(Build &build)
         if (request) {
             const SBuf &tmp = request->effectiveRequestUri();
             mb.append(tmp.rawContent(), tmp.length());
-        } else if (url)
+            no_urlescape = 1; // effectiveRequestUri() pct-encodes; keep in sync with Bug 5523 fix
+        } else if (url) {
+            // TODO: Set no_urlescape or explain why we should not.
             p = url;
-        else if (!building_deny_info_url)
+        } else if (!building_deny_info_url)
             p = "[no URL]";
         break;
 
@@ -1262,6 +1266,8 @@ ErrorState::compileLegacyCode(Build &build)
 
     case '%':
         p = "%";
+        if (building_deny_info_url)
+            no_urlescape = 1;
         break;
 
     case '\0':
@@ -1296,6 +1302,10 @@ ErrorState::compileLegacyCode(Build &build)
     // TODO: Add an I/O manipulator to report non-printable chars better.
     debugs(4, 3, "%" << (letter ? letter : '?') << " --> '" << p << "'" );
 
+    // XXX: We html_quote() some building_deny_info_url cases that are never
+    // used to create HTML content (e.g., a `%R` or `%U` URL path containing
+    // `a&b` results in `a&amp;b` being sent in Location URL path).
+    // TODO: Do not html_quote() any building_deny_info_url cases.
     if (do_quote)
         p = html_quote(p);
 
@@ -1358,7 +1368,10 @@ ErrorState::BuildHttpReply()
 
         if (request) {
             auto location = compile(urlTemplate, true, true);
-            rep->header.putStr(Http::HdrType::LOCATION, rfc1738_escape(location.c_str()));
+            // compile() calls rfc1738_escape() or equivalent for all legacy %codes
+            // XXX: compile() does not call rfc1738_escape() for logformat %codes, and it
+            // may be difficult or impossible for the admin to control their escaping
+            rep->header.putStr(Http::HdrType::LOCATION, location.c_str()); // no rfc1738_escape()
         }
 
         httpHeaderPutStrf(&rep->header, Http::HdrType::X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
