@@ -6122,10 +6122,15 @@ DOC_START
 		requests on the same client connection. A helper may update
 		the TAG during subsequent requests by returning a new kv-pair.
 
-	Values in `url=value` and `rewrite-url=value` pairs are assumed to be
-	pct-encoded (RFC 3986) unless they are "quoted". Squid decodes values before
-	using them. See `external_acl_type` documentation for more information about
-	value encoding (look for "double quotes" and "escaping").
+	Squid decodes all received `key=value` parameter values before using them:
+
+	* All "quoted" parameter values (e.g., `rewrite-url="value"`) are decoded
+	  using shell-like escape syntax. See `external_acl_type` documentation for
+	  info about that value encoding (look for "double quotes" and "escaping").
+
+	* All bare parameter values (e.g., `rewrite-url=value`) are decoded using
+	  percent-encoding syntax. See RFC 3986 Section 2.1, but note that Squid
+	  currently leaves `%00` percent-encoding triplets undecoded.
 
 	Helper messages contain the channel-ID part if and only if the
 	url_rewrite_children directive specifies positive concurrency. As a
