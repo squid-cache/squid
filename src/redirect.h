@@ -23,5 +23,10 @@ void redirectReconfigure();
 void redirectStart(ClientHttpRequest *, HLPCB *, void *);
 void storeIdStart(ClientHttpRequest *, HLPCB *, void *);
 
+/// Whether the given input uses URI-reference syntax (RFC 9110 Section 10.2.2).
+/// Logs a level-0 ERROR message on failures.
+/// \prec the given string has been percent-encoded (RFC 3986 Section 2.1)
+bool redirectUriIsValid(const char *);
+
 #endif /* SQUID_SRC_REDIRECT_H */
 

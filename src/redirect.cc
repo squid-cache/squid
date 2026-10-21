@@ -27,6 +27,7 @@
 #include "redirect.h"
 #include "rfc1738.h"
 #include "sbuf/SBuf.h"
+#include "sbuf/Stream.h"
 #include "SquidConfig.h"
 #include "Store.h"
 #if USE_AUTH
@@ -144,20 +145,18 @@ redirectHandleReply(void *data, const Helper::Reply &reply)
                         || status == Http::scTemporaryRedirect) {
 
                     if (const char *t = strchr(result, ':')) {
-                        char statusBuf[4];
-                        snprintf(statusBuf, sizeof(statusBuf),"%3u",status);
-                        newReply.notes.add("status", statusBuf);
                         ++t;
-                        // TODO: validate the URL produced here is RFC 2616 compliant URI
-                        newReply.notes.add("url", t);
+                        if (redirectUriIsValid(t)) {
+                            newReply.notes.add(SBuf("status"), ToSBuf(status));
+                            newReply.notes.add("url", t);
+                        }
                     } else {
                         debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << result);
                     }
                 } else {
                     // status code is not a redirect code (or does not exist)
                     // treat as a re-write URL request
-                    // TODO: validate the URL produced here is RFC 2616 compliant URI
-                    if (*result)
+                    if (*result && redirectUriIsValid(result))
                         newReply.notes.add("rewrite-url", result);
                 }
 
@@ -282,6 +281,26 @@ constructHelperQuery(const char * const name, const Helper::Client::Pointer &hlp
 }
 
 /**** PUBLIC FUNCTIONS ****/
+
+bool
+redirectUriIsValid(const char * const buf)
+{
+    Assure(buf);
+
+    // Check for violations that may affect HTTP message framing.
+    const auto goodPrefix = strcspn(buf, "\r\n");
+    if (goodPrefix < strlen(buf)) {
+        // TODO: Add and use Raw::escapeControlChars() instead of reporting the prefix
+        debugs(85, DBG_CRITICAL, "ERROR: url_rewrite_program produced a URI-reference with a bare ASCII CR or LF character" <<
+               Debug::Extra << "URI prefix: " << SBuf(buf, goodPrefix));
+        return false;
+    }
+
+    // TODO: More checks! For example, AnyP::Uri::parse() should succeed unless
+    // this is relative reference, as permitted by RFC 9110 Section 10.2.2.
+    // We already do that parse() check for the "rewrite-url" case.
+    return true;
+}
 
 void
 redirectStart(ClientHttpRequest * http, HLPCB * handler, void *data)

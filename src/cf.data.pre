@@ -6072,7 +6072,16 @@ DOC_START
 
 	  OK [status=30N] url="..."
 
-		Redirect the client to a URL supplied in the 'url' parameter.
+		Redirect the client to the specified URL. After decoding the `url`
+		parameter value as described further below, Squid uses the decoded value
+		(as is, without additional decoding or encoding) as a `URI-reference` in
+		the Squid-generated 3xx HTTP response Location header field (see RFC 9110
+		Section 10.2.2). HTTP syntax requires certain `URI-reference` characters
+		to be percent-encoded (see RFC 3986 Section 2.1). Squid does not fully
+		validate `URI-reference` value syntax, but if it detects a violation
+		(e.g., a new line presence), it logs an ERROR to cache.log and keeps the
+		client request intact.
+
 		Optional 'status' specifies the status code to send to the
 		client in Squid's HTTP redirect response. It must be one of
 		the standard HTTP redirect status codes: 301, 302, 303, 307,
@@ -6081,7 +6090,8 @@ DOC_START
 	  OK rewrite-url="..."
 
 		Replace the current request URL with the one supplied in the
-		'rewrite-url' parameter. Squid fetches the resource specified
+		'rewrite-url' parameter, after decoding that parameter value
+		as described further below. Squid fetches the resource specified
 		by the new URL and forwards the received response (or its
 		cached copy) to the client.
 
@@ -6124,11 +6134,11 @@ DOC_START
 
 	Squid decodes all received `key=value` parameter values before using them:
 
-	* All "quoted" parameter values (e.g., `rewrite-url="value"`) are decoded
-	  using shell-like escape syntax. See `external_acl_type` documentation for
-	  info about that value encoding (look for "double quotes" and "escaping").
+	* All parameter values, whether quoted or unquoted, are decoded using
+	  shell-like escape syntax. See `external_acl_type` documentation for info
+	  about that value encoding (look for "double quotes" and "escaping").
 
-	* All bare parameter values (e.g., `rewrite-url=value`) are decoded using
+	* All bare parameter values (e.g., `message=value`) are decoded using
 	  percent-encoding syntax. See RFC 3986 Section 2.1, but note that Squid
 	  currently leaves `%00` percent-encoding triplets undecoded.
 

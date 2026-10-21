@@ -1371,7 +1371,7 @@ ErrorState::BuildHttpReply()
             // compile() calls rfc1738_escape() or equivalent for all legacy %codes
             // XXX: compile() does not call rfc1738_escape() for logformat %codes, and it
             // may be difficult or impossible for the admin to control their escaping
-            rep->header.putStr(Http::HdrType::LOCATION, location.c_str()); // no rfc1738_escape()
+            rep->header.putStr(Http::HdrType::LOCATION, location.c_str());
         }
 
         httpHeaderPutStrf(&rep->header, Http::HdrType::X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
