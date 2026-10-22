@@ -68,8 +68,7 @@ class DebugMessages
 {
 public:
     /// configurable messages indexed by their IDs
-    typedef std::array<DebugMessage, DebugMessageIdUpperBound> Storage;
-    Storage messages;
+    std::array<DebugMessage, DebugMessageIdUpperBound> messages;
 };
 
 /// Global configuration for DebugMessageLevel() (where/when supported).
