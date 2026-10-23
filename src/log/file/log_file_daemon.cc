@@ -10,7 +10,6 @@
 
 #include "compat/unistd.h"
 
-#include <cassert>
 #include <cerrno>
 #include <csignal>
 #include <cstring>
