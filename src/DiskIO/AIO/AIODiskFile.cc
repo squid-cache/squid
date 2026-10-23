@@ -34,12 +34,12 @@
 
 CBDATA_CLASS_INIT(AIODiskFile);
 
-AIODiskFile::AIODiskFile(char const *aPath, AIODiskIOStrategy *aStrategy) : fd(-1), closed(true), error_(false)
+AIODiskFile::AIODiskFile(char const *aPath, AIODiskIOStrategy *aStrategy) :
+    path(aPath),
+    strategy(aStrategy)
 {
-    assert (aPath);
-    path = aPath;
-    strategy = aStrategy;
-    debugs(79, 3, "AIODiskFile::AIODiskFile: " << aPath);
+    assert(!path.isEmpty());
+    debugs(79, 3, path);
 }
 
 AIODiskFile::~AIODiskFile()
@@ -56,9 +56,9 @@ AIODiskFile::open(int flags, mode_t, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
 #if _SQUID_WINDOWS_
-    fd = aio_open(path.termedBuf(), flags);
+    fd = aio_open(path.c_str(), flags);
 #else
-    fd = file_open(path.termedBuf(), flags);
+    fd = file_open(path.c_str(), flags);
 #endif
 
     ioRequestor = callback;
