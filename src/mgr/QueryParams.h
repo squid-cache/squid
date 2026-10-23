@@ -13,7 +13,7 @@
 
 #include "ipc/forward.h"
 #include "mgr/QueryParam.h"
-#include "parser/forward.h"
+#include "sbuf/forward.h"
 #include "SquidString.h"
 
 #include <utility>
@@ -34,7 +34,7 @@ public:
     void pack(Ipc::TypedMsgHdr& msg) const; ///< store params into msg
     void unpack(const Ipc::TypedMsgHdr& msg); ///< load params from msg
     /// parses the query string parameters
-    static void Parse(Parser::Tokenizer &, QueryParams &);
+    static void Parse(SBuf &, QueryParams &);
 
 private:
     /// find query parameter by name
