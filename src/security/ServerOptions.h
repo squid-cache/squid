@@ -27,7 +27,7 @@ class ServerOptions : public PeerOptions
 public:
 #if USE_OPENSSL
     sk_dtor_wrapper(sk_X509_NAME, STACK_OF(X509_NAME) *, X509_NAME_free);
-    typedef std::unique_ptr<STACK_OF(X509_NAME), Security::ServerOptions::sk_X509_NAME_free_wrapper> X509_NAME_STACK_Pointer;
+    using X509_NAME_STACK_Pointer = std::unique_ptr<STACK_OF(X509_NAME), Security::ServerOptions::sk_X509_NAME_free_wrapper>;
 #endif
 
     ServerOptions() : PeerOptions() {
