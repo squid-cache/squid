@@ -72,6 +72,15 @@ extern void (*failure_notify) (const char *);
 #elif defined(USE_KQUEUE) || defined(USE_EPOLL) || defined(USE_DEVPOLL)
 # define SQUID_FDSET_NOUSE 1
 
+// An OS may supply us with huge RLIMIT_NOFILE limits (e.g., the soft
+// limit may exceed one billion on Kubernets). We cap these OS-provided
+// limits to protect deployments from accidentally or unknowingly
+// allocating huge FD-indexed structures (e.g., ~432 GB fd_table on
+// Kubernetes). Special deployments that really need more descriptors
+// than this cap must set max_filedescriptors accordingly.
+/* ~42 MB fd_table */
+#define SQUID_MAXFD_LIMIT (100*1024)
+
 #else
 # error Unknown select loop model!
 #endif
