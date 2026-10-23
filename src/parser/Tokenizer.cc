@@ -76,24 +76,32 @@ Parser::Tokenizer::token(SBuf &returnedToken, const CharacterSet &delimiters)
 }
 
 bool
-Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
+Parser::Tokenizer::prefix_(SBuf &returnedToken, const SBuf::size_type limit, const SearchAlgorithm searchAlgorithm, const CharacterSet &chars)
 {
-    SBuf::size_type prefixLen = buf_.substr(0,limit).findFirstNotOf(tokenChars);
+    const auto limitedBuf = buf_.substr(0, limit);
+    auto prefixLen = (searchAlgorithm == findFirstOf) ? limitedBuf.findFirstOf(chars) : limitedBuf.findFirstNotOf(chars);
     if (prefixLen == 0) {
-        debugs(24, 8, "no prefix for set " << tokenChars.name);
+        debugs(24, 8, "empty needle with set " << chars.name);
         return false;
     }
-    if (prefixLen == SBuf::npos && (atEnd() || limit == 0)) {
-        debugs(24, 8, "no char in set " << tokenChars.name << " while looking for prefix");
+    if (prefixLen == SBuf::npos && !limitedBuf.length()) {
+        // TODO: Evaluate whether checking limitedBuf.length() before computing prefixLen is an optimization.
+        debugs(24, 8, "empty haystack with limit " << limit);
         return false;
     }
-    if (prefixLen == SBuf::npos && limit > 0) {
+    if (prefixLen == SBuf::npos) {
         debugs(24, 8, "whole haystack matched");
         prefixLen = limit;
     }
     debugs(24, 8, "found with length " << prefixLen);
     returnedToken = consume(prefixLen); // cannot be empty after the npos check
     return true;
+}
+
+bool
+Parser::Tokenizer::prefix(SBuf &returnedToken, const CharacterSet &tokenChars, const SBuf::size_type limit)
+{
+    return prefix_(returnedToken, limit, findFirstNotOf, tokenChars);
 }
 
 SBuf
@@ -104,13 +112,19 @@ Parser::Tokenizer::prefix(const char *description, const CharacterSet &tokenChar
 
     SBuf result;
 
-    if (!prefix(result, tokenChars, limit))
+    if (!prefix_(result, limit, findFirstNotOf, tokenChars))
         throw TexcHere(ToSBuf("cannot parse ", description));
 
     if (atEnd())
         throw InsufficientInput();
 
     return result;
+}
+
+bool
+Parser::Tokenizer::prefixUntil(SBuf &returnedToken, const CharacterSet &delimiters, SBuf::size_type limit)
+{
+    return prefix_(returnedToken, limit, findFirstOf, delimiters);
 }
 
 bool
