@@ -94,7 +94,7 @@ private:
     static const time_t RenegotiationsWindow = 10;
 
     /// the maximum tolerated number of client-initiated renegotiations in RenegotiationsWindow
-    static const int RenegotiationsLimit = 5;
+    static const uint64_t RenegotiationsLimit = 5;
 
     bool holdRead_; ///< The read hold state of the bio.
     bool holdWrite_;  ///< The write hold state of the bio.
