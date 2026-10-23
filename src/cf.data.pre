@@ -1086,23 +1086,11 @@ DOC_START
 
 	Any keywords may be sent on any response whether OK, ERR or BH.
 
-	Response keyword=value encoding:
-
-	The exact parameter encoding is too complex to be documented in full here,
-	but the following abridged description is sufficient for all use cases and
-	should be closely followed by helpers to avoid bugs and upgrade problems:
-
-	  * The quoted (i.e. `key="value"`) format signals `value` escaping using a
-	    backslash character (`\`): Escape each double quote character and each
-	    backslash character with a backslash. To send a single ASCII CR or LF
-	    character send a two-byte `\r` or `\n` sequence. Do not send byte 0, raw
-	    or escaped. The wrapping double quotes around `value` are removed.
-
-	  * The unquoted (`key=value`) format signals percent-encoding (RFC 3986
-	    Section 2.1). Encode all double quote characters (as `%22`), backslash
-	    characters (as `%5C`), percent characters (as `%25`) as well as all
-	    ASCII SP (i.e. space), HT, CR, and LF characters. Do not send byte 0,
-	    raw or percent-encoded.
+	All response keyword values need to be a single token with URL
+	escaping, or enclosed in double quotes (") and escaped using \ on
+	any double quotes or \ characters within the value. The wrapping
+	double quotes are removed before the value is interpreted by Squid.
+	\r and \n are also replace by CR and LF.
 
 	Some example key values:
 
