@@ -373,27 +373,133 @@ HttpHeader::append(const HttpHeader * src)
     }
 }
 
+/**
+ * Whether this is the same resource representation
+ * the 304 ('fresh') header was generated from, and
+ * that there are changes to apply.
+ *
+ * Governed by RFC 9111 section 4.3.4:
+ * "
+ *  When a cache receives a 304 (Not Modified) response,
+ *  it needs to identify stored responses that are
+ *  suitable for updating with the new information provided
+ * "
+ */
 bool
 HttpHeader::needUpdate(HttpHeader const *fresh) const
 {
+    bool result = false; // assume optimal result; no further work necessary
+    String value;
     for (const auto e: fresh->entries) {
-        if (!e || skipUpdateHeader(e->id))
+        if (!e) // Paranoid check; should never occur
             continue;
-        String value;
-        if (!hasNamed(e->name, &value) ||
-                (value != fresh->getByName(e->name)))
-            return true;
+
+        switch (e->id) {
+        case Http::HdrType::OTHER:
+            // check if this header is actually being changed.
+            if (!result)
+                result = (!hasNamed(e->name, &value) || value != fresh->getByName(e->name));
+            break;
+
+        case Http::HdrType::CONTENT_ENCODING:
+        case Http::HdrType::CONTENT_LENGTH:
+        case Http::HdrType::CONTENT_TYPE:
+        case Http::HdrType::ETAG:
+        case Http::HdrType::VARY:
+            // Strong Identifiers;
+            // Any difference in these headers indicates the 304
+            // received DOES NOT apply to this representation.
+            if (!getByIdIfPresent(e->id, &value) || value != fresh->getByName(e->name))
+                return false;
+            break;
+
+        case Http::HdrType::CONTENT_LANGUAGE:
+        case Http::HdrType::CONTENT_LOCATION:
+            // Weak identifiers;
+            // Changes only cause representation issues if they are
+            // used by the Vary field-value
+            if (hasListMember(Http::HdrType::VARY, e->value.rawBuf(), ','))
+                return false;
+            [[fallthrough]];
+
+        default:
+            // check if this header is actually being changed.
+            if (!result)
+                result = (!getByIdIfPresent(e->id, &value) || value != fresh->getByName(e->name));
+            break;
+        }
     }
-    return false;
+    return result;
 }
 
+/**
+ * Whether this HTTP header is to be ignored when updating
+ * an existing cache object after revalidation, etc.
+ *
+ * Governed by RFC 9111 section 3.1 and 3.2:
+ * "
+ *  Caches are required to update a stored response's
+ *  header fields from another (typically newer)
+ *  response in several situations
+ * "
+ */
 bool
 HttpHeader::skipUpdateHeader(const Http::HdrType id) const
 {
-    return
-        // TODO: Consider updating Vary headers after comparing the magnitude of
-        // the required changes (and/or cache losses) with compliance gains.
-        (id == Http::HdrType::VARY);
+    /**
+     * RFC 9111 section 3.2:
+     *  the cache MUST add each header field in the provided
+     *  response to the stored response, replacing field
+     *  values that are already present, with the following
+     *  exceptions:
+     */
+
+    // s3.2: Header fields excepted from storage in Section 3.1
+    switch (id) {
+    // s3.1: Header fields that are specific to the proxy that a cache uses
+    case Http::HdrType::PROXY_AUTHENTICATE:
+    case Http::HdrType::PROXY_AUTHENTICATION_INFO:
+    case Http::HdrType::PROXY_AUTHORIZATION:
+        return true;
+
+    // s3.1: The Connection header field and fields whose names are listed in it
+    // MAY update. so we dont bother figuring out if we can skip any listed.
+    case Http::HdrType::CONNECTION:
+        return true;
+
+    // s3.1: The no-cache and private cache directives can have arguments that prevent storage of header fields
+    // MAY update. so we dont bother figuring out if we can skip.
+
+    default:
+        // s3.1: some fields' semantics require them to be removed before forwarding the message
+        if (Http::HeaderLookupTable.lookup(id).hopbyhop)
+            return true;
+        break;
+    }
+
+    switch (id) {
+    // s3.2: Header fields that the cache's stored response depends upon
+    case Http::HdrType::ETAG:
+    case Http::HdrType::KEY:
+    case Http::HdrType::VARY:
+        return true;
+
+    // s3.2: Header fields that are automatically processed and removed by the recipient
+    case Http::HdrType::CONTENT_ENCODING:
+    case Http::HdrType::CONTENT_MD5:
+    case Http::HdrType::CONTENT_RANGE:
+    case Http::HdrType::CONTENT_TYPE:
+        return true;
+
+    // s3.2: The Content-Length header field
+    case Http::HdrType::CONTENT_LENGTH:
+        return true;
+
+    // more complex tests using field-value are in update(fresh)
+    case Http::HdrType::OTHER:
+    default:
+        return false;
+    }
 }
 
 void
@@ -402,29 +508,25 @@ HttpHeader::update(HttpHeader const *fresh)
     assert(fresh);
     assert(this != fresh);
 
-    const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
+    String value;
 
-    while ((e = fresh->getEntry(&pos))) {
+    while (const auto e = fresh->getEntry(&pos)) {
         /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
 
         if (skipUpdateHeader(e->id))
             continue;
+
+        // when header value not actually changed, don't touch it.
+        if (hasNamed(e->name, &value) && value == fresh->getByName(e->name))
+            continue;
+
+        debugs(55, 7, "Updating header '" << Http::HeaderLookupTable.lookup(e->id).name << "' in cached entry");
 
         if (e->id != Http::HdrType::OTHER)
             delById(e->id);
         else
             delByName(e->name);
-    }
-
-    pos = HttpHeaderInitPos;
-    while ((e = fresh->getEntry(&pos))) {
-        /* deny bad guys (ok to check for Http::HdrType::OTHER) here */
-
-        if (skipUpdateHeader(e->id))
-            continue;
-
-        debugs(55, 7, "Updating header '" << Http::HeaderLookupTable.lookup(e->id).name << "' in cached entry");
 
         addEntry(e->clone());
     }
