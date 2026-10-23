@@ -149,9 +149,8 @@ public: // HTTP/1.x state data
 
     class DeferredParams
     {
-
     public:
-        clientStreamNode *node;
+        clientStreamNode *node = nullptr;
         HttpReply *rep;
         StoreIOBuffer queuedBuffer;
     };
