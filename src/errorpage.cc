@@ -381,12 +381,17 @@ TemplateFile::loadDefault()
     }
 #endif
 
-    /* test default location if failed (templates == English translation base templates) */
+    /** test default templates if failed (templates == English translation base templates) */
     if (!loaded()) {
         tryLoadTemplate("templates");
     }
 
-    /* giving up if failed */
+    /** test for any 'soft-coded' template available as default-if-none. */
+    if (!loaded()) {
+        tryInternalDefault();
+    }
+
+    /** giving up if failed. Will result in "Internal Error" production. */
     if (!loaded()) {
         debugs(1, (templateCode < TCP_RESET ? DBG_CRITICAL : 3), "WARNING: failed to find or read error text file " << templateName);
         template_.clear();
@@ -418,6 +423,26 @@ TemplateFile::tryLoadTemplate(const char *lang)
 #endif
 
     return false;
+}
+
+void
+TemplateFile::tryInternalDefault()
+{
+    if (loaded())
+        return; // admin has provided a template.
+
+    // Default templates if no file is found.
+    static const std::list<std::pair<err_type, const SBuf>> SoftCodedErrors = {
+        { HTTP_TRACE_REPLY, SBuf("%R\n") }
+    };
+
+    for (const auto &m: SoftCodedErrors) {
+        if (m.first == templateCode) {
+            template_ = m.second;
+            wasLoaded = parse();
+            return;
+        }
+    }
 }
 
 bool
