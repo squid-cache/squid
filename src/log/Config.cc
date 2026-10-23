@@ -39,9 +39,6 @@ Log::LogConfig::BuiltInFormatName(const Format::log_type logformatType)
 
     case Format::CLF_USERAGENT:
         return "useragent";
-
-    case Log::Format::CLF_REFERER:
-        return "referrer";
     }
 
     // forgotten (by developers) type, invalid type, or unreachable code
@@ -74,9 +71,6 @@ Log::LogConfig::FindBuiltInFormat(const char *logformatName)
 
     if (strcmp(logformatName, "useragent") == 0)
         return Format::CLF_USERAGENT;
-
-    if (strcmp(logformatName, "referrer") == 0)
-        return Format::CLF_REFERER;
 
     // CLF_NONE, CLF_UNKNOWN, CLF_CUSTOM types cannot be specified explicitly.
     // TODO: Ban "none" and "unknown" custom logformat names to avoid confusion.
