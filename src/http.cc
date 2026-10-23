@@ -673,6 +673,7 @@ HttpStateData::processReplyHeader()
                 // fall through to handle this premature EOF as an error
             } else {
                 debugs(33, 5, "Incomplete response, waiting for end of response headers");
+                Assure(!parsedOk);
                 return;
             }
         }
@@ -1469,6 +1470,10 @@ HttpStateData::decodeAndWriteReplyBody()
     }
     catch (...) {
         debugs (11, 2, "de-chunking failure: " << CurrentException);
+        const auto err = new ErrorState(ERR_INVALID_RESP, Http::scBadGateway, fwd->request, fwd->al);
+        static const auto d = MakeNamedErrorDetail("BAD_CHUNKED_RESPONSE_BODY");
+        err->detailError(d);
+        fwd->fail(err);
     }
     return false;
 }

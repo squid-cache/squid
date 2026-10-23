@@ -1194,9 +1194,8 @@ void Adaptation::Icap::ModXact::parseBody()
         return;
     }
 
-    debugs(93,3, this << " needsMoreData = " << bodyParser->needsMoreData());
-
-    if (bodyParser->needsMoreData()) {
+    Assure(bodyParser->needsMoreData());
+    {
         debugs(93,3, this);
         Must(mayReadMore());
         readMore();
