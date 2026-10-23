@@ -1847,55 +1847,38 @@ idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
 }
 
 #if SQUID_SNMP
-/*
- * The function to return the DNS via SNMP
- */
+/// The function to report the DNS nameserver statistics via SNMP
 variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
-    int n = 0;
-    variable_list *Answer = nullptr;
     MemBuf tmp;
     debugs(49, 5, "snmp_netDnsFn: Processing request: " << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
+    size_t n = 0;
     switch (Var->name[LEN_SQ_NET + 1]) {
 
     case DNS_REQ:
-
         for (const auto &server : nameservers)
             n += server.nqueries;
-
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      n,
-                                      SMI_COUNTER32);
-
         break;
 
     case DNS_REP:
         for (const auto &server : nameservers)
             n += server.nreplies;
-
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      n,
-                                      SMI_COUNTER32);
-
         break;
 
     case DNS_SERVERS:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      nameservers.size(),
-                                      SMI_COUNTER32);
-
+        n = nameservers.size();
         break;
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-
-        break;
+        return nullptr;
     }
 
-    return Answer;
+    variable_list *Answer = nullptr;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, ASN_COUNTER, &n, sizeof(n));
 }
 
 #endif /*SQUID_SNMP */
