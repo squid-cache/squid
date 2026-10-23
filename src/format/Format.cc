@@ -17,6 +17,7 @@
 #include "format/Format.h"
 #include "format/Quoting.h"
 #include "format/Token.h"
+#include "fqdncache.h"
 #include "http/Stream.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
@@ -491,6 +492,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
                 out = al->tcpClient->local.toStr(tmp, sizeof(tmp));
             break;
 
+        case LFT_CLIENT_LOCAL_FQDN:
+            // May be too late for ours, but FQDN_LOOKUP_IF_MISS might help the next caller.
+            if (al->tcpClient)
+                out = fqdncache_gethostbyaddr(al->tcpClient->local, FQDN_LOOKUP_IF_MISS);
+            break;
+
         case LFT_CLIENT_LOCAL_TOS:
             if (al->tcpClient) {
                 sb.appendf("0x%x", static_cast<uint32_t>(al->tcpClient->tos));
@@ -530,6 +537,12 @@ Format::Format::assemble(MemBuf &mb, const AccessLogEntry::Pointer &al, int logS
         case LFT_SERVER_LOCAL_IP:
             if (al->hier.tcpServer)
                 out = al->hier.tcpServer->local.toStr(tmp, sizeof(tmp));
+            break;
+
+        case LFT_SERVER_LOCAL_FQDN:
+            // May be too late for ours, but FQDN_LOOKUP_IF_MISS might help the next caller.
+            if (al->hier.tcpServer)
+                out = fqdncache_gethostbyaddr(al->hier.tcpServer->local, FQDN_LOOKUP_IF_MISS);
             break;
 
         case LFT_SERVER_LOCAL_PORT:
