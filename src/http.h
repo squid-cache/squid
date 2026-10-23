@@ -125,8 +125,11 @@ private:
 
     void writeReplyBody();
     bool decodeAndWriteReplyBody();
+    void handleVirginReplyTrailers(HttpHeader &, const SBuf &);
+
     bool finishingBrokenPost();
     bool finishingChunkedRequest();
+    void generateLastChunk(MemBuf &);
     void doneSendingRequestBody() override;
     void requestBodyHandler(MemBuf &);
     void sentRequestBody(const CommIoCbParams &io) override;

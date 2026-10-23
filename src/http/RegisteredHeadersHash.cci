@@ -177,7 +177,7 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
     {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
     {""}, {""}, {""},
 #line 85 "RegisteredHeadersHash.gperf"
-    {"TE", Http::HdrType::TE, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader},
+    {"TE", Http::HdrType::TE, Http::HdrFieldType::ftStr, HdrKind::RequestHeader|HdrKind::HopByHopHeader|HdrKind::DeniedTrailer},
     {""}, {""}, {""},
 #line 64 "RegisteredHeadersHash.gperf"
     {"Link", Http::HdrType::LINK, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader},
@@ -253,7 +253,7 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
 #line 39 "RegisteredHeadersHash.gperf"
     {"Content-Disposition", Http::HdrType::CONTENT_DISPOSITION, Http::HdrFieldType::ftStr, HdrKind::None},
 #line 87 "RegisteredHeadersHash.gperf"
-    {"Trailer", Http::HdrType::TRAILER, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader},
+    {"Trailer", Http::HdrType::TRAILER, Http::HdrFieldType::ftStr, HdrKind::HopByHopHeader|HdrKind::DeniedTrailer},
 #line 66 "RegisteredHeadersHash.gperf"
     {"Max-Forwards", Http::HdrType::MAX_FORWARDS, Http::HdrFieldType::ftInt64, HdrKind::RequestHeader},
 #line 82 "RegisteredHeadersHash.gperf"
@@ -279,7 +279,7 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
 #line 25 "RegisteredHeadersHash.gperf"
     {"Accept-Charset", Http::HdrType::ACCEPT_CHARSET, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader},
 #line 42 "RegisteredHeadersHash.gperf"
-    {"Content-Length", Http::HdrType::CONTENT_LENGTH, Http::HdrFieldType::ftInt64, HdrKind::EntityHeader},
+    {"Content-Length", Http::HdrType::CONTENT_LENGTH, Http::HdrFieldType::ftInt64, HdrKind::EntityHeader|HdrKind::DeniedTrailer},
 #line 50 "RegisteredHeadersHash.gperf"
     {"ETag", Http::HdrType::ETAG, Http::HdrFieldType::ftETag, HdrKind::EntityHeader},
 #line 68 "RegisteredHeadersHash.gperf"
@@ -333,7 +333,7 @@ static const class HeaderTableRecord HttpHeaderDefinitionsTable[] =
 #line 77 "RegisteredHeadersHash.gperf"
     {"Public", Http::HdrType::PUBLIC, Http::HdrFieldType::ftStr, HdrKind::ReplyHeader},
 #line 88 "RegisteredHeadersHash.gperf"
-    {"Transfer-Encoding", Http::HdrType::TRANSFER_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader},
+    {"Transfer-Encoding", Http::HdrType::TRANSFER_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::GeneralHeader|HdrKind::HopByHopHeader|HdrKind::DeniedTrailer},
 #line 67 "RegisteredHeadersHash.gperf"
     {"Mime-Version", Http::HdrType::MIME_VERSION, Http::HdrFieldType::ftStr, HdrKind::GeneralHeader},
 #line 80 "RegisteredHeadersHash.gperf"
