@@ -14,7 +14,7 @@
 #include "ipc/forward.h"
 #include "mgr/forward.h"
 #include "mgr/QueryParam.h"
-#include "SquidString.h"
+#include "sbuf/SBuf.h"
 
 namespace Mgr
 {
@@ -23,13 +23,13 @@ class StringParam: public QueryParam
 {
 public:
     StringParam();
-    StringParam(const String& aString);
+    StringParam(const SBuf& aString);
     void pack(Ipc::TypedMsgHdr& msg) const override;
     void unpackValue(const Ipc::TypedMsgHdr& msg) override;
-    const String& value() const;
+    const auto& value() const { return str; }
 
 private:
-    String str;
+    SBuf str;
 };
 
 } // namespace Mgr
