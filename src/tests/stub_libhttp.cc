@@ -38,7 +38,7 @@ namespace Http
 {
 Message::Message(const http_hdr_owner_type owner): header(owner) {STUB}
 Message::~Message() {STUB}
-void Message::packInto(Packable *, bool) const STUB
+void Message::packInto(Packable *, bool, const MaskSensitiveInfo) const STUB
 void Message::setContentLength(int64_t) STUB
 bool Message::persistent() const STUB_RETVAL(false)
 void Message::putCc(const HttpHdrCc &) STUB
