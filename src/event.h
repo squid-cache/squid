@@ -9,8 +9,8 @@
 #ifndef SQUID_SRC_EVENT_H
 #define SQUID_SRC_EVENT_H
 
-#include "AsyncEngine.h"
 #include "base/Packable.h"
+#include "engines/AsyncEngine.h"
 #include "mem/forward.h"
 
 /* event scheduling facilities - run a callback after a given time period. */
