@@ -6074,13 +6074,12 @@ DOC_START
 
 		Redirect the client to the specified URL. After decoding the `url`
 		parameter value as described further below, Squid uses the decoded value
-		(as is, without additional decoding or encoding) as a `URI-reference` in
-		the Squid-generated 3xx HTTP response Location header field (see RFC 9110
-		Section 10.2.2). HTTP syntax requires certain `URI-reference` characters
-		to be percent-encoded (see RFC 3986 Section 2.1). Squid does not fully
-		validate `URI-reference` value syntax, but if it detects a violation
-		(e.g., a new line presence), it logs an ERROR to cache.log and keeps the
-		client request intact.
+		(as is, without additional decoding or encoding) as a Location header
+		field value in a Squid-generated 3xx HTTP response (see RFC 9110 Section
+		10.2.2).
+
+		Decoded URL value must satisfy `URI-reference` format (see RFC 3986
+		Section 2.1). Currently, Squid only partially validates that value syntax.
 
 		Optional 'status' specifies the status code to send to the
 		client in Squid's HTTP redirect response. It must be one of
@@ -6104,8 +6103,6 @@ DOC_START
 		Location headers and embedded URLs after the helper rewrites
 		the request URL.
 
-		If Squid cannot parse the URL value returned by the helper, it logs a
-		critical cache.log ERROR message and uses the original request URL.
 		Supported URL format depends on the request method. For example,
 		CONNECT request URLs must use `host:port` form, while GET URLs start
 		with a `scheme:` prefix (e.g., `https://example.com/`).
@@ -6132,15 +6129,26 @@ DOC_START
 		requests on the same client connection. A helper may update
 		the TAG during subsequent requests by returning a new kv-pair.
 
-	Squid decodes all received `key=value` parameter values before using them:
+	URL decoding and validation:
 
-	* All parameter values, whether quoted or unquoted, are decoded using
-	  shell-like escape syntax. See `external_acl_type` documentation for info
-	  about that value encoding (look for "double quotes" and "escaping").
+	Squid decodes all received `key=value` parameter values before using them.
+	See `external_acl_type` documentation for information about that value
+	encoding (look for "escaping" and "double quotes"). After that decoding
+	step, when handling a `url` or `rewrite-url` helper response parameter,
+	Squid expects to see a percent-encoded URI (see RFC 3986 Section 2.1). If
+	the decoded value fails Squid validation (e.g., it contains an ASCII new
+	line character), Squid logs a level-0 ERROR message to cache.log, keeps the
+	client request intact, and proceeds as if the helper sent an `OK` response
+	without any `url` and `rewrite-url` parameters.
 
-	* All bare parameter values (e.g., `message=value`) are decoded using
-	  percent-encoding syntax. See RFC 3986 Section 2.1, but note that Squid
-	  currently leaves `%00` percent-encoding triplets undecoded.
+	Here are a few examples of raw helper responses. The two valid ones would
+	result in Squid sending an HTTP 302 response with the following header
+	field: `Location: https://example.com/trailing%20newline%0A`.
+
+	  * `OK url="https://example.com/trailing newline\n"` -- bare SP and NL
+	  * `OK url="https://example.com/trailing%20newline%0A"` -- valid
+	  * `OK  url=https://example.com/trailing%20newline%0A` -- bare SP and NL
+	  * `OK  url=https://example.com/trailing%2520newline%250A"` -- valid
 
 	Helper messages contain the channel-ID part if and only if the
 	url_rewrite_children directive specifies positive concurrency. As a
@@ -9065,9 +9073,10 @@ DOC_START
 	When substituting the above single-letter format tags in a URL pattern,
 	Squid pct-encodes substitution values. Squid does not encode the non-tag
 	portions of the URL pattern. Admins have to be extra careful with error URL
-	patterns because Squid does not validate pattern substitution result against
-	URL syntax rules and, hence, does not warn about URL syntax violations when
-	using that result for the HTTP Location response header value.
+	patterns because Squid does not validate the pattern substitution result
+	against HTTP Location response header syntax rules (see RFC 9110 Section
+	10.2.2), and, hence, does not warn about syntax violations when using that
+	result (as is) for the Location response header value.
 
 	If your error URL pattern contains `%` characters that are not meant to be
 	interpreted as the beginning of a single-letter format tags above, replace

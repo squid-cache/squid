@@ -291,7 +291,7 @@ redirectUriIsValid(const char * const buf)
     const auto goodPrefix = strcspn(buf, "\r\n");
     if (goodPrefix < strlen(buf)) {
         // TODO: Add and use Raw::escapeControlChars() instead of reporting the prefix
-        debugs(85, DBG_CRITICAL, "ERROR: url_rewrite_program produced a URI-reference with a bare ASCII CR or LF character" <<
+        debugs(85, DBG_CRITICAL, "ERROR: url_rewrite_program produced a URI with a bare ASCII CR or LF character" <<
                Debug::Extra << "URI prefix: " << SBuf(buf, goodPrefix));
         return false;
     }

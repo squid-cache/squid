@@ -23,7 +23,8 @@ void redirectReconfigure();
 void redirectStart(ClientHttpRequest *, HLPCB *, void *);
 void storeIdStart(ClientHttpRequest *, HLPCB *, void *);
 
-/// Whether the given input uses URI-reference syntax (RFC 9110 Section 10.2.2).
+/// Whether the given input uses URI syntax common across `url=...` and
+/// `rewrite-url=...` parameters of a `url_rewrite_program` response.
 /// Logs a level-0 ERROR message on failures.
 /// \prec the given string has been percent-encoded (RFC 3986 Section 2.1)
 bool redirectUriIsValid(const char *);

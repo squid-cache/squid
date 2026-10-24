@@ -1368,9 +1368,9 @@ ErrorState::BuildHttpReply()
 
         if (request) {
             auto location = compile(urlTemplate, true, true);
-            // compile() calls rfc1738_escape() or equivalent for all legacy %codes
-            // XXX: compile() does not call rfc1738_escape() for logformat %codes, and it
-            // may be difficult or impossible for the admin to control their escaping
+            // compile() calls rfc1738_escape() or equivalent for all legacy %codes that may need that
+            // compile() does not call rfc1738_escape() for logformat %codes, relying on the admin
+            // to enable percent-encoding of those logformat %code substitutions that need it
             rep->header.putStr(Http::HdrType::LOCATION, location.c_str());
         }
 
