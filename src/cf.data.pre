@@ -9047,6 +9047,10 @@ DOC_START
 	HTTP/1.1 specs. A different 3xx code may be specified by prefixing
 	the URL. e.g. 303:http://example.com/
 
+	Squid expects the URL pattern substitution result to be a percent-encoded
+	URI (see RFC 3986 Section 2.1), suitable for using as an HTTP Location
+	header value (see RFC 9110 Section 10.2.2).
+
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
 		%A	- Local listening IP address the client connection was connected to
