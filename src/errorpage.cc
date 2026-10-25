@@ -1200,13 +1200,11 @@ ErrorState::compileLegacyCode(Build &build)
     case 'U':
         /* Using the fake-https version of absolute-URI so error pages see https:// */
         /* even when the url-path cannot be shown as more than '*' */
-        if (request) {
+        if (request)
             p = urlCanonicalFakeHttps(request.getRaw());
-            no_urlescape = 1; // urlCanonicalFakeHttps() pct-encodes; keep in sync with Bug 5523 fix
-        } else if (url) {
-            // TODO: Set no_urlescape or explain why we should not.
+        else if (url)
             p = url;
-        } else if (!building_deny_info_url)
+        else if (!building_deny_info_url)
             p = "[no URL]";
         break;
 
@@ -1214,11 +1212,9 @@ ErrorState::compileLegacyCode(Build &build)
         if (request) {
             const SBuf &tmp = request->effectiveRequestUri();
             mb.append(tmp.rawContent(), tmp.length());
-            no_urlescape = 1; // effectiveRequestUri() pct-encodes; keep in sync with Bug 5523 fix
-        } else if (url) {
-            // TODO: Set no_urlescape or explain why we should not.
+        } else if (url)
             p = url;
-        } else if (!building_deny_info_url)
+        else if (!building_deny_info_url)
             p = "[no URL]";
         break;
 
