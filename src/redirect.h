@@ -25,7 +25,7 @@ void storeIdStart(ClientHttpRequest *, HLPCB *, void *);
 
 /// Whether the given input uses URI syntax common across `url=...` and
 /// `rewrite-url=...` parameters of a `url_rewrite_program` response.
-/// Logs a level-0 ERROR message on failures.
+/// \returns false and logs a level-0 ERROR message on validation failures
 /// \prec the given string has been percent-encoded (RFC 3986 Section 2.1)
 bool redirectUriIsValid(const char *);
 
