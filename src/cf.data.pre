@@ -9071,7 +9071,7 @@ DOC_START
 		%%	- Literal percent (%) code
 
 	When substituting the above single-letter format tags in a URL pattern,
-	Squid pct-encodes substitution values. Squid does not encode the non-tag
+	Squid percent-encodes substitution values. Squid does not encode the non-tag
 	portions of the URL pattern. Admins have to be extra careful with error URL
 	patterns because Squid does not validate the pattern substitution result
 	against HTTP Location response header syntax rules (see RFC 9110 Section
