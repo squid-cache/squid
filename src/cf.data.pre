@@ -6145,9 +6145,9 @@ DOC_START
 	result in Squid sending an HTTP 302 response with the following header
 	field: `Location: https://example.com/trailing%20newline%0A`.
 
-	  * `OK url="https://example.com/trailing newline\n"` -- bare SP and NL
+	  * `OK url="https://example.com/trailing newline\n"` -- bare SP and LF
 	  * `OK url="https://example.com/trailing%20newline%0A"` -- valid
-	  * `OK  url=https://example.com/trailing%20newline%0A` -- bare SP and NL
+	  * `OK  url=https://example.com/trailing%20newline%0A` -- bare SP and LF
 	  * `OK  url=https://example.com/trailing%2520newline%250A"` -- valid
 
 	Helper messages contain the channel-ID part if and only if the
