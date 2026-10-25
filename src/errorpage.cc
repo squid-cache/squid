@@ -1298,11 +1298,7 @@ ErrorState::compileLegacyCode(Build &build)
     // TODO: Add an I/O manipulator to report non-printable chars better.
     debugs(4, 3, "%" << (letter ? letter : '?') << " --> '" << p << "'" );
 
-    // XXX: We html_quote() some building_deny_info_url cases that are never
-    // used to create HTML content (e.g., a `%R` or `%U` URL path containing
-    // `a&b` results in `a&amp;b` being sent in Location URL path).
-    // TODO: Do not html_quote() any building_deny_info_url cases.
-    if (do_quote)
+    if (do_quote && !building_deny_info_url)
         p = html_quote(p);
 
     if (building_deny_info_url && !no_urlescape)
