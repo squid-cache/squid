@@ -91,6 +91,21 @@ typedef void (StateMethod)(Ftp::Gateway *);
 
 using RememberLastToken = OnOff;
 
+/// manages accumulation of control messages
+class RememberedMessages
+{
+public:
+    /// Adds parsed message tokens (if possible).
+    void noteNewMessage(const wordlist *tokens, RememberLastToken);
+
+    /// Remembered parsed message tokens, separated by new lines.
+    const SBuf &tokens() const { return tokens_; }
+
+private:
+    SBuf tokens_; ///< tokens accumulated so far
+    bool frozen_ = false; ///< whether noteNewMessage() has banned new token accumulation
+};
+
 /// FTP Gateway: An FTP client that takes an HTTP request with an ftp:// URI,
 /// converts it into one or more FTP commands, and then
 /// converts one or more FTP responses into the final HTTP response.
@@ -118,7 +133,7 @@ public:
     char *dirpath;
     int64_t restart_offset;
     size_t list_width;
-    String cwd_message;
+    RememberedMessages rememberedMessages; ///< past control replies
     char *old_filepath;
     char typecode;
     MemBuf listing;     ///< FTP directory listing in HTML format.
@@ -164,11 +179,6 @@ public:
     void haveParsedReplyHeaders() override;
 
     virtual bool haveControlChannel(const char *caller_name) const;
-
-    /// If possible, stores/adds tokens of the last parsed control reply. Stored
-    /// concatenated replies may be printed in Squid-generated error messages
-    /// containing %z. Stops adding tokens after accumulating "too much".
-    void rememberLastServerResponse(RememberLastToken);
 
 protected:
     void handleControlReply() override;
@@ -385,7 +395,6 @@ Ftp::Gateway::~Gateway()
     if (pathcomps)
         wordlistDestroy(&pathcomps);
 
-    cwd_message.clean();
     xfree(old_filepath);
     title_url.clean();
     base_href.clean();
@@ -1171,33 +1180,39 @@ Ftp::Gateway::start()
 /* ====================================================================== */
 
 void
-Ftp::Gateway::rememberLastServerResponse(const RememberLastToken rememberLastToken)
+Ftp::RememberedMessages::noteNewMessage(const wordlist * const messageTokens, const RememberLastToken rememberLastToken)
 {
+    if (frozen_)
+        return; // accumulated all we could
+
     // An arbitrary reasonable limit: We want to accumulate several responses,
-    // and we understand that an FTP server may get fairly chatty, especially if
-    // there was a problem (`cwd_message`'s primary use case!), but we cannot
-    // promise to remember everything. Config.maxReplyHeaderSize does not fit
-    // this use case because that configurable limit is for a single response
-    // while cwd_message accumulates multiple (possibly hundreds!) of replies.
+    // and we know that an FTP server may get fairly chatty, especially if there
+    // was a problem (and reporting error details is our primary use case!), but
+    // we cannot promise to remember everything. Config.maxReplyHeaderSize does
+    // not fit this use case because that configurable limit is for a single
+    // response while we accumulates multiple replies.
     const auto accumulationMax = String::RawSizeMaxXXX();
 
-    for (auto w = ctrl.message; w; w = w->next) {
+    for (auto w = messageTokens; w; w = w->next) {
         if (!w->next && rememberLastToken == RememberLastToken::off)
             break;
 
-        // XXX: This check placement implies that we may exceed accumulationMax
-        // by one token size. This violates RawSizeMaxXXX() API and might allow
-        // the attacker to create a large enough last token to cause us trouble.
-        if (cwd_message.size() >= accumulationMax) {
-            debugs(9, 3, "WARNING: forgetting recent response(s) after accumulating " << cwd_message.size() << " bytes");
+        const auto sizeIncrease = strlen(w->key) + 1;
+        if (tokens_.length() + sizeIncrease > accumulationMax) {
+            debugs(9, 3, "WARNING: Started to forget control response(s) after accumulating " << tokens_.length() << " bytes and receiving " << sizeIncrease << " more");
+            frozen_ = true;
+            // We do not truncate this token because that might change its meaning.
+            // TODO: Append "..." to mark message truncation?
             return;
         }
 
-        cwd_message.append('\n');
-        cwd_message.append(w->key);
+        // TODO: Do not add a new line in front of the first token?
+        tokens_.append('\n');
+        tokens_.append(w->key);
+        Assure(tokens_.length() <= accumulationMax);
     }
 
-    debugs(9, 7, "bytes accumulated: " << cwd_message.size());
+    debugs(9, 7, "bytes accumulated: " << tokens_.length());
 }
 
 void
@@ -1207,7 +1222,7 @@ Ftp::Gateway::handleControlReply()
     if (ctrl.message == nullptr)
         return; // didn't get complete reply yet
 
-    rememberLastServerResponse(RememberLastToken::off);
+    rememberedMessages.noteNewMessage(ctrl.message, RememberLastToken::off);
 
     FTP_SM_FUNCS[state] (this);
 }
@@ -1516,9 +1531,10 @@ ftpReadCwd(Ftp::Gateway * ftpState)
         /* CWD OK */
         ftpState->unhack();
 
-        /* Reset cwd_message to only include the last message */
-        ftpState->cwd_message.reset("");
-        ftpState->rememberLastServerResponse(Ftp::RememberLastToken::on);
+        // forget all but the last/CWD control reply
+        ftpState->rememberedMessages = {};
+        ftpState->rememberedMessages.noteNewMessage(ftpState->ctrl.message, Ftp::RememberLastToken::on);
+
         wordlistDestroy(&ftpState->ctrl.message);
 
         /* Continue to traverse the path */
@@ -2244,7 +2260,7 @@ Ftp::Gateway::completedListing()
     ErrorState ferr(ERR_DIR_LISTING, Http::scOkay, request.getRaw(), fwd->al);
     ferr.ftp.listing = &listing;
     safe_free(ferr.ftp.cwd_msg);
-    ferr.ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
+    ferr.ftp.cwd_msg = SBufToCstring(rememberedMessages.tokens());
     ferr.ftp.server_msg = ctrl.message;
     ctrl.message = nullptr;
     entry->replaceHttpReply(ferr.BuildHttpReply());
