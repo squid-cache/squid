@@ -10,6 +10,7 @@
 
 #include "squid.h"
 #include "acl/FilledChecklist.h"
+#include "base/OnOff.h"
 #include "base/PackableStream.h"
 #include "clients/forward.h"
 #include "clients/FtpClient.h"
@@ -88,6 +89,8 @@ struct GatewayFlags {
 class Gateway;
 typedef void (StateMethod)(Ftp::Gateway *);
 
+using RememberLastToken = OnOff;
+
 /// FTP Gateway: An FTP client that takes an HTTP request with an ftp:// URI,
 /// converts it into one or more FTP commands, and then
 /// converts one or more FTP responses into the final HTTP response.
@@ -161,6 +164,11 @@ public:
     void haveParsedReplyHeaders() override;
 
     virtual bool haveControlChannel(const char *caller_name) const;
+
+    /// If possible, stores/adds tokens of the last parsed control reply. Stored
+    /// concatenated replies may be printed in Squid-generated error messages
+    /// containing %z. Stops adding tokens after accumulating "too much".
+    void rememberLastServerResponse(RememberLastToken);
 
 protected:
     void handleControlReply() override;
@@ -1163,19 +1171,43 @@ Ftp::Gateway::start()
 /* ====================================================================== */
 
 void
+Ftp::Gateway::rememberLastServerResponse(const RememberLastToken rememberLastToken)
+{
+    // An arbitrary reasonable limit: We want to accumulate several responses,
+    // and we understand that an FTP server may get fairly chatty, especially if
+    // there was a problem (`cwd_message`'s primary use case!), but we cannot
+    // promise to remember everything. Config.maxReplyHeaderSize does not fit
+    // this use case because that configurable limit is for a single response
+    // while cwd_message accumulates multiple (possibly hundreds!) of replies.
+    const auto accumulationMax = String::RawSizeMaxXXX();
+
+    for (auto w = ctrl.message; w; w = w->next) {
+        if (!w->next && rememberLastToken == RememberLastToken::off)
+            break;
+
+        // XXX: This check placement implies that we may exceed accumulationMax
+        // by one token size. This violates RawSizeMaxXXX() API and might allow
+        // the attacker to create a large enough last token to cause us trouble.
+        if (cwd_message.size() >= accumulationMax) {
+            debugs(9, 3, "WARNING: forgetting recent response(s) after accumulating " << cwd_message.size() << " bytes");
+            return;
+        }
+
+        cwd_message.append('\n');
+        cwd_message.append(w->key);
+    }
+
+    debugs(9, 7, "bytes accumulated: " << cwd_message.size());
+}
+
+void
 Ftp::Gateway::handleControlReply()
 {
     Ftp::Client::handleControlReply();
     if (ctrl.message == nullptr)
         return; // didn't get complete reply yet
 
-    /* Copy the message except for the last line to cwd_message to be
-     * printed in error messages.
-     */
-    for (wordlist *w = ctrl.message; w && w->next; w = w->next) {
-        cwd_message.append('\n');
-        cwd_message.append(w->key);
-    }
+    rememberLastServerResponse(RememberLastToken::off);
 
     FTP_SM_FUNCS[state] (this);
 }
@@ -1486,10 +1518,7 @@ ftpReadCwd(Ftp::Gateway * ftpState)
 
         /* Reset cwd_message to only include the last message */
         ftpState->cwd_message.reset("");
-        for (wordlist *w = ftpState->ctrl.message; w; w = w->next) {
-            ftpState->cwd_message.append('\n');
-            ftpState->cwd_message.append(w->key);
-        }
+        ftpState->rememberLastServerResponse(Ftp::RememberLastToken::on);
         wordlistDestroy(&ftpState->ctrl.message);
 
         /* Continue to traverse the path */
