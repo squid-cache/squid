@@ -1,3 +1,23 @@
+Changes in squid-7.8 (28 Oct 2026):
+
+	- Bug 5553: Segfault when parsing valueless request_header_add
+	- Bug 5552: Buffer overflow when parsing deny_info NNN w/o URL
+	- Reject Range and Content-Range with INT64_MAX last-pos
+	- Treat %00 pct-encoding triplets in URLs as invalid
+	- Improve uri_whitespace chop support
+	- Improve cache digest mask sizing
+	- Tolerate more ICP responses not associated with a cache_peer
+	- FTP: Properly escape unusual directory listing lines
+	- ICAP: Replace Trailer validation Must() with an explicit throw
+	- ntlm_fake_auth: Convert documentation to POD syntax
+	- basic_radius_auth: Do not pass negative char to isspace()
+	- negotiate_sspi_auth: Fix crash in FormatMessage()
+	- WCCP: Fix offset calculation when parsing incoming packets
+	- Remove unimplemented sslflags=DELAYED_AUTH squid.conf option
+	- Apply OpenSSL pkg-config settings before checking headers
+	- ... and documentation improvements
+	- ... and some build optimizations
+
 Changes in squid-7.7 (17 Aug 2026):
 
 	- Protect several base64 encoding buffers
