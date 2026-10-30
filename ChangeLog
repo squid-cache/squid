@@ -2,7 +2,7 @@ Changes in squid-7.8 (28 Oct 2026):
 
 	- Bug 5553: Segfault when parsing valueless request_header_add
 	- Bug 5552: Buffer overflow when parsing deny_info NNN w/o URL
-	- Reject Range and Content-Range with INT64_MAX last-pos
+	- HTTP(S): Reject Range and Content-Range with INT64_MAX last-pos
 	- Treat %00 pct-encoding triplets in URLs as invalid
 	- Improve uri_whitespace chop support
 	- Improve cache digest mask sizing
