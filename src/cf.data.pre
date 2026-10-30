@@ -6135,7 +6135,9 @@ DOC_START
 	parameter value as usual (for the details of that general helper parameter
 	decoding algorithm, see `external_acl_type` documentation; look for
 	"escaping" and "double quotes"), Squid expects to see a percent-encoded URI
-	(see RFC 3986 Section 2.1).
+	(see RFC 3986 Section 2.1). This means that sending a URL using a
+	percent-encoded token value format usually requires percent-encoding twice.
+	See examples further below.
 
 	If the decoded parameter value (i.e. the expected percent-encoded URI value
 	mentioned in the above paragraph) fails Squid validation (e.g., it contains
