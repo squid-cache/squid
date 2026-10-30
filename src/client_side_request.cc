@@ -1056,6 +1056,9 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
         if (urlNote != nullptr) {
             // HTTP protocol redirect to be done.
 
+            if (!redirectUriIsValid(urlNote))
+                break;
+
             // TODO: change default redirect status for appropriate requests
             // Squid defaults to 302 status for now for better compatibility with old clients.
             // HTTP/1.0 client should get 302 (Http::scFound)
@@ -1074,7 +1077,6 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
                     || status == Http::scTemporaryRedirect) {
                 http->redirect.status = status;
                 http->redirect.location = xstrdup(urlNote);
-                // TODO: validate the URL produced here is RFC 2616 compliant absolute URI
             } else {
                 debugs(85, DBG_CRITICAL, "ERROR: URL-rewrite produces invalid " << status << " redirect Location: " << urlNote);
             }
@@ -1084,6 +1086,10 @@ ClientRequestContext::clientRedirectDone(const Helper::Reply &reply)
 
             // prevent broken helpers causing too much damage. If old URL == new URL skip the re-write.
             if (urlNote != nullptr && strcmp(urlNote, http->uri)) {
+
+                if (!redirectUriIsValid(urlNote))
+                    break;
+
                 AnyP::Uri tmpUrl;
                 if (tmpUrl.parse(old_request->method, SBuf(urlNote))) {
                     HttpRequest *new_request = old_request->clone();
