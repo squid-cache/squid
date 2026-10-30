@@ -6078,7 +6078,7 @@ DOC_START
 		HTTP response (see RFC 9110 Section 10.2.2).
 
 		Decoded URL value must satisfy `URI-reference` format (see RFC 3986
-		Section 2.1). Currently, Squid only partially validates that value syntax.
+		Section 2.1).
 
 		Optional 'status' specifies the status code to send to the
 		client in Squid's HTTP redirect response. It must be one of
