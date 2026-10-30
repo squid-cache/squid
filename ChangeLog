@@ -6,7 +6,7 @@ Changes in squid-7.8 (28 Oct 2026):
 	- Treat %00 pct-encoding triplets in URLs as invalid
 	- Improve uri_whitespace chop support
 	- Improve cache digest mask sizing
-	- Tolerate more ICP responses not associated with a cache_peer
+	- ICP: Tolerate more responses not associated with a cache_peer
 	- FTP: Properly escape unusual directory listing lines
 	- ICAP: Replace Trailer validation Must() with an explicit throw
 	- ntlm_fake_auth: Convert documentation to POD syntax
