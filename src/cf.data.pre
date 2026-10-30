@@ -6081,7 +6081,14 @@ DOC_START
 
 	  OK [status=30N] url="..."
 
-		Redirect the client to a URL supplied in the 'url' parameter.
+		Redirect the client to the specified URL. After decoding and validating
+		the `url` parameter value as described further below, Squid uses the
+		decoded value as a Location header field value in a Squid-generated 3xx
+		HTTP response (see RFC 9110 Section 10.2.2).
+
+		Decoded URL value must satisfy `URI-reference` format (see RFC 3986
+		Section 2.1).
+
 		Optional 'status' specifies the status code to send to the
 		client in Squid's HTTP redirect response. It must be one of
 		the standard HTTP redirect status codes: 301, 302, 303, 307,
@@ -6090,7 +6097,8 @@ DOC_START
 	  OK rewrite-url="..."
 
 		Replace the current request URL with the one supplied in the
-		'rewrite-url' parameter. Squid fetches the resource specified
+		'rewrite-url' parameter, after decoding and validating that parameter
+		value as described further below. Squid fetches the resource specified
 		by the new URL and forwards the received response (or its
 		cached copy) to the client.
 
@@ -6103,8 +6111,6 @@ DOC_START
 		Location headers and embedded URLs after the helper rewrites
 		the request URL.
 
-		If Squid cannot parse the URL value returned by the helper, it logs a
-		critical cache.log ERROR message and uses the original request URL.
 		Supported URL format depends on the request method. For example,
 		CONNECT request URLs must use `host:port` form, while GET URLs start
 		with a `scheme:` prefix (e.g., `https://example.com/`).
@@ -6131,6 +6137,33 @@ DOC_START
 		requests on the same client connection. A helper may update
 		the TAG during subsequent requests by returning a new kv-pair.
 
+	URL decoding and validation:
+
+	This section describes initial handling common to `url` and `rewrite-url`
+	helper response parameters. After decoding the received `key=value`
+	parameter value as usual (for the details of that general helper parameter
+	decoding algorithm, see `external_acl_type` documentation; look for
+	"escaping" and "double quotes"), Squid expects to see a percent-encoded URI
+	(see RFC 3986 Section 2.1). This means that sending a URL using a
+	percent-encoded token value format usually requires percent-encoding twice.
+	See examples further below.
+
+	If the decoded parameter value (i.e. the expected percent-encoded URI value
+	mentioned in the above paragraph) fails Squid validation (e.g., it contains
+	an ASCII new line character), Squid logs a level-0 ERROR message to
+	cache.log, keeps the client request intact, and proceeds as if the helper
+	sent an `OK` response without any `url` and `rewrite-url` parameters.
+
+	Here are a few examples of raw helper responses before decoding. The two
+	valid ones lead to Squid sending an HTTP 302 response with the following
+	header field: `Location: https://example.com/trailing%20newline%0A`.
+
+	  * `OK url="https://example.com/trailing newline\n"` -- bare SP and LF
+	  * `OK url="https://example.com/trailing%20newline%0A"` -- valid
+	  * `OK  url=https://example.com/trailing%20newline%0A` -- bare SP and LF
+	  * `OK  url=https://example.com/trailing%2520newline%250A"` -- valid
+
+	Concurrency support:
 
 	Helper messages contain the channel-ID part if and only if the
 	url_rewrite_children directive specifies positive concurrency. As a
@@ -9023,11 +9056,15 @@ DOC_START
 	Alternatively you can tell Squid to reset the TCP connection
 	by specifying TCP_RESET.
 
-	Or you can specify an error URL or URL pattern. The browsers will
+	Or you can specify an error URL pattern. The client will
 	get redirected to the specified URL after formatting tags have
 	been replaced. Redirect will be done with 302 or 307 according to
 	HTTP/1.1 specs. A different 3xx code may be specified by prefixing
 	the URL. e.g. 303:http://example.com/
+
+	After performing URL pattern substitutions, Squid expects a percent-encoded
+	URI (see RFC 3986 Section 2.1), suitable for use as an HTTP Location header
+	value (see RFC 9110 Section 10.2.2).
 
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
@@ -9051,6 +9088,17 @@ DOC_START
 		%w	- Admin email from squid.conf
 		%x	- Error name
 		%%	- Literal percent (%) code
+
+	When substituting the above single-letter format tags in a URL pattern,
+	Squid percent-encodes individual substitution values. Squid does not encode
+	the non-tag portions of the URL pattern. Squid currently does not validate
+	the post-substitutions value against HTTP Location response header syntax
+	rules (see RFC 9110 Section 10.2.2), and, hence, does not warn about syntax
+	violations when using that result (as is) for that header value.
+
+	If a URL pattern contains a `%` character not meant to be interpreted as a
+	part of a format tag name, replace it with `%%`. For example, use `%%20` to
+	specify a percent-encoded ASCII space in a deny_info URL pattern.
 
 DOC_END
 
