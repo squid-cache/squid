@@ -9047,7 +9047,7 @@ DOC_START
 	Alternatively you can tell Squid to reset the TCP connection
 	by specifying TCP_RESET.
 
-	Or you can specify an error URL pattern. The browsers will
+	Or you can specify an error URL pattern. The client will
 	get redirected to the specified URL after formatting tags have
 	been replaced. Redirect will be done with 302 or 307 according to
 	HTTP/1.1 specs. A different 3xx code may be specified by prefixing
