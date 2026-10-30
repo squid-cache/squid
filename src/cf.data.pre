@@ -6074,9 +6074,8 @@ DOC_START
 
 		Redirect the client to the specified URL. After decoding and validating
 		the `url` parameter value as described further below, Squid uses the
-		decoded value (as is, without additional decoding or encoding) as a
-		Location header field value in a Squid-generated 3xx HTTP response (see
-		RFC 9110 Section 10.2.2).
+		decoded value as a Location header field value in a Squid-generated 3xx
+		HTTP response (see RFC 9110 Section 10.2.2).
 
 		Decoded URL value must satisfy `URI-reference` format (see RFC 3986
 		Section 2.1). Currently, Squid only partially validates that value syntax.
