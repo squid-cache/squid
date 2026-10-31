@@ -1262,6 +1262,8 @@ ErrorState::compileLegacyCode(Build &build)
 
     case '%':
         p = "%";
+        if (building_deny_info_url)
+            no_urlescape = 1;
         break;
 
     case '\0':
@@ -1296,7 +1298,7 @@ ErrorState::compileLegacyCode(Build &build)
     // TODO: Add an I/O manipulator to report non-printable chars better.
     debugs(4, 3, "%" << (letter ? letter : '?') << " --> '" << p << "'" );
 
-    if (do_quote)
+    if (do_quote && !building_deny_info_url)
         p = html_quote(p);
 
     if (building_deny_info_url && !no_urlescape)
@@ -1358,6 +1360,9 @@ ErrorState::BuildHttpReply()
 
         if (request) {
             auto location = compile(urlTemplate, true, true);
+            // compile() calls rfc1738_escape() or equivalent for all legacy %codes that may need that
+            // compile() does not call rfc1738_escape() for logformat %codes, relying on the admin
+            // to enable percent-encoding of those logformat %code substitutions that need it
             rep->header.putStr(Http::HdrType::LOCATION, location.c_str());
         }
 

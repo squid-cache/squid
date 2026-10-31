@@ -512,6 +512,10 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, Http::Message *rep, H
     } else
         absUrl = hdrUrl;
 
+    // XXX: When absUrl is the received hdrUrl, its percent-encoded characters
+    // may differ from those encoded by effectiveRequestUri(). The latter
+    // encoding is effectively assumed by purgeEntriesByUrl() for its URI
+    // parameter because we normally use effectiveRequestUri() for Store keys.
     purgeEntriesByUrl(req, absUrl);
 }
 

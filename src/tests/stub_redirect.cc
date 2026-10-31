@@ -16,4 +16,5 @@ void redirectInit(void) STUB
 void redirectShutdown(void) STUB
 void redirectStart(ClientHttpRequest *, HLPCB *, void *) STUB
 void storeIdStart(ClientHttpRequest *, HLPCB *, void *) STUB
+bool redirectUriIsValid(const char *) STUB_RETVAL(false)
 
