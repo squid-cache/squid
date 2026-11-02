@@ -58,17 +58,6 @@
 int Negotiate_packet_debug_enabled = 0;
 static int have_serverblob;
 
-/* A couple of harmless helper macros */
-#define SEND(X) do { debug("sending '%s' to squid\n",X); printf(X "\n"); } while (false)
-#ifdef __GNUC__
-#define SEND2(X,Y...) do { debug("sending '" X "' to squid\n",Y); printf(X "\n",Y); } while (false)
-#define SEND3(X,Y...) do { debug("sending '" X "' to squid\n",Y); printf(X "\n",Y); } while (false)
-#else
-/* no gcc, no debugging. varargs macros are a gcc extension */
-#define SEND2(X,Y) do { debug("sending '" X "' to squid\n",Y); printf(X "\n",Y); } while (false)
-#define SEND3(X,Y,Z) do { debug("sending '" X "' to squid\n",Y,Z); printf(X "\n",Y,Z); } while (false)
-#endif
-
 /*
  * options:
  * -d enable debugging.
