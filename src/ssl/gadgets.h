@@ -160,7 +160,7 @@ bool WriteX509Certificate(BIO_Pointer &bio, const Security::CertPointer & cert);
 bool WritePrivateKey(BIO_Pointer &bio, const Security::PrivateKeyPointer &pkey);
 
 /// a RAII wrapper for the memory-allocating flavor of X509_NAME_oneline()
-UniqueCString OneLineSummary(X509_NAME &);
+UniqueCString OneLineSummary(const X509_NAME &);
 
 /**
   \ingroup SslCrtdSslAPI
@@ -285,7 +285,7 @@ const char *CommonHostName(X509 *x509);
 SBuf AsnToSBuf(const ASN1_STRING &);
 
 /// interprets X.509 Subject or Issuer name entry (at the given position) as CN
-std::optional<AnyP::Host> ParseCommonNameAt(X509_NAME &, int);
+std::optional<AnyP::Host> ParseCommonNameAt(const X509_NAME &, int);
 
 /// interprets the given buffer as either a textual representation of an IP
 /// address (if possible) or a domain name without wildcard support (otherwise)
