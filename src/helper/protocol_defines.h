@@ -65,8 +65,7 @@
 
 /*
  * Send a printf(3)-formatted line to Squid, logging it with debug() first.
- * X must be a string literal. Each macro is a single statement, so an
- * unbraced if/else applies to all of it.
+ * X must be a string literal.
  */
 #define SEND(X) do { debug("sending '%s' to squid\n", X); printf(X "\n"); } while (false)
 #define SEND2(X, ...) do { debug("sending '" X "' to squid\n", __VA_ARGS__); printf(X "\n", __VA_ARGS__); } while (false)
