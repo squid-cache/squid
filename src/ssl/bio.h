@@ -54,7 +54,7 @@ public:
 
     /// Creates a low-level BIO table, creates a high-level Ssl::Bio object
     /// for a given socket, and then links the two together via BIO_C_SET_FD.
-    static BIO *Create(const int fd, Security::Io::Type type);
+    static BIO *Create(const int fd, Security::Io::Type type, const bool enable_ktls);
     /// Tells ssl connection to use BIO and monitor state via stateChanged()
     static void Link(SSL *ssl, BIO *bio);
 
@@ -172,7 +172,11 @@ public:
 private:
     int readAndGive(char *buf, const int size, BIO *table);
     int readAndParse(char *buf, const int size, BIO *table);
-    int readAndBuffer(BIO *table);
+    int readAndBuffer(BIO *table, const int size);
+#if defined(SSL_OP_ENABLE_KTLS)
+    int readAndParseKtls(char *buf, const int size, BIO *table);
+    int peekAndBuffer(BIO *table);
+#endif
     int giveBuffered(char *buf, const int size);
 
     /// SSL client features extracted from ClientHello message or SSL object
@@ -193,6 +197,10 @@ private:
     /// The size of data stored in rbuf which passed to the openSSL
     size_t rbufConsumePos;
     Security::HandshakeParser parser_; ///< The TLS/SSL messages parser.
+
+#if defined(SSL_OP_ENABLE_KTLS)
+    SBuf rbuf_toPeek;  ///< Used to peek input data.
+#endif
 };
 
 } // namespace Ssl
