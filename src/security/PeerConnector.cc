@@ -646,17 +646,17 @@ Security::PeerConnector::certDownloadingDone(DownloaderAnswer &downloaderAnswer)
     // be able to accept collection of certificates.
     // TODO: support collection of certificates
     auto raw = reinterpret_cast<const unsigned char*>(downloaderAnswer.resource.rawContent());
-    if (auto cert = d2i_X509(nullptr, &raw, downloaderAnswer.resource.length())) {
+    if (auto cert = CertPointer(d2i_X509(nullptr, &raw, downloaderAnswer.resource.length()))) {
         debugs(81, 5, "Retrieved certificate: " << *cert);
 
         if (!downloadedCerts)
             downloadedCerts.reset(sk_X509_new_null());
-        sk_X509_push(downloadedCerts.get(), cert);
+        sk_X509_push(downloadedCerts.get(), cert.get());
 
         const auto ctx = peerContext()->raw;
         const auto certsList = SSL_get_peer_cert_chain(&sconn);
-        if (!Ssl::findIssuerCertificate(cert, certsList, ctx)) {
-            if (const auto issuerUri = Ssl::findIssuerUri(cert)) {
+        if (!Ssl::findIssuerCertificate(cert.get(), certsList, ctx)) {
+            if (const auto issuerUri = Ssl::findIssuerUri(cert.get())) {
                 debugs(81, 5, "certificate " << *cert <<
                        " points to its missing issuer certificate at " << issuerUri);
                 urlsOfMissingCerts.push(SBuf(issuerUri));
