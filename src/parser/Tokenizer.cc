@@ -168,6 +168,17 @@ Parser::Tokenizer::skipOne(const CharacterSet &chars)
     return false;
 }
 
+char
+Parser::Tokenizer::skipOne()
+{
+    if (buf_.isEmpty())
+        throw InsufficientInput();
+
+    debugs(24, 8, "skipping one of any character");
+    const auto result = consume(1);
+    return result[0];
+}
+
 bool
 Parser::Tokenizer::skipSuffix(const SBuf &tokenToSkip)
 {
