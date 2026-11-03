@@ -77,9 +77,10 @@ public:
     typedef Mem::Owner<Shared> Owner;
 
     /// initialize shared memory
-    static Owner *Init(const char *const path, const int limit);
+    static Owner *Init(const char *const path, const char *const machineId, const int limit, const size_t extrasSize);
+    static Owner *Init(const char *const path, const char *const machineId, const int limit);
 
-    MemMap(const char *const aPath);
+    MemMap(const char *const aPath, const char *const machineId);
 
     /// finds, locks and return a slot for an empty key position,
     /// erasing the old entry (if any)
