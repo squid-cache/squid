@@ -27,11 +27,10 @@
 bool
 Auth::Basic::UserRequest::authenticated() const
 {
-    Auth::Basic::User const *basic_auth = dynamic_cast<Auth::Basic::User const *>(user().getRaw());
-
-    if (basic_auth && basic_auth->authenticated())
+    if (user() && user()->credentials() == Auth::Ok && !user()->expired())
         return true;
 
+    debugs(29, 4, "User not authenticated or credentials need rechecking.");
     return false;
 }
 
@@ -56,17 +55,13 @@ Auth::Basic::UserRequest::authenticate(HttpRequest *, ConnStateData *, Http::Hdr
         return;
 
     /* are we about to recheck the credentials externally? */
-    if ((user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->credentialsTTL) <= squid_curtime) {
-        debugs(29, 4, "credentials expired - rechecking");
+    if (user()->expired()) {
+        debugs(29, 4, HERE << "credentials expired - rechecking");
         return;
     }
 
     /* we have been through the external helper, and the credentials haven't expired */
-    debugs(29, 9, "user '" << user()->username() << "' authenticated");
-
-    /* Decode now takes care of finding the AuthUser struct in the cache */
-    /* after external auth occurs anyway */
-    user()->expiretime = current_time.tv_sec;
+    debugs(29, 9, HERE << "user '" << user()->username() << "' authenticated");
 }
 
 Auth::Direction
@@ -83,7 +78,7 @@ Auth::Basic::UserRequest::module_direction()
         return Auth::CRED_LOOKUP;
 
     case Auth::Ok:
-        if (user()->expiretime + static_cast<Auth::Basic::Config*>(Auth::SchemeConfig::Find("basic"))->credentialsTTL <= squid_curtime)
+        if (user()->expired())
             return Auth::CRED_LOOKUP;
         return Auth::CRED_VALID;
 
@@ -179,7 +174,7 @@ Auth::Basic::UserRequest::HandleReply(void *data, const Helper::Reply &reply)
             r->auth_user_request->setDenyMessage(reply.other().content());
     }
 
-    basic_auth->expiretime = squid_curtime;
+    basic_auth->noteHelperTtl(reply.notes.findFirst("ttl"));
 
     if (cbdataReferenceValidDone(r->data, &cbdata))
         r->handler(cbdata);
