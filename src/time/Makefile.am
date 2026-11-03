@@ -12,6 +12,8 @@ noinst_LTLIBRARIES = libtime.la
 libtime_la_SOURCES = \
 	Engine.cc \
 	Engine.h \
+	YamlDateTime.cc \
+	YamlDateTime.h \
 	forward.h \
 	gadgets.cc \
 	gadgets.h \
