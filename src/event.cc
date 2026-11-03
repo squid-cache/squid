@@ -9,6 +9,8 @@
 /* DEBUG: section 41    Event Processing */
 
 #include "squid.h"
+#include "base/IoManip.h"
+#include "base/PackableStream.h"
 #include "base/Random.h"
 #include "event.h"
 #include "mgr/Registration.h"
@@ -138,7 +140,8 @@ eventInit(void)
 static void
 eventDump(StoreEntry * sentry)
 {
-    EventScheduler::GetInstance()->dump(sentry);
+    PackableStream yaml(*sentry);
+    EventScheduler::GetInstance()->dump(yaml);
 }
 
 int
@@ -258,21 +261,28 @@ EventScheduler::clean()
 }
 
 void
-EventScheduler::dump(Packable *out)
+EventScheduler::dump(std::ostream &yaml)
 {
+    static const SBuf indent("  ", 2);
+
     if (last_event_ran)
-        out->appendf("Last event to run: %s\n\n", last_event_ran);
+        yaml << "last event: " << last_event_ran << "\n";
 
-    out->appendf("%-25s\t%-15s\t%s\t%s\n",
-                 "Operation",
-                 "Next Execution",
-                 "Weight",
-                 "Callback Valid?");
+    const auto savedFlags = yaml.flags();
 
+    AtMostOnce header("scheduled events:\n");
+    AtMostOnce seconds_comment("# seconds");
     for (auto *e = tasks; e; e = e->next) {
-        out->appendf("%-25s\t%0.3f sec\t%5d\t %s\n",
-                     e->name, (e->when ? e->when - current_dtime : 0), e->weight,
-                     (e->arg && e->cbdata) ? cbdataReferenceValid(e->arg) ? "yes" : "no" : "N/A");
+        yaml << header << indent << "- operation: " << e->name << '\n' <<
+             indent << indent << "next execution in: " << std::setprecision(3) << std::fixed << (e->when ? e->when - current_dtime : 0) << seconds_comment << '\n';
+
+        yaml.flags(savedFlags);
+        yaml << indent << indent << "weight: " << e->weight << '\n';
+
+        if (e->arg && e->cbdata) {
+            yaml << indent << indent << "callback valid: " <<
+                 (cbdataReferenceValid(e->arg) ? "Yes" : "No") << '\n';
+        }
     }
 }
 
