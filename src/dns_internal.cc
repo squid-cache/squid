@@ -280,6 +280,7 @@ static void idnsRcodeCount(int, int);
 static CLCB idnsVCClosed;
 static unsigned short idnsQueryID(void);
 static void idnsSendSlaveAAAAQuery(idns_query *q);
+static void idnsSendSlaveAQuery(idns_query *q);
 static void idnsCallbackOnEarlyError(IDNSCB *callback, void *cbdata, const char *error);
 
 static void
@@ -1258,7 +1259,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
             return;
         }
 
-        // Do searchpath processing on the master A query only to keep
+        // Do searchpath processing on the master query only to keep
         // things simple. NXDOMAIN is authoritative for the label, not
         // the record type.
         if (q->rcode == 3 && !q->master && q->do_searchpath && q->attempt < MAX_ATTEMPT) {
@@ -1278,7 +1279,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
 
             rfc1035MessageDestroy(&message);
 
-            // cleanup slave AAAA query
+            // cleanup slave query
             while (idns_query *slave = q->slave) {
                 dlinkDelete(&slave->lru, &lru_list);
                 q->slave = slave->slave;
@@ -1286,10 +1287,15 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
                 delete slave;
             }
 
-            // Build new query
+            // Rebuild with the same family preference as the initial lookup
             q->query_id = idnsQueryID();
-            debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
-            q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
+            if (Ip::EnableIpv6) {
+                debugs(78, 3, "idnsGrokReply: Trying AAAA Query for " << q->name);
+                q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
+            } else {
+                debugs(78, 3, "idnsGrokReply: Trying A Query for " << q->name);
+                q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
+            }
             if (q->sz < 0) {
                 /* problem with query data -- query not sent */
                 idnsCallback(q, "Internal error");
@@ -1301,7 +1307,7 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
             idnsCheckMDNS(q);
             idnsSendQuery(q);
             if (Ip::EnableIpv6)
-                idnsSendSlaveAAAAQuery(q);
+                idnsSendSlaveAQuery(q);
             return;
         }
     }
@@ -1749,6 +1755,33 @@ idnsSendSlaveAAAAQuery(idns_query *master)
     idnsSendQuery(q);
 }
 
+/// Send an A (IPv4) query as a slave of the given master query.
+/// Used when AAAA is the master to provide IPv4 fallback.
+static void
+idnsSendSlaveAQuery(idns_query *master)
+{
+    idns_query *q = new idns_query;
+    memcpy(q->name, master->name, sizeof(q->name));
+    memcpy(q->orig, master->orig, sizeof(q->orig));
+    q->master = master;
+    q->query_id = idnsQueryID();
+    q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
+
+    debugs(78, 3, "buf is " << q->sz << " bytes for " << q->name <<
+           ", id = 0x" << asHex(q->query_id));
+    if (!q->sz) {
+        delete q;
+        return;
+    }
+
+    q->start_t = master->start_t;
+    q->slave = master->slave;
+
+    idnsCheckMDNS(q);
+    master->slave = q;
+    idnsSendQuery(q);
+}
+
 void
 idnsALookup(const char *name, IDNSCB * callback, void *data)
 {
@@ -1788,11 +1821,17 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
     }
 
-    q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
+    // IPv6-first: when IPv6 is enabled, build AAAA as the master query so
+    // that IPv6 addresses reach HappyConnOpener before IPv4, giving IPv6
+    // the connection-racing advantage on dual-stack endpoints.
+    if (Ip::EnableIpv6)
+        q->sz = rfc3596BuildAAAAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
+    else
+        q->sz = rfc3596BuildAQuery(q->name, q->buf, sizeof(q->buf), q->query_id, &q->query);
 
     if (q->sz < 0) {
         /* problem with query data -- query not sent */
-        idnsCallbackOnEarlyError(callback, data, "rfc3596BuildAQuery error");
+        idnsCallbackOnEarlyError(callback, data, "idnsALookup query build failure");
         delete q;
         return;
     }
@@ -1804,7 +1843,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     idnsStartQuery(q, callback, data);
 
     if (Ip::EnableIpv6)
-        idnsSendSlaveAAAAQuery(q);
+        idnsSendSlaveAQuery(q);
 }
 
 void
