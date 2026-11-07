@@ -43,6 +43,7 @@
  * useful and shared between helpers.
  */
 
+#include <cstdio>
 #include <iostream>
 
 #define HELPER_INPUT_BUFFER 8196
@@ -61,6 +62,15 @@
 
 /* send TT result to Squid with a string parameter. */
 #define SEND_TT(x)  std::cout << "TT " << x << std::endl
+
+/*
+ * Send a printf(3)-formatted line to Squid, logging it with debug() first.
+ * X must be a string literal.
+ */
+#define SEND(X) do { debug("sending '%s' to squid\n", X); printf(X "\n"); } while (false)
+#define SEND2(X, ...) do { debug("sending '" X "' to squid\n", __VA_ARGS__); printf(X "\n", __VA_ARGS__); } while (false)
+#define SEND3(X, ...) SEND2(X, __VA_ARGS__)
+#define SEND4(X, ...) SEND2(X, __VA_ARGS__)
 
 #endif /* SQUID_SRC_HELPER_PROTOCOL_DEFINES_H */
 
