@@ -13,8 +13,6 @@
 #include "squid.h"
 #include "base64.h"
 
-#if !HAVE_NETTLE_BASE64_H
-
 /* base64-encode.c
 
    Copyright (C) 2002 Niels Möller
@@ -323,6 +321,4 @@ base64_encode_final(struct base64_encode_ctx *ctx,
     assert(done <= BASE64_ENCODE_FINAL_LENGTH);
     return done;
 }
-
-#endif /* !HAVE_NETTLE_BASE64_H */
 

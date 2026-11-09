@@ -19,7 +19,6 @@ digest_ldap_auth_LDADD= \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LIBLDAP_LIBS) \
-	$(LIBNETTLE_LIBS) \
 	$(CRYPTLIB) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)

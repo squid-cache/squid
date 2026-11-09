@@ -194,7 +194,6 @@ jobs:
               gmake \
               libltdl \
               libtool \
-              nettle \
               pkgconf
             ccache --set-config=cache_dir="$GITHUB_WORKSPACE/.ccache"
             ccache --set-config=max_size='250MB'
@@ -239,7 +238,6 @@ jobs:
               gmake \
               libltdl \
               libtool \
-              libnettle \
               libxml \
               libtool \
               m4 \

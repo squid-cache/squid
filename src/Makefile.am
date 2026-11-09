@@ -553,7 +553,6 @@ squid_LDADD = \
 	$(LIBGSS_LIBS) \
 	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
-	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 
@@ -1159,7 +1158,6 @@ tests_testRock_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
-	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
 else
@@ -1336,7 +1334,6 @@ tests_testUfs_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
-	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 else
@@ -1501,7 +1498,6 @@ tests_testStore_LDADD= \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
-	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 
@@ -1676,7 +1672,6 @@ tests_testDiskIO_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
-	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 
@@ -1924,7 +1919,6 @@ tests_testHttpReply_LDADD=\
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
-	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
@@ -1989,7 +1983,6 @@ tests_testHttpRequest_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(LIBGNUTLS_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
-	$(LIBNETTLE_LIBS) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
@@ -2289,7 +2282,6 @@ tests_testCacheManager_LDADD = \
 	$(LIBGSS_LIBS) \
 	$(LIBMIT_KRB5_LIBS) \
 	$(LIBNETFILTER_CONNTRACK_LIBS) \
-	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)

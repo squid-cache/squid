@@ -28,7 +28,6 @@ negotiate_kerberos_auth_LDADD= \
 	$(LIBGSS_LIBS) \
 	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(LIBMIT_KRB5_LIBS) \
-	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 
 negotiate_kerberos_auth_test_SOURCES = \
@@ -39,7 +38,6 @@ negotiate_kerberos_auth_test_LDADD= \
 	$(LIBGSS_LIBS) \
 	$(LIBHEIMDAL_KRB5_LIBS) \
 	$(LIBMIT_KRB5_LIBS) \
-	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
 
 man_MANS= negotiate_kerberos_auth.8
