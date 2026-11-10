@@ -55,8 +55,6 @@ void Mgr::MenuAction::dump(StoreEntry *) STUB
 
 Mgr::Action::Pointer Mgr::ShutdownAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
 void Mgr::ShutdownAction::dump(StoreEntry *) STUB
-// protected:
-//Mgr::ShutdownAction::ShutdownAction(const CommandPointer &) STUB
 
 Mgr::Action::Pointer Mgr::ReconfigureAction::Create(const Mgr::CommandPointer &) STUB_RETVAL(dummyAction)
 void Mgr::ReconfigureAction::dump(StoreEntry *) STUB
@@ -241,10 +239,6 @@ void Mgr::StoreToCommWriter::noteCommClosed(const CommCloseCbParams&) STUB
 void Mgr::StoreToCommWriter::close() STUB
 
 #include "mgr/StringParam.h"
-//Mgr::StringParam::StringParam() STUB
-//Mgr::StringParam::StringParam(const String&) STUB
 void Mgr::StringParam::pack(Ipc::TypedMsgHdr&) const STUB
 void Mgr::StringParam::unpackValue(const Ipc::TypedMsgHdr&) STUB
-static String t;
-const String& Mgr::StringParam::value() const STUB_RETVAL(t)
 
