@@ -226,7 +226,6 @@ typedef Dns::CachedIps ipcache_addrs; ///< deprecated alias
 
 typedef void IPH(const ipcache_addrs *, const Dns::LookupDetails &details, void *);
 
-void ipcache_purgelru(void *);
 void ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData);
 const ipcache_addrs *ipcache_gethostbyname(const char *, int flags);
 void ipcacheInvalidate(const char *);
