@@ -170,7 +170,7 @@ Auth::Basic::Config::decodeCleartext(const char *httpAuthHeader, const HttpReque
     struct base64_decode_ctx ctx;
     base64_decode_init(&ctx);
 
-    size_t dstLen = 0;
+    size_t dstLen = sizeof(cleartext);
     if (base64_decode_update(&ctx, &dstLen, reinterpret_cast<uint8_t*>(cleartext), srcLen, eek) && base64_decode_final(&ctx)) {
         cleartext[dstLen] = '\0';
 
