@@ -146,6 +146,20 @@ AS_IF([test "x$ac_cv_path_PERL" = "xnone"],[
 ])
 AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
 AM_CONDITIONAL(ENABLE_POD2MAN_DOC, test "x${ac_cv_path_POD2MAN}" != "x$FALSE")
+m4_include([acinclude/ax_prog_perl_modules.m4])
+AX_PROG_PERL_MODULES([ \
+	strict \
+	warnings \
+	Carp \
+	Fcntl \
+	File::Basename \
+	Getopt::Long \
+	Getopt::Std \
+	IO::File \
+	IPC::Open2 \
+	Pod::Usage \
+	Squid::ParseLog \
+])
 
 AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
