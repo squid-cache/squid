@@ -20,9 +20,11 @@ noinst_LTLIBRARIES= libdigest.la
 libdigest_la_SOURCES = \
 	Config.cc \
 	Config.h \
+	Nonce.h \
 	Scheme.cc \
 	Scheme.h \
 	User.cc \
 	User.h \
 	UserRequest.cc \
-	UserRequest.h
+	UserRequest.h \
+	forward.h
