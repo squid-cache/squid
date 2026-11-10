@@ -44,7 +44,7 @@ public:
     bool parse(const SBuf &aBuf) override;
 
     /// the HTTP method if this is a request message
-    const HttpRequestMethod & method() const {return method_;}
+    const RequestMethod & method() const {return method_;}
 
     /// the request-line URI if this is a request message, or an empty string.
     const SBuf &requestUri() const {return uri_;}
@@ -69,7 +69,7 @@ private:
     static const CharacterSet &RequestTargetCharacters();
 
     /// what request method has been found on the first line
-    HttpRequestMethod method_;
+    RequestMethod method_;
 
     /// raw copy of the original client request-line URI field
     SBuf uri_;

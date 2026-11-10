@@ -52,8 +52,8 @@ int StoreEntry::checkNegativeHit() const STUB_RETVAL(0)
 int StoreEntry::validToSend() const STUB_RETVAL(0)
 bool StoreEntry::memoryCachable() STUB_RETVAL(false)
 void StoreEntry::createMemObject() STUB
-void StoreEntry::createMemObject(const char *, const char *, const HttpRequestMethod &) STUB
-void StoreEntry::ensureMemObject(const char *, const char *, const HttpRequestMethod &) STUB
+void StoreEntry::createMemObject(const char *, const char *, const Http::RequestMethod &) STUB
+void StoreEntry::ensureMemObject(const char *, const char *, const Http::RequestMethod &) STUB
 void StoreEntry::dump(int) const STUB
 void StoreEntry::hashDelete() STUB
 void StoreEntry::hashInsert(const cache_key *) STUB
@@ -96,11 +96,11 @@ std::ostream &operator <<(std::ostream &os, const StoreEntry &)
 
 size_t storeEntryInUse() STUB_RETVAL(0)
 void storeEntryReplaceObject(StoreEntry *, HttpReply *) STUB
-StoreEntry *storeGetPublic(const char *, const HttpRequestMethod&) STUB_RETVAL(nullptr)
+StoreEntry *storeGetPublic(const char *, const Http::RequestMethod&) STUB_RETVAL(nullptr)
 StoreEntry *storeGetPublicByRequest(HttpRequest *, const KeyScope) STUB_RETVAL(nullptr)
-StoreEntry *storeGetPublicByRequestMethod(HttpRequest *, const HttpRequestMethod&, const KeyScope) STUB_RETVAL(nullptr)
-StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const HttpRequestMethod&) STUB_RETVAL(nullptr)
-StoreEntry *storeCreatePureEntry(const char *, const char *, const HttpRequestMethod&) STUB_RETVAL(nullptr)
+StoreEntry *storeGetPublicByRequestMethod(HttpRequest *, const Http::RequestMethod&, const KeyScope) STUB_RETVAL(nullptr)
+StoreEntry *storeCreateEntry(const char *, const char *, const RequestFlags &, const Http::RequestMethod&) STUB_RETVAL(nullptr)
+StoreEntry *storeCreatePureEntry(const char *, const char *, const Http::RequestMethod&) STUB_RETVAL(nullptr)
 void storeConfigure(void) STUB
 int expiresMoreThan(time_t, time_t) STUB_RETVAL(0)
 void storeAppendPrintf(StoreEntry *, const char *,...) STUB

@@ -17,7 +17,7 @@ namespace Acl
 {
 
 /// a "method" ACL
-class MethodCheck: public ParameterizedNode< ACLData<HttpRequestMethod> >
+class MethodCheck: public ParameterizedNode< ACLData<Http::RequestMethod> >
 {
 public:
     /* Acl::Node API */

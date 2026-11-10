@@ -61,7 +61,7 @@ class CachePeer;
 int htcpQuery(StoreEntry * e, HttpRequest * req, CachePeer * p);
 
 /// \ingroup ServerProtocolHTCP
-void htcpClear(StoreEntry * e, HttpRequest * req, const HttpRequestMethod &method, CachePeer * p, htcp_clr_reason reason);
+void htcpClear(StoreEntry * e, HttpRequest * req, const Http::RequestMethod &method, CachePeer * p, htcp_clr_reason reason);
 
 #endif /* USE_HTCP */
 #endif /* SQUID_SRC_HTCP_H */
