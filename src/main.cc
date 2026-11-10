@@ -33,7 +33,7 @@
 #include "dns/forward.h"
 #include "errorpage.h"
 #include "event.h"
-#include "EventLoop.h"
+#include "engines/EventLoop.h"
 #include "ExternalACL.h"
 #include "fd.h"
 #include "format/Token.h"

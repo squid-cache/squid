@@ -9,31 +9,18 @@
 /* DEBUG: section 01    Main Loop */
 
 #include "squid.h"
-#include "AsyncEngine.h"
 #include "base/AsyncCallQueue.h"
 #include "debug/Stream.h"
-#include "EventLoop.h"
+#include "engines/EventLoop.h"
 #include "fatal.h"
 #include "time/Engine.h"
 
 EventLoop *EventLoop::Running = nullptr;
 
-EventLoop::EventLoop() : errcount(0), last_loop(false), timeService(nullptr),
-    primaryEngine(nullptr),
-    loop_delay(EVENT_LOOP_TIMEOUT),
-    error(false),
-    runOnceResult(false)
-{}
-
 void
-EventLoop::checkEngine(AsyncEngine * engine, bool const primary)
+EventLoop::checkEngine(AsyncEngine * const engine, const bool primary)
 {
-    int requested_delay;
-
-    if (!primary)
-        requested_delay = engine->checkEvents(0);
-    else
-        requested_delay = engine->checkEvents(loop_delay);
+    auto requested_delay = engine->checkEvents(primary ? loop_delay : 0);
 
     if (requested_delay < 0)
         switch (requested_delay) {
@@ -67,12 +54,6 @@ EventLoop::prepareToRun()
 }
 
 void
-EventLoop::registerEngine(AsyncEngine *engine)
-{
-    engines.push_back(engine);
-}
-
-void
 EventLoop::run()
 {
     prepareToRun();
@@ -99,10 +80,9 @@ EventLoop::runOnce()
 
     do {
         // generate calls and events
-        typedef engine_vector::iterator EVI;
-        for (EVI i = engines.begin(); i != engines.end(); ++i) {
-            if (*i != waitingEngine)
-                checkEngine(*i, false);
+        for (auto engine : engines) {
+            if (engine != waitingEngine)
+                checkEngine(engine, false);
         }
 
         // dispatch calls accumulated so far
@@ -139,34 +119,21 @@ EventLoop::runOnce()
 
 // dispatches calls accumulated during checkEngine()
 bool
-EventLoop::dispatchCalls()
+EventLoop::dispatchCalls() const
 {
     bool dispatchedSome = AsyncCallQueue::Instance().fire();
     return dispatchedSome;
 }
 
 void
-EventLoop::setPrimaryEngine(AsyncEngine * engine)
+EventLoop::setPrimaryEngine(AsyncEngine * const e)
 {
-    for (engine_vector::iterator i = engines.begin();
-            i != engines.end(); ++i)
-        if (*i == engine) {
+    for (auto engine : engines) {
+        if (engine == e) {
             primaryEngine = engine;
             return;
         }
+    }
 
     fatal("EventLoop::setPrimaryEngine: No such engine!.");
 }
-
-void
-EventLoop::setTimeService(Time::Engine *engine)
-{
-    timeService = engine;
-}
-
-void
-EventLoop::stop()
-{
-    last_loop = true;
-}
-
