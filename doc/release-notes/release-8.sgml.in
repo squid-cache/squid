@@ -20,6 +20,8 @@ This new release is available for download from <url url="http://www.squid-cache
 <p>Although this release is deemed good enough for use in many setups, please note the existence of
 <url url="https://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;product=Squid&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;version=@SQUID_RELEASE@" name="open bugs against Squid-@SQUID_RELEASE@">.
 
+<p>The minimum <em>libtool</em> version required to build Squid has been increased to <em>version 2.4</em>.
+
 <sect1>Changes since earlier releases of Squid-@SQUID_RELEASE@
 <p>
 The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squid-cache/squid/commits/v@SQUID_RELEASE@" name="viewed here">.
@@ -30,7 +32,7 @@ The Squid-@SQUID_RELEASE@ change history can be <url url="https://github.com/squ
 
 <p>The most important of these new features are:
 <itemize>
-	<item>
+	<item>Build Requirement Changes
 </itemize>
 
 <sect1>Helper changes
@@ -66,7 +68,6 @@ support for <em>src_as</em> and <em>dst_as</em> ACLs and associated ASN
 lookups. Requests for that report now result in HTTP 404 errors.
 
 Most user-facing changes are reflected in squid.conf (see below).
-
 
 <sect>Changes to squid.conf since Squid-@SQUID_RELEASE_OLD@
 <p>

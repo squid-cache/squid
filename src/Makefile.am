@@ -740,7 +740,6 @@ TESTSOURCES= \
 #	$(LIBCPPUNIT_LIBS) \
 #	$(COMPAT_LIB) \
 #	$(XTRA_LIBS)
-#tests_testX_LDFLAGS = $(LIBADD_DL)
 
 ## A demonstration test that does nothing but shows the salient points
 ## involved in writing tests.
@@ -753,7 +752,6 @@ tests_testBoilerplate_LDADD= \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 
 # Unit Tests are listed below by sub-directory with order matching the SUBDIRS
 # dependency-based list so that simpler code is tested before more complex code
@@ -771,7 +769,6 @@ tests_testMath_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testMath_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of RandomUuid.h
 check_PROGRAMS += tests/testRandomUuid
@@ -788,7 +785,6 @@ tests_testRandomUuid_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testRandomUuid_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of mem/*
 
@@ -803,7 +799,6 @@ tests_testMem_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testMem_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of base/*
 
@@ -817,7 +812,6 @@ tests_testCharacterSet_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testCharacterSet_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testClpMap
 tests_testClpMap_SOURCES = \
@@ -842,7 +836,6 @@ tests_testEnumIterator_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testEnumIterator_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testLookupTable
 tests_testLookupTable_SOURCES = \
@@ -857,7 +850,6 @@ tests_testLookupTable_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testLookupTable_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testRefCount
 tests_testRefCount_SOURCES = \
@@ -868,7 +860,6 @@ tests_testRefCount_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testRefCount_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testYesNoNone
 tests_testYesNoNone_SOURCES = \
@@ -882,7 +873,6 @@ tests_testYesNoNone_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testYesNoNone_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of anyp/*
 
@@ -914,7 +904,6 @@ tests_testURL_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testURL_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of dns/*
 
@@ -927,7 +916,6 @@ tests_testDns_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testDns_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of parser/*
 
@@ -946,7 +934,6 @@ tests_testTokenizer_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testTokenizer_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of sbuf/* and String handling objects
 
@@ -965,7 +952,6 @@ tests_testSBuf_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testSBuf_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testSBufList
 tests_testSBufList_SOURCES = \
@@ -980,7 +966,6 @@ tests_testSBufList_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testSBufList_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testString
 tests_testString_SOURCES = \
@@ -996,7 +981,6 @@ tests_testString_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testString_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of fs/*
 
@@ -1161,7 +1145,7 @@ tests_testRock_LDADD = \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
-tests_testRock_LDFLAGS = $(AM_CPPFLAGS) $(LIBADD_DL)
+tests_testRock_LDFLAGS = $(AM_CPPFLAGS)
 else
 EXTRA_DIST += \
         tests/testRock.cc \
@@ -1338,7 +1322,6 @@ tests_testUfs_LDADD = \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
-tests_testUfs_LDFLAGS = $(LIBADD_DL)
 else
 EXTRA_DIST += \
 	tests/testUfs.cc
@@ -1503,7 +1486,6 @@ tests_testStore_LDADD= \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
-tests_testStore_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of DiskIO/*
 
@@ -1678,7 +1660,6 @@ tests_testDiskIO_LDADD = \
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
-tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of auth/*
 
@@ -1727,7 +1708,6 @@ tests_testACLMaxUserIP_LDADD = \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 else
 EXTRA_DIST += \
 	tests/testACLMaxUserIP.cc
@@ -1749,7 +1729,6 @@ tests_testHtmlQuote_LDADD= \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testHtmlQuote_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of http/* and HTTP Protocol objects
 
@@ -1774,7 +1753,6 @@ tests_testHttpRange_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testHttpRange_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttp1Parser
 tests_testHttp1Parser_SOURCES = \
@@ -1820,7 +1798,6 @@ tests_testHttp1Parser_LDADD= \
 	$(LIBGNUTLS_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testHttp1Parser_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpReply
 tests_testHttpReply_SOURCES = \
@@ -1926,7 +1903,6 @@ tests_testHttpReply_LDADD=\
 	$(COMPAT_LIB) \
 	$(LIBNETTLE_LIBS) \
 	$(XTRA_LIBS)
-tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testHttpRequest
 tests_testHttpRequest_SOURCES = \
@@ -1992,7 +1968,6 @@ tests_testHttpRequest_LDADD = \
 	$(LIBNETTLE_LIBS) \
 	$(SSLLIB) \
 	$(XTRA_LIBS)
-tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of ip/*
 
@@ -2010,7 +1985,6 @@ tests_testIpAddress_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testIpAddress_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of icmp/*
 
@@ -2031,7 +2005,6 @@ tests_testIcmp_LDADD=\
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testIcmp_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testNetDb
 tests_testNetDb_SOURCES = \
@@ -2049,7 +2022,6 @@ tests_testNetDb_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testNetDb_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of mgr/* and CacheManager objects
 
@@ -2292,7 +2264,6 @@ tests_testCacheManager_LDADD = \
 	$(LIBNETTLE_LIBS) \
 	$(LIBPSAPI_LIBS) \
 	$(XTRA_LIBS)
-tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testStatHist
 tests_testStatHist_SOURCES = \
@@ -2330,7 +2301,6 @@ tests_testStatHist_LDADD = \
 	$(top_builddir)/lib/libmisccontainers.la \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB)
-tests_testStatHist_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of ConfigParser
 
@@ -2352,7 +2322,6 @@ tests_testConfigParser_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testConfigParser_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of Event handling
 
@@ -2374,7 +2343,6 @@ tests_testEvent_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testEvent_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testEventLoop
 tests_testEventLoop_SOURCES = \
@@ -2390,7 +2358,6 @@ tests_testEventLoop_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 
 check_PROGRAMS += tests/testIoManip
 tests_testIoManip_SOURCES = \
@@ -2405,4 +2372,3 @@ tests_testIoManip_LDADD = \
 	$(LIBCPPUNIT_LIBS) \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
-tests_testIoManip_LDFLAGS = $(LIBADD_DL)
