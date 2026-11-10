@@ -274,14 +274,24 @@ Security::HandshakeParser::parseModernRecord()
     Must(record.fragment.length() || record.type == ContentType::ctApplicationData);
 
     if (currentContentType != record.type) {
+        // A different content type cannot continue an incomplete message.
+        tkMessages.reinput(fragments, false);
+        tkMessages.rollback();
         parseMessages();
         Must(tkMessages.atEnd()); // no currentContentType leftovers
         fragments = record.fragment;
         currentContentType = record.type;
+        tkMessages.reset(fragments, true);
     } else {
         fragments.append(record.fragment);
+        tkMessages.reinput(fragments, true);
+        tkMessages.rollback();
     }
 
+    // This condition makes message-layer InsufficientInput meaningful to
+    // parseHello(): Insufficient message input coincides with insufficient
+    // record input. Without it, parseMessages() could request more data while
+    // already buffered records contain the missing message fragments.
     if (tkRecords.atEnd() && !done)
         parseMessages();
 }
@@ -290,7 +300,6 @@ Security::HandshakeParser::parseModernRecord()
 void
 Security::HandshakeParser::parseMessages()
 {
-    tkMessages.reset(fragments, false);
     for (; !tkMessages.atEnd(); tkMessages.commit()) {
         switch (currentContentType) {
         case ContentType::ctChangeCipherSpec:
