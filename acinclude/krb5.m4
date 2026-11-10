@@ -112,9 +112,6 @@ AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif
-#if HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
 #endif
@@ -149,9 +146,6 @@ AC_DEFUN([SQUID_CHECK_SPNEGO_SUPPORT], [
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
-#endif
-#if HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
 #endif
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
