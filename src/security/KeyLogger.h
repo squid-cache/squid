@@ -15,7 +15,7 @@
 #include <iosfwd>
 
 class MasterXaction;
-typedef RefCount<MasterXaction> MasterXactionPointer;
+using MasterXactionPointer = RefCount<MasterXaction>;
 
 namespace Security {
 

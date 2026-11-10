@@ -91,7 +91,8 @@ static const uint64_t HelloRandomSize = 32;
 class Extension
 {
 public:
-    typedef uint16_t Type;
+    using Type = uint16_t;
+
     explicit Extension(Parser::BinaryTokenizer &tk);
 
     /// whether this extension is supported by Squid and, hence, may be bumped
@@ -103,7 +104,7 @@ public:
 };
 
 /// Extension types optimized for fast lookups.
-typedef std::unordered_set<Extension::Type> Extensions;
+using Extensions = std::unordered_set<Extension::Type>;
 static Extensions SupportedExtensions();
 
 /// parse TLS ProtocolVersion (uint16) and convert it to AnyP::ProtocolVersion
