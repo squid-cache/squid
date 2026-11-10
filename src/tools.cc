@@ -775,7 +775,7 @@ setMaxFD(void)
         /* select() breaks if this gets set too big */
         if (Config.max_filedescriptors > FD_SETSIZE) {
             rl.rlim_cur = FD_SETSIZE;
-            debugs(50, DBG_CRITICAL, "WARNING: 'max_filedescriptors " << Config.max_filedescriptors << "' does not work with select()");
+            debugs(50, DBG_CRITICAL, "ERROR: max_filedescriptors limited to " << FD_SETSIZE << " by select() algorithm.");
         } else
 #endif
             rl.rlim_cur = Config.max_filedescriptors;
