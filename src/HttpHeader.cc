@@ -393,7 +393,11 @@ HttpHeader::skipUpdateHeader(const Http::HdrType id) const
     return
         // TODO: Consider updating Vary headers after comparing the magnitude of
         // the required changes (and/or cache losses) with compliance gains.
-        (id == Http::HdrType::VARY);
+        (id == Http::HdrType::VARY) ||
+        // RFC 9111 Section 3.2 explicitly excludes Content-Length
+        // from the "MUST add ..., replacing already present" list. Also,
+        // broken servers are known to send Content-Length:0 in their 304s.
+        (id == Http::HdrType::CONTENT_LENGTH);
 }
 
 void
