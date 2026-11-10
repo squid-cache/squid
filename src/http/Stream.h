@@ -103,15 +103,12 @@ public:
     clientStream_status_t socketState();
 
     /// send an HTTP reply message headers and maybe some initial payload
-    void sendStartOfMessage(HttpReply *, StoreIOBuffer bodyData);
+    void sendStartOfMessage(const HttpReplyPointer &, StoreIOBuffer);
     /// send some HTTP reply message payload
     void sendBody(StoreIOBuffer bodyData);
     /// update stream state when N bytes are being sent.
     /// NP: Http1Server bytes actually not sent yet, just packed into a MemBuf ready
     void noteSentBodyBytes(size_t);
-
-    /// add Range headers (if any) to the given HTTP reply message
-    void buildRangeHeader(HttpReply *);
 
     clientStreamNode * getTail() const;
     clientStreamNode * getClientReplyContext() const;
@@ -127,13 +124,13 @@ public:
     /// terminate due to a send/write error (may continue reading)
     void initiateClose(const char *reason);
 
-    void deferRecipientForLater(clientStreamNode *, HttpReply *, StoreIOBuffer receivedData);
+    void deferRecipientForLater(clientStreamNode *, const HttpReplyPointer &, StoreIOBuffer receivedData);
 
 public: // HTTP/1.x state data
 
     Comm::ConnectionPointer clientConnection; ///< details about the client connection socket
     ClientHttpRequest *http;    /* we pretend to own that Job */
-    HttpReply *reply;
+    HttpReplyPointer reply;
     char reqbuf[HTTP_REQBUF_SZ];
     struct {
         unsigned deferred:1; ///< This is a pipelined request waiting for the current object to complete
@@ -152,7 +149,7 @@ public: // HTTP/1.x state data
 
     public:
         clientStreamNode *node;
-        HttpReply *rep;
+        HttpReplyPointer reply;
         StoreIOBuffer queuedBuffer;
     };
 
@@ -160,7 +157,7 @@ public: // HTTP/1.x state data
     int64_t writtenToSocket;
 
 private:
-    void prepareReply(HttpReply *);
+    void buildRangeHeader();
     void packChunk(const StoreIOBuffer &bodyData, MemBuf &);
     void packRange(StoreIOBuffer const &, MemBuf *);
     void doClose();
