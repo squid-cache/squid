@@ -776,7 +776,6 @@ serverConnectionsOpen(void)
     // start various proxying services if we are responsible for them
     if (IamWorkerProcess()) {
         clientOpenListenSockets();
-        icpOpenPorts();
         icmpEngine.Open();
         netdbInit();
         Acl::Node::Initialize();
@@ -791,7 +790,6 @@ serverConnectionsClose(void)
 
     if (IamWorkerProcess()) {
         clientConnectionsClose();
-        icpConnectionShutdown();
         icmpEngine.Close();
     }
 }
@@ -809,7 +807,6 @@ mainReconfigureStart(void)
 
     // Initiate asynchronous closing sequence
     serverConnectionsClose();
-    icpClosePorts();
 #if USE_OPENSSL
     Ssl::TheGlobalContextStorage().reconfigureStart();
 #endif
@@ -1396,6 +1393,7 @@ RegisterModules()
 #if USE_HTCP
     CallRunnerRegistrator(HtcpRr);
 #endif
+    CallRunnerRegistrator(IcpRr);
 #if USE_OPENSSL
     CallRunnerRegistrator(sslBumpCfgRr);
 #endif
@@ -2015,7 +2013,6 @@ SquidShutdown()
 #endif
     redirectShutdown();
     externalAclShutdown();
-    icpClosePorts();
     releaseServerSockets();
     commCloseAllSockets();
 
