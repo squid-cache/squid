@@ -12,15 +12,19 @@
 #include "acl/FilledChecklist.h"
 #include "acl/UrlPath.h"
 #include "HttpRequest.h"
+#include "rfc1738.h"
 
 int
 Acl::UrlPathCheck::match(ACLChecklist * const ch)
 {
     const auto checklist = Filled(ch);
-    auto urlPath = checklist->request->url.path();
 
-    if (urlPath.isEmpty())
+    if (checklist->request->url.path().isEmpty())
         return -1;
 
-    return data->match(urlPath.c_str());
+    const auto esc_buf = SBufToCstring(checklist->request->url.path());
+    rfc1738_unescape(esc_buf);
+    const auto result = data->match(esc_buf);
+    xfree(esc_buf);
+    return result;
 }
