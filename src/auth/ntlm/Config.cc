@@ -34,7 +34,6 @@
 static AUTHSSTATS authenticateNTLMStats;
 
 Helper::StatefulClientPointer ntlmauthenticators;
-static int authntlm_initialised = 0;
 
 static hash_table *proxy_auth_cache = nullptr;
 
@@ -54,8 +53,6 @@ void
 Auth::Ntlm::Config::done()
 {
     Auth::SchemeConfig::done();
-
-    authntlm_initialised = 0;
 
     if (ntlmauthenticators) {
         helperStatefulShutdown(ntlmauthenticators);
@@ -85,7 +82,7 @@ Auth::Ntlm::Config::init(Auth::SchemeConfig *)
 {
     if (authenticateProgram) {
 
-        authntlm_initialised = 1;
+        activate();
 
         if (ntlmauthenticators == nullptr)
             ntlmauthenticators = statefulhelper::Make("ntlmauthenticator");
