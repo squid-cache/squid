@@ -18,15 +18,12 @@
 #include "ip/Address.h"
 #include "log/access_log.h"
 #include "mgr/Registration.h"
+#include "snmp_core.h"
 #include "SquidConfig.h"
 #include "SquidMath.h"
 #include "StatCounters.h"
 #include "Store.h"
 #include "tools.h"
-
-#if SQUID_SNMP
-#include "snmp_core.h"
-#endif
 
 static hash_table *client_table = nullptr;
 
@@ -441,13 +438,11 @@ client_entry(const Ip::Address *current)
 variable_list *
 snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 {
-    char key[MAX_IPSTRLEN];
-    ClientInfo *c = nullptr;
-    Ip::Address keyIp;
-
     *ErrP = SNMP_ERR_NOERROR;
     MemBuf tmp;
     debugs(49, 6, "Current : length=" << Var->name_length << ": " << snmpDebugOid(Var->name, Var->name_length, tmp));
+
+    Ip::Address keyIp;
     if (Var->name_length == 16) {
         keyIp = oid2addr(&(Var->name[12]), 4).value();
     } else if (Var->name_length == 28) {
@@ -457,104 +452,79 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
         return nullptr;
     }
 
-    keyIp.toStr(key, sizeof(key));
-    debugs(49, 5, "[" << key << "] requested!");
-    c = (ClientInfo *) hash_lookup(client_table, key);
+    char buf[MAX_IPSTRLEN];
+    keyIp.toStr(buf, sizeof(buf));
+    debugs(49, 5, "[" << buf << "] requested!");
 
-    if (c == nullptr) {
+    auto c = static_cast<ClientInfo *>(hash_lookup(client_table, buf));
+    if (!c) {
         debugs(49, 5, "not found.");
         *ErrP = SNMP_ERR_NOSUCHNAME;
         return nullptr;
     }
 
+    size_t value = 0;
+    auto type = ASN_COUNTER; // most of these are counters
     variable_list *Answer = nullptr;
-    int aggr = 0;
-
     switch (Var->name[LEN_SQ_NET + 2]) {
 
-    case MESH_CTBL_ADDR_TYPE: {
-        int ival;
-        ival = c->addr.isIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      ival, SMI_INTEGER);
-    }
+    case MESH_CTBL_ADDR_TYPE:
+        value = c->addr.isIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6;
+        type = ASN_INTEGER;
     break;
 
     case MESH_CTBL_ADDR: {
-        Answer = snmp_var_new(Var->name, Var->name_length);
         // InetAddress doesn't have its own ASN.1 type,
         // like IpAddr does (SMI_IPADDRESS)
         // See: rfc4001.txt
-        Answer->type = ASN_OCTET_STR;
-        char client[MAX_IPSTRLEN];
-        c->addr.toStr(client,MAX_IPSTRLEN);
-        Answer->val_len = strlen(client);
-        Answer->val.string =  (u_char *) xstrdup(client);
+        c->addr.toStr(buf, MAX_IPSTRLEN);
+        auto v = xstrdup(buf);
+        return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, ASN_OCTET_STR, &v, strlen(v));
     }
     break;
+
     case MESH_CTBL_HTBYTES:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) c->Http.kbytes_out.kb,
-                                      SMI_COUNTER32);
+        value = c->Http.kbytes_out.kb;
         break;
 
     case MESH_CTBL_HTREQ:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) c->Http.n_requests,
-                                      SMI_COUNTER32);
+        value = c->Http.n_requests;
         break;
 
     case MESH_CTBL_HTHITS:
-        aggr = 0;
-
         for (LogTags_ot l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
             if (LogTags(l).isTcpHit())
-                aggr += c->Http.result_hist[l];
+                value += c->Http.result_hist[l];
         }
-
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) aggr,
-                                      SMI_COUNTER32);
         break;
 
     case MESH_CTBL_HTHITBYTES:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) c->Http.hit_kbytes_out.kb,
-                                      SMI_COUNTER32);
+        value = c->Http.hit_kbytes_out.kb;
         break;
 
     case MESH_CTBL_ICPBYTES:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) c->Icp.kbytes_out.kb,
-                                      SMI_COUNTER32);
+        value = c->Icp.kbytes_out.kb;
         break;
 
     case MESH_CTBL_ICPREQ:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) c->Icp.n_requests,
-                                      SMI_COUNTER32);
+        value = c->Icp.n_requests;
         break;
 
     case MESH_CTBL_ICPHITS:
-        aggr = c->Icp.result_hist[LOG_UDP_HIT];
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) aggr,
-                                      SMI_COUNTER32);
+        value = c->Icp.result_hist[LOG_UDP_HIT];
         break;
 
     case MESH_CTBL_ICPHITBYTES:
-        Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) c->Icp.hit_kbytes_out.kb,
-                                      SMI_COUNTER32);
+        value = c->Icp.hit_kbytes_out.kb;
         break;
 
     default:
         *ErrP = SNMP_ERR_NOSUCHNAME;
-        debugs(49, 5, "snmp_meshCtblFn: illegal column.");
-        break;
+        debugs(49, 5, "illegal column.");
+        return nullptr;
     }
 
-    return Answer;
+    return snmp_varlist_add_variable(&Answer, Var->name, Var->name_length, type, &value, sizeof(value));
 }
 
 #endif /*SQUID_SNMP */
