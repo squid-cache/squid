@@ -11,8 +11,6 @@
 #include "dns/rfc1035.h"
 #include "unitTestMain.h"
 
-// #include <cassert>
-
 /*
  * test the DNS resolver RFC 1035 Engine
  */

@@ -24,8 +24,6 @@
     while (!(condition)) \
         ReportAndThrow_((debugLevel), (description), (location))
 
-#if !defined(NDEBUG)
-
 /// Like assert() but throws an exception instead of aborting the process. Use
 /// this macro to detect code logic mistakes (i.e. bugs) where aborting the
 /// current AsyncJob or a similar task is unlikely to jeopardize Squid service
@@ -39,14 +37,6 @@
 /// \param description string literal describing the condition (i.e. what MUST happen)
 #define Assure2(condition, description) \
         Assure_(0, (condition), ("assurance failed: " description), Here())
-
-#else
-
-/* do-nothing implementations for NDEBUG builds */
-#define Assure(condition) ((void)0)
-#define Assure2(condition, description) ((void)0)
-
-#endif /* NDEBUG */
 
 #endif /* SQUID_SRC_BASE_ASSURE_H */
 

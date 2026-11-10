@@ -14,7 +14,6 @@
 #include "mem/PoolChunked.h"
 #include "mem/Stats.h"
 
-#include <cassert>
 #include <cstring>
 
 #define MEM_MAX_MMAP_CHUNKS 2048

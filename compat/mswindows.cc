@@ -20,8 +20,6 @@
 
 #define sys_nerr _sys_nerr
 
-#undef assert
-#include <cassert>
 #include <cstring>
 #include <fcntl.h>
 #include <memory>
