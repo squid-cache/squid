@@ -109,8 +109,6 @@ int
 main(int argc, char **argv)
 {
     char wstr[HELPER_INPUT_BUFFER];
-    char username[256];
-    char password[256];
     char *p;
     int err = 0;
 
@@ -145,12 +143,17 @@ main(int argc, char **argv)
             *p = '\0';      /* strip \n */
         if ((p = strchr(wstr, '\r')) != NULL)
             *p = '\0';      /* strip \r */
-        /* Clear any current settings */
-        username[0] = '\0';
-        password[0] = '\0';
-        sscanf(wstr, "%s %s", username, password);  /* Extract parameters */
 
         debug("Got %s from Squid\n", wstr);
+
+        // TODO: Unify and encapsulate code splitting helper input into tokens.
+        if (!(p = strchr(wstr, ' '))) {
+            SEND_ERR("Missing username and/or password");
+            continue;
+        }
+        *p = '\0';
+        const auto username = wstr;
+        const auto password = p + 1;
 
         /* Check for invalid or blank entries */
         if ((username[0] == '\0') || (password[0] == '\0')) {
