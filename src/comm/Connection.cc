@@ -63,6 +63,7 @@ Comm::Connection::cloneProfile() const
     c.setAddrs(local, remote);
     c.peerType = peerType;
     // fd excused
+    c.transport = transport;
     c.tos = tos;
     c.nfmark = nfmark;
     c.nfConnmark = nfConnmark;
@@ -152,6 +153,47 @@ Comm::Connection::tlsNegotiations()
     return tlsHistory;
 }
 
+int
+Comm::Connection::sockTransport() const
+{
+    switch (transport)
+    {
+    case AnyP::PROTO_TCP:
+        return SOCK_STREAM;
+
+    case AnyP::PROTO_UDP:
+        return SOCK_DGRAM;
+
+    case AnyP::PROTO_ICMP:
+        return SOCK_RAW;
+
+    default:
+        return 0; // invalid
+    }
+}
+
+int
+Comm::Connection::ipTransport() const
+{
+    switch (transport)
+    {
+    case AnyP::PROTO_TCP:
+        return IPPROTO_TCP;
+
+    case AnyP::PROTO_UDP:
+        return IPPROTO_UDP;
+
+    case AnyP::PROTO_ICMP:
+        if (local.isIPv4() || remote.isIPv4())
+            return IPPROTO_ICMP;
+        else
+            return IPPROTO_ICMPV6;
+
+    default:
+        return 0; // invalid
+    }
+}
+
 time_t
 Comm::Connection::connectTimeout(const time_t fwdStart) const
 {
@@ -186,7 +228,7 @@ Comm::Connection::detailCodeContext(std::ostream &os) const
 std::ostream &
 Comm::operator << (std::ostream &os, const Connection &conn)
 {
-    os << conn.id;
+    os << conn.id << " " << conn.transport;
     if (!conn.local.isNoAddr() || conn.local.port())
         os << " local=" << conn.local;
     if (!conn.remote.isNoAddr() || conn.remote.port())
