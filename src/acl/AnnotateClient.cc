@@ -23,12 +23,12 @@ Acl::AnnotateClientCheck::match(ACLChecklist * const ch)
     const auto conn = checklist->conn();
 
     if (conn) {
-        tdata->annotate(conn->notes(), &delimiters.value, checklist->al);
+        tdata->annotate(conn->notes(), delimiters.value(), checklist->al);
         annotated = true;
     }
 
     if (const auto &request = checklist->request) {
-        tdata->annotate(request->notes(), &delimiters.value, checklist->al);
+        tdata->annotate(request->notes(), delimiters.value(), checklist->al);
         annotated = true;
     } else if (conn && !conn->pipeline.empty()) {
         debugs(28, DBG_IMPORTANT, "ERROR: Squid BUG: " << name << " ACL is used in context with " <<

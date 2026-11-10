@@ -101,14 +101,8 @@ class OptionValue
 public:
     typedef Value value_type;
 
-    // TODO: Some callers use .value without checking whether the option is
-    // enabled(), accessing the (default-initialized or customized) default
-    // value that way. This trick will stop working if we add valued options
-    // that can be disabled (e.g., --with-foo=x --without-foo). To support such
-    // options, store the default value separately and provide value accessor.
-
-    OptionValue(): value {} {}
-    explicit OptionValue(const Value &aValue): value(aValue) {}
+    OptionValue(): explicitOrDefaultValue {} {}
+    explicit OptionValue(const Value &aValue): explicitOrDefaultValue(aValue) {}
 
     /// whether the option is explicitly turned "on" (with or without a value)
     bool enabled() const { return configured && !disabled; }
@@ -117,11 +111,21 @@ public:
     /// go back to the default-initialized state
     void reset() { *this = OptionValue<Value>(); }
 
-    Value value; ///< final value storage, possibly after conversions
+    /// option value (if the option was enabled) or nil (otherwise)
+    const Value *value() const { return enabled() ?  &explicitOrDefaultValue : nullptr; }
+    void setValue(const Value &aValue){ explicitOrDefaultValue = aValue; };
+
     bool configured = false; ///< whether the option was present in squid.conf
     /* flags for configured options */
     bool disabled = false; ///< whether the option was turned off
     bool valued = false; ///< whether a configured option had a value
+
+private:
+    /// Value storage after any conversions.
+    /// For an example of a conversion, \see TypedOption<CharacterSetOptionValue>::import().
+    /// When `valued` is true, this is an explicitly set value.
+    /// Otherwise, this is the default value.
+    Value explicitOrDefaultValue;
 };
 
 /// a type-specific Option (e.g., a boolean --toggle or -m=SBuf)
@@ -191,8 +195,8 @@ public:
     }
 
 private:
-    void import(const SBuf &rawValue) const { recipient_->value = rawValue; }
-    void printValue(std::ostream &os) const { os << recipient_->value; }
+    void import(const SBuf &rawValue) const { recipient_->setValue(rawValue); }
+    void printValue(std::ostream &os) const { os << *recipient_->value(); }
 
     // The "mutable" specifier demarcates set-once Option kind/behavior from the
     // ever-changing recipient of the actual admin-configured option value.
