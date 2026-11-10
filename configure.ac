@@ -1017,15 +1017,6 @@ SQUID_DEFINE_BOOL(USE_HTCP,${enable_htcp:=yes},
 AM_CONDITIONAL(ENABLE_HTCP, [test "x$enable_htcp" = "xyes"])
 AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
-# Cryptograhic libraries
-SQUID_AUTO_LIB(nettle,[Nettle crypto],[LIBNETTLE])
-SQUID_CHECK_LIB_WORKS(nettle,[
-  PKG_CHECK_MODULES([LIBNETTLE],[nettle >= 3.4],[
-    CPPFLAGS="$LIBNETTLE_CFLAGS $CPPFLAGS"
-    AC_CHECK_HEADERS(nettle/base64.h nettle/md5.h nettle/version.h)
-  ],[:])
-])
-
 dnl Check for libcrypt
 CRYPTLIB=
 dnl Some of our helpers use crypt(3) which may be in libc, or in

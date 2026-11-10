@@ -9,27 +9,6 @@
 #ifndef SQUID_INCLUDE_MD5_H
 #define SQUID_INCLUDE_MD5_H
 
-#if HAVE_NETTLE_MD5_H
-#include <nettle/md5.h>
-
-#if HAVE_NETTLE_VERSION_H
-#include <nettle/version.h>
-#endif
-
-typedef struct md5_ctx SquidMD5_CTX;
-
-#define SquidMD5Init(c)       md5_init((c))
-#define SquidMD5Update(c,b,l) md5_update((c), (l), (const uint8_t *)(b))
-
-#if NETTLE_VERSION_MAJOR >= 4
-#define SquidMD5Final(d,c)    md5_digest((c), (uint8_t *)(d))
-#else
-#define SquidMD5Final(d,c)    md5_digest((c), MD5_DIGEST_SIZE, (uint8_t *)(d))
-#endif
-
-#define SQUID_MD5_DIGEST_LENGTH MD5_DIGEST_SIZE
-
-#else
 /*
  * This is the header file for the MD5 message-digest algorithm.
  * The algorithm is due to Ron Rivest.  This code was
@@ -73,8 +52,6 @@ SQUIDCEXTERN void SquidMD5Final(uint8_t digest[16], struct SquidMD5Context *cont
 SQUIDCEXTERN void SquidMD5Transform(uint32_t buf[4], uint32_t const in[16]);
 
 #define SQUID_MD5_DIGEST_LENGTH         16
-
-#endif /* HAVE_NETTLE_MD5_H */
 
 #endif /* SQUID_INCLUDE_MD5_H */
 
