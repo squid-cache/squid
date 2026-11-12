@@ -35,18 +35,117 @@
  */
 
 #include "squid.h"
+#include "base/Assure.h"
+#include "base/TextException.h"
+#include "debug/Stream.h"
 #include "rfc1738.h"
 
 #include "negotiate_kerberos.h"
+
+#include <cstddef>
+#include <memory>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #if HAVE_GSSAPI && HAVE_KRB5_PAC_SUPPORT
 
 #define LOGON_EXTRA_SIDS 0x0020
 #define LOGON_RESOURCE_GROUPS 0x0200
 
+/// A safety wrapper for legacy `p[bpos]` calls that lack buffer length checks.
+/// Unlike the KrbBuffer class, this class does not own the memory it points to.
+/// TODO: Callers should be refactored to use a BinaryTokenizer instead.
+class KrbBufferPointer
+{
+public:
+    using Storage = const unsigned char *;
+    KrbBufferPointer(const Storage start, const size_t length): start_(start), length_(length) {}
+
+    // the index is `int` because `bpos` is int
+    const unsigned char &operator [](const int pos) const {
+        Assure(pos >= 0);
+        if (static_cast<unsigned int>(pos) >= length_)
+            throw TextException("truncated input", Here());
+        return start_[pos];
+    }
+
+private:
+    Storage start_;
+    size_t length_;
+};
+
+/// A safety wrapper for legacy pa=xcalloc()/pa[l]/xfree(pa) and similar calls
+/// that leak memory when an exception is thrown and lack buffer length checks.
+template <class T>
+class KrbBuffer {
+public:
+    static_assert(std::is_trivial_v<T>, "xcalloc()/xfree() lifetime management is appropriate for T");
+    static_assert(alignof(T) <= alignof(std::max_align_t), "xcalloc()-provided alignment is sufficient for T");
+
+    explicit KrbBuffer(const size_t size):
+        storage_(static_cast<T*>(xcalloc(sizeof(T), size))),
+        size_(size) {}
+
+    ~KrbBuffer() { xfree(storage_); }
+
+    KrbBuffer(const KrbBuffer&) = delete;
+    KrbBuffer& operator=(const KrbBuffer&) = delete;
+
+    KrbBuffer(KrbBuffer &&other): storage_(std::exchange(other.storage_, nullptr)), size_(std::exchange(other.size_, 0)) {}
+    KrbBuffer &operator=(KrbBuffer &&other) {
+        if (this != &other) {
+            xfree(storage_);
+            storage_ = std::exchange(other.storage_, nullptr);
+            size_ = std::exchange(other.size_, 0);
+        }
+        return *this;
+    }
+
+    operator T*() const {
+        return storage_;
+    }
+
+    T &operator[](const size_t index) {
+        // Normally, this would be an Assure() call, but this wrapper class
+        // exists to help with dangerously written input parsing code where
+        // out-of-bounds reads are a lot more likely to indicate invalid input.
+        // TODO: Callers should be refactored to use a BinaryTokenizer instead.
+        if (index >= size_)
+            throw TextException("malformed encoding", Here());
+
+        return storage_[index];
+    }
+
+    T &operator[](const int index) {
+        Assure(index >= 0);
+        return operator[](static_cast<size_t>(index));
+    }
+
+    T* get() { return storage_; }
+    size_t size() const { return size_; }
+
+private:
+    /// Never-null storage containing size_ zero-initialized trivial objects.
+    T* storage_;
+
+    /// The number of objects stored in storage_
+    size_t size_;
+};
+
+using KrbRids = std::vector< KrbBuffer<char> >;
+
+/// Prevents double-xfree in legacy code converted to use KrbBuffer.
+template <class T>
+static void
+xfree(const KrbBuffer<T> &) = delete;
+
 static int bpos;
-static krb5_data *ad_data;
-static unsigned char *p;
+
+// XXX: This global conflicts with function parameters named `p`, preventing
+// this file from including headers like sbuf/Stream.h. TODO: Migrate this (and
+// other similar variables) and the functions using them inside a new C++ class.
+static KrbBufferPointer p(nullptr, 0);
 
 extern int
 check_k5_err(krb5_context context, const char *function, krb5_error_code code);
@@ -162,8 +261,8 @@ checkustr(RPC_UNICODE_STRING *string)
     return 0;
 }
 
-char **
-getgids(char **Rids, uint32_t GroupIds, uint32_t  GroupCount)
+static KrbRids
+getgids(const uint32_t GroupIds, const uint32_t GroupCount)
 {
     if (GroupIds!= 0) {
         uint32_t ngroup;
@@ -174,26 +273,29 @@ getgids(char **Rids, uint32_t GroupIds, uint32_t  GroupCount)
         if ( ngroup != GroupCount) {
             debug((char *) "%s| %s: ERROR: Group encoding error => GroupCount: %d Array size: %d\n",
                   LogTime(), PROGRAM, GroupCount, ngroup);
-            return nullptr;
+            // TODO: Move the above info into the exception text below after `p` global is gone.
+            throw TextException("Cannot compute the RIDS list: Inconsistent group encoding", Here());
         }
         debug((char *) "%s| %s: INFO: Found %d rids\n", LogTime(), PROGRAM, GroupCount);
 
-        Rids=(char **)xcalloc(GroupCount*sizeof(char*),1);
+        KrbRids Rids;
+        Rids.reserve(GroupCount);
         for ( l=0; l<(int)GroupCount; l++) {
             uint32_t sauth;
-            Rids[l]=(char *)xcalloc(4*sizeof(char),1);
+            Rids.emplace_back(4);
             memcpy((void *)Rids[l],(void *)&p[bpos],4);
             sauth = get4byt();
             debug((char *) "%s| %s: Info: Got rid: %u\n", LogTime(), PROGRAM, sauth);
             /* attribute */
             bpos = bpos+4;
         }
+        return Rids;
     }
-    return Rids;
+    throw TextException("Cannot compute the RIDS list: zero group IDs", Here());
 }
 
-char *
-getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t GroupCount)
+static char *
+getdomaingids(char *ad_groups, uint32_t DomainLogonId, KrbRids &Rids, uint32_t GroupCount)
 {
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store groups\n",
@@ -201,17 +303,12 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
         return nullptr;
     }
 
-    if (!Rids) {
-        debug((char *) "%s| %s: ERR: Invalid RIDS list\n",
-              LogTime(), PROGRAM);
-        return nullptr;
-    }
+    Assure(Rids.size() == GroupCount);
 
     if (DomainLogonId!= 0) {
         uint8_t rev;
         uint64_t idauth;
         char dli[256];
-        char *ag;
         int l;
 
         align(4);
@@ -229,7 +326,7 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
 
         /* prepend rids with DomainID */
         for (l=0; l<(int)GroupCount; l++) {
-            ag=(char *)xcalloc((length+4)*sizeof(char),1);
+            KrbBuffer<char> ag(length+4);
             memcpy((void *)ag,(const void*)&p[bpos],1);
             memcpy((void *)&ag[1],(const void*)&p[bpos+1],1);
             ag[1] = ag[1]+1;
@@ -250,7 +347,7 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
             base64_encode_init(&ctx);
             const uint32_t expectedSz = base64_encode_len(length+4) +1 /* terminator */;
             char *b64buf = static_cast<char *>(xcalloc(expectedSz, 1));
-            size_t blen = base64_encode_update(&ctx, b64buf, length+4, reinterpret_cast<uint8_t*>(ag));
+            size_t blen = base64_encode_update(&ctx, b64buf, length+4, reinterpret_cast<uint8_t*>(ag.get()));
             blen += base64_encode_final(&ctx, b64buf+blen);
             b64buf[expectedSz-1] = '\0';
             if (!pstrcat(ad_groups, b64buf)) {
@@ -258,7 +355,6 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
                       LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
             }
             xfree(b64buf);
-            xfree(ag);
         }
 
         /* mainly for debug only */
@@ -270,6 +366,7 @@ getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t Gro
         for ( l=0; l<(int)nauth; l++ ) {
             uint32_t sauth;
             sauth = get4byt();
+            // TODO: Encapsulate these loops and use ToSBuf() after `p` global is gone.
             snprintf((char *)&dli[strlen(dli)],sizeof(dli)-strlen(dli),"-%u",sauth);
         }
         debug((char *) "%s| %s: INFO: Got DomainLogonId %s\n", LogTime(), PROGRAM, dli);
@@ -282,8 +379,6 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
 {
     if (ExtraSids!= 0) {
         uint32_t ngroup;
-        uint32_t *pa;
-        char *ag;
         int l;
 
         align(4);
@@ -295,7 +390,7 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
         }
         debug((char *) "%s| %s: INFO: Found %d ExtraSIDs\n", LogTime(), PROGRAM, SidCount);
 
-        pa=(uint32_t *)xmalloc(SidCount*sizeof(uint32_t));
+        KrbBuffer<uint32_t> pa(SidCount);
         for ( l=0; l < (int)SidCount; l++ ) {
             pa[l] = get4byt();
             bpos = bpos+4; /* attr */
@@ -315,18 +410,15 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                 if (nauth > maxGidCount) {
                     debug((char *) "%s| %s: ERROR: Too many extra groups ! count > %d : %s\n",
                           LogTime(), PROGRAM, maxGidCount, ad_groups);
-                    xfree(pa);
                     return nullptr;
                 }
 
                 size_t length = 1+1+6+nauth*4;
-                ag = (char *)xcalloc((length)*sizeof(char),1);
+                KrbBuffer<char> ag(length);
                 memcpy((void *)ag,(const void*)&p[bpos],length);
                 if (!ad_groups) {
                     debug((char *) "%s| %s: ERR: No space to store groups\n",
                           LogTime(), PROGRAM);
-                    xfree(pa);
-                    xfree(ag);
                     return nullptr;
                 } else {
                     if (!pstrcat(ad_groups," group=")) {
@@ -339,7 +431,7 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                 base64_encode_init(&ctx);
                 const uint32_t expectedSz = base64_encode_len(length) +1 /* terminator */;
                 char *b64buf = static_cast<char *>(xcalloc(expectedSz, 1));
-                size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(ag));
+                size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(ag.get()));
                 blen += base64_encode_final(&ctx, b64buf+blen);
                 b64buf[expectedSz-1] = '\0';
                 if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
@@ -347,7 +439,6 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                           LogTime(), PROGRAM, MAX_PAC_GROUP_SIZE, ad_groups);
                 }
                 xfree(b64buf);
-                xfree(ag);
 
                 rev = get1byt();
                 bpos = bpos + 1; /* nsub */
@@ -357,12 +448,12 @@ getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount)
                 for (int k=0; k<(int)nauth; k++ ) {
                     uint32_t sauth;
                     sauth = get4byt();
+                    // TODO: Encapsulate these loops and use ToSBuf() after `p` global is gone.
                     snprintf((char *)&es[strlen(es)],sizeof(es)-strlen(es),"-%u",sauth);
                 }
                 debug((char *) "%s| %s: INFO: Got ExtraSid %s\n", LogTime(), PROGRAM, es);
             }
         }
-        xfree(pa);
     }
     return ad_groups;
 }
@@ -399,7 +490,7 @@ get_resource_group_domain_sid(const uint32_t ResourceGroupDomainSid, size_t &len
         // length = revision[1byte]+nsub[1byte]+idauth[6bytes]+nauth*sauth[4bytes]
         length = 1 + 1 + 6 + nauth*4;
 
-        auto sid = static_cast<char *>(xcalloc(length, 1));
+        KrbBuffer<char> sid(length);
         // 1 byte revision
         // 1 byte nsub
         // 6 bytes+nauth*4bytes idauth+sauths
@@ -418,8 +509,8 @@ get_resource_group_domain_sid(const uint32_t ResourceGroupDomainSid, size_t &len
         for (int l=0; l<(int)nauth; l++) {
             uint32_t sauth;
             sauth = get4byt();
+            // TODO: Encapsulate these loops and use ToSBuf() after `p` global is gone.
             rv = snprintf((char *)&dli[strlen(dli)], sizeof(dli) - strlen(dli), "-%u", sauth);
-            assert(rv > 0);
         }
         debug((char *) "%s| %s: INFO: Got ResourceGroupDomainSid %s\n", LogTime(), PROGRAM, dli);
         return sid;
@@ -456,7 +547,7 @@ get_resource_groups(char *ad_groups, uint32_t ResourceGroupDomainSid,  uint32_t 
 
         // prepare a group template which begins with the resource_group_domain_sid
         size_t length = group_domain_sid_len + 4;  // +4 for a rid concatenation
-        auto *st = static_cast<char *>(xcalloc(length, 1));
+        KrbBuffer<char> st(length);
 
         memcpy((void *)st, (const void*)resource_group_domain_sid, group_domain_sid_len); // template
 
@@ -473,7 +564,7 @@ get_resource_groups(char *ad_groups, uint32_t ResourceGroupDomainSid,  uint32_t 
             base64_encode_init(&ctx);
             const uint32_t expectedSz = base64_encode_len(length) + 1 /* terminator */;
             char *b64buf = static_cast<char *>(xcalloc(expectedSz, 1));
-            size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(st));
+            size_t blen = base64_encode_update(&ctx, b64buf, length, reinterpret_cast<uint8_t*>(st.get()));
             blen += base64_encode_final(&ctx, b64buf + blen);
             b64buf[expectedSz - 1] = '\0';
             if (!pstrcat(ad_groups, reinterpret_cast<char*>(b64buf))) {
@@ -487,16 +578,15 @@ get_resource_groups(char *ad_groups, uint32_t ResourceGroupDomainSid,  uint32_t 
             /* attribute */
             bpos = bpos + 4;
         }
-
-        xfree(st);
     }
 
     xfree(resource_group_domain_sid);
     return true;
 }
 
-char *
-get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
+/// implements get_ad_groups() except for C++ exception handling
+static char *
+get_ad_groups_(char *ad_groups, krb5_context context, krb5_pac pac)
 {
     krb5_error_code ret;
     RPC_UNICODE_STRING EffectiveName;
@@ -516,8 +606,6 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
     uint32_t ResourceGroupDomainSid=0;
     uint32_t ResourceGroupCount=0;
     uint32_t ResourceGroupIds=0;
-    char **Rids=nullptr;
-    int l=0;
 
     if (!ad_groups) {
         debug((char *) "%s| %s: ERR: No space to store groups\n",
@@ -525,14 +613,21 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
         return nullptr;
     }
 
-    ad_data = (krb5_data *)xcalloc(1,sizeof(krb5_data));
+    const auto ad_data_deleter = [context](krb5_data * const data) {
+        if (data)
+            krb5_free_data(context, data);
+    };
+
+    std::unique_ptr<krb5_data, decltype(ad_data_deleter)> ad_data(
+        static_cast<krb5_data*>(xcalloc(1, sizeof(krb5_data))),
+        ad_data_deleter);
 
 #define KERB_LOGON_INFO 1
-    ret = krb5_pac_get_buffer(context, pac, KERB_LOGON_INFO, ad_data);
+    ret = krb5_pac_get_buffer(context, pac, KERB_LOGON_INFO, ad_data.get());
     if (check_k5_err(context, "krb5_pac_get_buffer", ret))
-        goto k5clean;
+        return nullptr;
 
-    p = (unsigned char *)ad_data->data;
+    p = KrbBufferPointer(reinterpret_cast<unsigned char *>(ad_data->data), ad_data->length);
 
     debug((char *) "%s| %s: INFO: Got PAC data of length %d\n",
           LogTime(), PROGRAM, (int)ad_data->length);
@@ -594,22 +689,22 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
      * Read all data from structure => Now check pointers
      */
     if (checkustr(&EffectiveName)<0)
-        goto k5clean;
+        return nullptr;
     if (checkustr(&FullName)<0)
-        goto k5clean;
+        return nullptr;
     if (checkustr(&LogonScript)<0)
-        goto k5clean;
+        return nullptr;
     if (checkustr(&ProfilePath)<0)
-        goto k5clean;
+        return nullptr;
     if (checkustr(&HomeDirectory)<0)
-        goto k5clean;
+        return nullptr;
     if (checkustr(&HomeDirectoryDrive)<0)
-        goto k5clean;
-    Rids = getgids(Rids,GroupIds,GroupCount);
+        return nullptr;
+    auto Rids = getgids(GroupIds,GroupCount);
     if (checkustr(&LogonServer)<0)
-        goto k5clean;
+        return nullptr;
     if (checkustr(&LogonDomainName)<0)
-        goto k5clean;
+        return nullptr;
     ad_groups = getdomaingids(ad_groups,LogonDomainId,Rids,GroupCount);
 
     // https://learn.microsoft.com/en-us/previous-versions/aa302203(v=msdn.10)?redirectedfrom=MSDN#top-level-pac-structure
@@ -617,36 +712,31 @@ get_ad_groups(char *ad_groups, krb5_context context, krb5_pac pac)
         // EXTRA_SIDS structures are present and valid
         debug((char *) "%s| %s: Info: EXTRA_SIDS are present\n", LogTime(), PROGRAM);
         if ((ad_groups = getextrasids(ad_groups,ExtraSids,SidCount)) == nullptr)
-            goto k5clean;
+            return nullptr;
     }
 
     if ((UserFlags&LOGON_RESOURCE_GROUPS) != 0 && ResourceGroupDomainSid && ResourceGroupIds && ResourceGroupCount) {
         // RESOURCE_GROUPS structures are present and valid
         debug((char *) "%s| %s: Info: RESOURCE_GROUPS are present\n", LogTime(), PROGRAM);
         if (!get_resource_groups(ad_groups, ResourceGroupDomainSid, ResourceGroupIds, ResourceGroupCount))
-            goto k5clean;
+            return nullptr;
     }
 
     debug((char *) "%s| %s: INFO: Read %d of %d bytes \n", LogTime(), PROGRAM, bpos, (int)ad_data->length);
-
-    if (Rids) {
-        for ( l=0; l<(int)GroupCount; l++) {
-            xfree(Rids[l]);
-        }
-        xfree(Rids);
-    }
-    krb5_free_data(context, ad_data);
     return ad_groups;
+}
 
-k5clean:
-    if (Rids) {
-        for ( l=0; l<(int)GroupCount; l++) {
-            xfree(Rids[l]);
-        }
-        xfree(Rids);
+char *
+get_ad_groups(char * const ad_groups, const krb5_context context, const krb5_pac pac)
+{
+    try {
+        return get_ad_groups_(ad_groups, context, pac);
     }
-    krb5_free_data(context, ad_data);
-    return nullptr;
+    catch (...) {
+        debugs(29, DBG_CRITICAL, "ERROR: Failed to parse AD groups in a Kerberos service response" <<
+               Debug::Extra << "exception: " << CurrentException);
+        return nullptr;
+    }
 }
 
 #endif /* HAVE_GSSAPI && HAVE_KRB5_PAC_SUPPORT */

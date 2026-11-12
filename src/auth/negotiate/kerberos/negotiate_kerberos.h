@@ -134,8 +134,6 @@ typedef struct {
 
 void align(int n);
 void getustr(RPC_UNICODE_STRING *string);
-char **getgids(char **Rids, uint32_t GroupIds, uint32_t GroupCount);
-char *getdomaingids(char *ad_groups, uint32_t DomainLogonId, char **Rids, uint32_t  GroupCount);
 char *getextrasids(char *ad_groups, uint32_t ExtraSids, uint32_t SidCount);
 uint64_t get6byt_be(void);
 uint32_t get4byt(void);

@@ -23,6 +23,13 @@ negotiate_kerberos_auth_SOURCES = \
 	negotiate_kerberos_auth.cc \
 	negotiate_kerberos_pac.cc
 negotiate_kerberos_auth_LDADD= \
+	$(top_builddir)/src/debug/libdebug.la \
+	$(top_builddir)/src/base/libbase.la \
+	$(top_builddir)/src/sbuf/libsbuf.la \
+	$(top_builddir)/src/error/liberror.la \
+	$(top_builddir)/src/comm/libminimal.la \
+	$(top_builddir)/src/mem/libminimal.la \
+	$(top_builddir)/src/time/libtime.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LIBGSS_LIBS) \
@@ -34,6 +41,13 @@ negotiate_kerberos_auth_LDADD= \
 negotiate_kerberos_auth_test_SOURCES = \
 	negotiate_kerberos_auth_test.cc
 negotiate_kerberos_auth_test_LDADD= \
+	$(top_builddir)/src/debug/libdebug.la \
+	$(top_builddir)/src/base/libbase.la \
+	$(top_builddir)/src/sbuf/libsbuf.la \
+	$(top_builddir)/src/error/liberror.la \
+	$(top_builddir)/src/comm/libminimal.la \
+	$(top_builddir)/src/mem/libminimal.la \
+	$(top_builddir)/src/time/libtime.la \
 	$(top_builddir)/lib/libmiscencoding.la \
 	$(COMPAT_LIB) \
 	$(LIBGSS_LIBS) \
