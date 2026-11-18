@@ -34,7 +34,7 @@ namespace Security
 {
 
 inline bool nilFunction(const void *) { return false; }
-typedef HardFun<bool, const void *, nilFunction> NilFunctor;
+using NilFunctor = HardFun<bool, const void *, nilFunction>;
 
 /**
  * A shared pointer to a reference-counting Object with library-specific
@@ -51,7 +51,7 @@ class LockingPointer
 {
 public:
     /// a helper label to simplify this objects API definitions below
-    typedef Security::LockingPointer<T, UnLocker, Locker> SelfType;
+    using SelfType = Security::LockingPointer<T, UnLocker, Locker>;
 
     /// constructs a nil smart pointer
     constexpr LockingPointer(): raw(nullptr) {}

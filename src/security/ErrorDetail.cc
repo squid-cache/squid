@@ -31,7 +31,7 @@
 namespace Security {
 
 // we use std::map to optimize search; TODO: Use std::unordered_map instead?
-typedef std::map<ErrorCode, const char *> ErrorCodeNames;
+using ErrorCodeNames = std::map<ErrorCode, const char *>;
 static const ErrorCodeNames TheErrorCodeNames = {
     {   SQUID_TLS_ERR_ACCEPT,
         "SQUID_TLS_ERR_ACCEPT"
