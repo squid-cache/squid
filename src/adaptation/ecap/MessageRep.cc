@@ -94,7 +94,9 @@ Adaptation::Ecap::HeaderRep::image() const
 {
     MemBuf mb;
     mb.init();
-    theMessage.packInto(&mb, true);
+    // XXX: libecap does not provide for header masking
+    // we are forced to trust the library does not leak
+    theMessage.packInto(&mb, true, MaskSensitiveInfo::off);
     return Area::FromTempBuffer(mb.content(), mb.contentSize());
 }
 
