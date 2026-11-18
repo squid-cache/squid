@@ -28,8 +28,6 @@
 
 REMOVALPOLICYCREATE createRemovalPolicy_heap;
 
-static int nr_heap_policies = 0;
-
 struct HeapPolicyData {
     void setPolicyNode (StoreEntry *, void *) const;
     RemovalPolicy *policy;
@@ -338,9 +336,6 @@ createRemovalPolicy_heap(wordlist * args)
     policy->WalkInit = heap_walkInit;
 
     policy->PurgeInit = heap_purgeInit;
-
-    /* Increase policy usage count */
-    nr_heap_policies += 0;
 
     return policy;
 }
