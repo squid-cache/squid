@@ -126,6 +126,12 @@ Valid_User(char *UserName, char *Password, char *)
     char User[256];
 
     errormsg = NTV_SERVER_ERROR_MSG;
+
+    if (strlen(UserName) >= sizeof(NTDomain)) {
+        errormsg = "Username too long";
+        debug("%s\n", "%s: %zu >= %zu", errormsg, strlen(UserName), sizeof(NTDomain));
+        return NTV_SERVER_ERROR;
+    }
     xstrncpy(NTDomain, UserName, sizeof(NTDomain));
 
     for (i=0; i < strlen(NTV_VALID_DOMAIN_SEPARATOR); ++i) {
