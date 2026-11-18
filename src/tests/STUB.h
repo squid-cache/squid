@@ -33,6 +33,9 @@
 /// macro to stub a void function.
 #define STUB { stub_fatal(STUB_API " required"); }
 
+/// macro to provide custom logic (eg. return value or external call )
+#define STUBX(x) { stub_fatal(STUB_API " required"); x; }
+
 /// macro to stub a void function without a fatal message
 /// Intended for registration pattern APIs where the function result does not matter to the test
 #define STUB_NOP { std::cerr<<"SKIP: "<<STUB_API<<" "<<__func__<<" (not implemented).\n"; }
