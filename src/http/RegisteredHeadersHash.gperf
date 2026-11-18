@@ -25,6 +25,7 @@ Accept, Http::HdrType::ACCEPT, Http::HdrFieldType::ftStr, HdrKind::ListHeader|Hd
 Accept-Charset, Http::HdrType::ACCEPT_CHARSET, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
 Accept-Encoding, Http::HdrType::ACCEPT_ENCODING, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader|HdrKind::ReplyHeader
 Accept-Language, Http::HdrType::ACCEPT_LANGUAGE, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::RequestHeader
+Accept-Query, Http::HdrType::ACCEPT_QUERY, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 Accept-Ranges, Http::HdrType::ACCEPT_RANGES, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::ReplyHeader
 Age, Http::HdrType::AGE, Http::HdrFieldType::ftInt, HdrKind::ReplyHeader
 Allow, Http::HdrType::ALLOW, Http::HdrFieldType::ftStr, HdrKind::ListHeader|HdrKind::EntityHeader
