@@ -104,6 +104,17 @@ dnl   warranty.
 
 ==============================================================================
 
+acinclude/ax_prog_perl_modules.m4:
+
+dnl   Copyright (c) 2009 Dean Povey <povey@wedgetail.com>
+dnl
+dnl   Copying and distribution of this file, with or without modification, are
+dnl   permitted in any medium without royalty provided the copyright notice
+dnl   and this notice are preserved. This file is offered as-is, without any
+dnl   warranty.
+
+==============================================================================
+
 acinclude/ax_with_prog.m4:
 
 dnl   Copyright (c) 2008 Francesco Salvestrini <salvestrini@users.sourceforge.net>
