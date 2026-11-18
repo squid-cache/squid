@@ -71,8 +71,6 @@ public:
     dlink_node node;
 };
 
-static int nr_lru_policies = 0;
-
 static void
 lru_add(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 {
@@ -330,9 +328,6 @@ createRemovalPolicy_lru(wordlist * args)
     policy->PurgeInit = lru_purgeInit;
 
     policy->Stats = lru_stats;
-
-    /* Increase policy usage count */
-    nr_lru_policies += 0;
 
     return policy;
 }
