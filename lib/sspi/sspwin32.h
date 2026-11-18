@@ -57,7 +57,6 @@ BOOL WINAPI SSP_LogonUser(PTSTR, PTSTR, PTSTR);
 #endif
 
 #if HAVE_AUTH_MODULE_NTLM
-const char * WINAPI SSP_MakeChallenge(PVOID, int);
 BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID, int, char *);
 extern BOOL NTLM_LocalCall;
 #endif

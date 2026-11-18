@@ -14,6 +14,8 @@
 #include "sspi/sspwin32.h"
 #include "util.h"
 
+#include <vector>
+
 // FARPROC is an exception on Windows to the -Wcast-function-type sanity check.
 // suppress the warning only when casting FARPROC
 template <typename T>
@@ -463,54 +465,6 @@ BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
 }
 
 #if HAVE_AUTH_MODULE_NTLM
-const char * WINAPI SSP_MakeChallenge(PVOID PNegotiateBuf, int NegotiateLen)
-{
-    BOOL        fDone      = FALSE;
-    uint8_t  * fResult = nullptr;
-    DWORD       cbOut      = 0;
-    DWORD       cbIn       = 0;
-    ntlm_challenge * challenge;
-
-    if (NTLM_asServer.fHaveCtxtHandle)
-        _DeleteSecurityContext(&NTLM_asServer.hctxt);
-    if (NTLM_asServer.fHaveCredHandle)
-        _FreeCredentialsHandle(&NTLM_asServer.hcred);
-
-    NTLM_LocalCall = FALSE;
-    Use_Unicode = FALSE;
-    memcpy(pClientBuf, PNegotiateBuf, NegotiateLen);
-    ZeroMemory(pServerBuf, cbMaxToken);
-    ZeroMemory(&NTLM_asServer, sizeof(NTLM_asServer));
-    do {
-        if (!hModule)
-            break;
-
-        /* Prepare server message (challenge) */
-        cbIn = NegotiateLen;
-        cbOut = cbMaxToken;
-        if (!GenServerContext(&NTLM_asServer, pClientBuf, cbIn, pServerBuf, &cbOut,
-                              &fDone, nullptr))
-            break;
-        fResult = pServerBuf;
-    } while (0);
-    if (fResult != NULL) {
-        challenge = (ntlm_challenge *) fResult;
-        Use_Unicode = NTLM_NEGOTIATE_UNICODE & challenge->flags;
-        NTLM_LocalCall = NTLM_NEGOTIATE_THIS_IS_LOCAL_CALL & challenge->flags;
-        struct base64_encode_ctx ctx;
-        base64_encode_init(&ctx);
-        static char encoded[8192];
-        assert(base64_encode_len(cbOut) < sizeof(encoded));
-        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, reinterpret_cast<const uint8_t*>(fResult));
-        assert(dstLen < sizeof(encoded));
-        dstLen += base64_encode_final(&ctx, encoded+dstLen);
-        assert(dstLen < sizeof(encoded));
-        encoded[dstLen] = '\0';
-        return encoded;
-    }
-    return nullptr;
-}
-
 BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID PAutenticateBuf, int AutenticateLen, char * credentials)
 {
     BOOL        fDone      = FALSE;
@@ -538,6 +492,30 @@ BOOL WINAPI SSP_ValidateNTLMCredentials(PVOID PAutenticateBuf, int AutenticateLe
 #endif /* HAVE_AUTH_MODULE_NTLM */
 
 #if HAVE_AUTH_MODULE_NEGOTIATE
+
+/// A NUL-terminated Base64 encoding of the given token.
+/// The returned pointer is invalidated by a subsequent call (and program exit).
+static const char *
+Base64EncodeSspiToken(const void * const token, const size_t tokenLength)
+{
+    base64_encode_ctx ctx;
+    base64_encode_init(&ctx);
+
+    static std::vector<char> encodingBuffer;
+    encodingBuffer.resize(base64_encode_len(tokenLength));
+
+    auto encodedLength = base64_encode_update(&ctx, encodingBuffer.data(),
+                         tokenLength, static_cast<const uint8_t*>(token));
+
+    assert(encodedLength < encodingBuffer.size());
+    encodedLength += base64_encode_final(&ctx, encodingBuffer.data() + encodedLength);
+
+    assert(encodedLength < encodingBuffer.size());
+    encodingBuffer[encodedLength] = '\0';
+
+    return encodingBuffer.data();
+}
+
 const char * WINAPI SSP_MakeNegotiateBlob(PVOID PNegotiateBuf, int NegotiateLen, PBOOL fDone, int * Status, char * credentials)
 {
     DWORD       cbOut      = 0;
@@ -566,15 +544,7 @@ const char * WINAPI SSP_MakeNegotiateBlob(PVOID PNegotiateBuf, int NegotiateLen,
         *Status = SSP_OK;
     } while (0);
     if (pServerBuf != NULL && cbOut > 0) {
-        struct base64_encode_ctx ctx;
-        base64_encode_init(&ctx);
-        static char encoded[8192];
-        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, reinterpret_cast<const uint8_t*>(pServerBuf));
-        assert(dstLen < sizeof(encoded));
-        dstLen += base64_encode_final(&ctx, encoded+dstLen);
-        assert(dstLen < sizeof(encoded));
-        encoded[dstLen] = '\0';
-        return encoded;
+        return Base64EncodeSspiToken(pServerBuf, cbOut);
     }
     return nullptr;
 }
@@ -601,15 +571,7 @@ const char * WINAPI SSP_ValidateNegotiateCredentials(PVOID PAutenticateBuf, int 
         *Status = SSP_OK;
     } while (0);
     if (pServerBuf != NULL && cbOut > 0) {
-        struct base64_encode_ctx ctx;
-        base64_encode_init(&ctx);
-        static char encoded[8192];
-        size_t dstLen = base64_encode_update(&ctx, encoded, cbOut, reinterpret_cast<const uint8_t*>(pServerBuf));
-        assert(dstLen < sizeof(encoded));
-        dstLen += base64_encode_final(&ctx, encoded+dstLen);
-        assert(dstLen < sizeof(encoded));
-        encoded[dstLen] = '\0';
-        return encoded;
+        return Base64EncodeSspiToken(pServerBuf, cbOut);
     }
     return nullptr;
 }
