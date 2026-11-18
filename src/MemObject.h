@@ -47,7 +47,7 @@ public:
     /// the trio because the entry filling code may expect them to be constant.
     /// XXX: Avoid this method. We plan to remove it and make the trio constant
     /// after addressing the XXX in MemStore::get().
-    void setUris(char const *aStoreId, char const *aLogUri, const HttpRequestMethod &aMethod);
+    void setUris(char const *aStoreId, char const *aLogUri, const Http::RequestMethod &aMethod);
 
     /// whether setUris() has been called
     bool hasUris() const;
@@ -144,7 +144,7 @@ public:
     /// client request URI used for logging; storeId() by default
     const char *logUri() const;
 
-    HttpRequestMethod method;
+    Http::RequestMethod method;
     mem_hdr data_hdr;
     int64_t inmem_lo = 0;
     dlink_list clients;

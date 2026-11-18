@@ -22,13 +22,13 @@ operator++ (Http::MethodType &aMethod)
 }
 
 /**
- * Construct a HttpRequestMethod from a C-string such as "GET"
+ * Construct a Http::RequestMethod from a C-string such as "GET"
  * Assumes the string is either nul-terminated or contains whitespace
  *
  * \deprecated use SBuf constructor instead
  */
 void
-HttpRequestMethod::HttpRequestMethodXXX(char const *begin)
+Http::RequestMethod::HttpRequestMethodXXX(char const *begin)
 {
     // XXX: performance regression due to this method no longer being a constructor
     // ensure the members are empty/default values before any of the early-return
@@ -65,12 +65,12 @@ HttpRequestMethod::HttpRequestMethodXXX(char const *begin)
 }
 
 /**
- * Construct a HttpRequestMethod from an SBuf string such as "GET"
+ * Construct a Http::RequestMethod from an SBuf string such as "GET"
  * or from a range of chars such as "FOO" from buffer "GETFOOBARBAZ"
  *
  * Assumes the s parameter contains only the characters representing the method name
  */
-HttpRequestMethod::HttpRequestMethod(const SBuf &s) : theMethod(Http::METHOD_NONE)
+Http::RequestMethod::RequestMethod(const SBuf &s) : theMethod(Http::METHOD_NONE)
 {
     if (s.isEmpty())
         return;
@@ -96,7 +96,7 @@ HttpRequestMethod::HttpRequestMethod(const SBuf &s) : theMethod(Http::METHOD_NON
 }
 
 const SBuf &
-HttpRequestMethod::image() const
+Http::RequestMethod::image() const
 {
     static const SBuf methodOther("METHOD_OTHER");
     if (Http::METHOD_OTHER != theMethod) {
@@ -111,7 +111,7 @@ HttpRequestMethod::image() const
 }
 
 bool
-HttpRequestMethod::isHttpSafe() const
+Http::RequestMethod::isHttpSafe() const
 {
     // Only a few methods are defined as safe. All others are "unsafe"
 
@@ -156,7 +156,7 @@ HttpRequestMethod::isHttpSafe() const
 }
 
 bool
-HttpRequestMethod::isIdempotent() const
+Http::RequestMethod::isIdempotent() const
 {
     // Only a few methods are defined as idempotent.
 
@@ -205,7 +205,7 @@ HttpRequestMethod::isIdempotent() const
 }
 
 bool
-HttpRequestMethod::respMaybeCacheable() const
+Http::RequestMethod::respMaybeCacheable() const
 {
     // Only a few methods are defined as cacheable.
     // All other methods from the below RFC are "MUST NOT cache"
@@ -260,7 +260,7 @@ HttpRequestMethod::respMaybeCacheable() const
 }
 
 bool
-HttpRequestMethod::shouldInvalidate() const
+Http::RequestMethod::shouldInvalidate() const
 {
     switch (theMethod) {
     /* RFC 2616 section 13.10 - "MUST invalidate" */
@@ -289,7 +289,7 @@ HttpRequestMethod::shouldInvalidate() const
 }
 
 bool
-HttpRequestMethod::purgesOthers() const
+Http::RequestMethod::purgesOthers() const
 {
     if (shouldInvalidate())
         return true;

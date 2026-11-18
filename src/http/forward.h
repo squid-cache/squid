@@ -21,6 +21,8 @@ class ContentLengthInterpreter;
 class Message;
 typedef RefCount<Http::Message> MessagePointer;
 
+class RequestMethod;
+
 class Stream;
 typedef RefCount<Http::Stream> StreamPointer;
 
@@ -40,8 +42,6 @@ typedef enum {
 class HttpHdrSc;
 
 class HttpHeader;
-
-class HttpRequestMethod;
 
 class HttpRequest;
 typedef RefCount<HttpRequest> HttpRequestPointer;

@@ -31,7 +31,7 @@ public:
 public:
     /* details of the client HTTP request that caused the action */
     String httpUri; ///< HTTP request URI
-    HttpRequestMethod httpMethod; ///< HTTP request method
+    Http::RequestMethod httpMethod; ///< HTTP request method
     RequestFlags httpFlags; ///< HTTP request flags
     String httpOrigin;       ///< HTTP Origin: header (if any)
 

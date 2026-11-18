@@ -77,7 +77,7 @@ struct _FileIterator {
 static time_t cur_time = -1;    /* timestamp of the current log entry */
 
 /* copied from url.c */
-static HttpRequestMethod
+static Http::RequestMethod
 methodStrToId(const char *s)
 {
     if (strcasecmp(s, "GET") == 0) {
@@ -379,7 +379,7 @@ accessLogReader(FileIterator * fi)
     RawAccessLogEntry *entry;
     char *url;
     char *method;
-    HttpRequestMethod method_id = METHOD_NONE;
+    Http::RequestMethod method_id = METHOD_NONE;
     char *hier = nullptr;
 
     assert(fi);

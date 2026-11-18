@@ -92,7 +92,7 @@ storeKeyPrivate()
 }
 
 const cache_key *
-storeKeyPublic(const char *url, const HttpRequestMethod& method, const KeyScope keyScope)
+storeKeyPublic(const char *url, const Http::RequestMethod& method, const KeyScope keyScope)
 {
     static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
     unsigned char m = (unsigned char) method.id();
@@ -113,7 +113,7 @@ storeKeyPublicByRequest(HttpRequest * request, const KeyScope keyScope)
 }
 
 const cache_key *
-storeKeyPublicByRequestMethod(HttpRequest * request, const HttpRequestMethod& method, const KeyScope keyScope)
+storeKeyPublicByRequestMethod(HttpRequest * request, const Http::RequestMethod& method, const KeyScope keyScope)
 {
     static cache_key digest[SQUID_MD5_DIGEST_LENGTH];
     unsigned char m = (unsigned char) method.id();
