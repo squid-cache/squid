@@ -11,6 +11,7 @@
 
 #if USE_AUTH
 
+#include <chrono>
 #include <vector>
 
 /// HTTP Authentication
@@ -24,6 +25,8 @@ class SchemeConfig;
 typedef std::vector<Auth::SchemeConfig *> ConfigVector;
 
 class UserRequest;
+
+typedef std::chrono::seconds Ttl;
 
 } // namespace Auth
 
