@@ -191,7 +191,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
 
     const auto colonPos = basic_cookie.find(':');
     if (colonPos == SBuf::npos) {
-        debugs(16, DBG_IMPORTANT, "ERROR: CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
+        debugs(16, DBG_IMPORTANT, "ERROR: Missing colon in cache manager Basic credentials");
         return;
     }
 
@@ -199,9 +199,7 @@ CacheManager::ParseHeaders(const HttpRequest * request, Mgr::ActionParams &param
     params.userName = SBufToString(basic_cookie.substr(0, colonPos));
     params.password = SBufToString(basic_cookie.substr(colonPos+1));
 
-    /* warning: this prints decoded password which maybe not be what you want to do @?@ @?@ */
-    debugs(16, 9, "CacheManager::ParseHeaders: got user: '" <<
-           params.userName << "' passwd: '" << params.password << "'");
+    debugs(16, 9, "Parsed cache manager Basic credentials");
 #endif
 }
 
