@@ -773,6 +773,23 @@ tests_testMath_LDADD = \
 	$(XTRA_LIBS)
 tests_testMath_LDFLAGS = $(LIBADD_DL)
 
+## Tests of FadingCounter
+check_PROGRAMS += tests/testFadingCounter
+tests_testFadingCounter_SOURCES = \
+	tests/testFadingCounter.cc
+nodist_tests_testFadingCounter_SOURCES = \
+	FadingCounter.cc \
+	tests/stub_SBuf.cc \
+	tests/stub_debug.cc \
+	tests/stub_libmem.cc \
+	tests/stub_libtime.cc
+tests_testFadingCounter_LDADD = \
+	base/libbase.la \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testFadingCounter_LDFLAGS = $(LIBADD_DL)
+
 ## Tests of RandomUuid.h
 check_PROGRAMS += tests/testRandomUuid
 tests_testRandomUuid_SOURCES = \
