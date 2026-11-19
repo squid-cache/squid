@@ -159,7 +159,7 @@ fi
 if [ -f "$top/configure" -a -f "$top/libltdl/configure" ]; then
     echo "Already bootstrapped, skipping step"
 else
-    (cd "$top"; ./bootstrap.sh)
+    (cd "$top" && ./bootstrap.sh) || exit $?
 fi
 
 # Decide what tests to run, $* contains test spec names or filenames.
