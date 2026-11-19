@@ -99,7 +99,11 @@ check_spelling() {
     fi
     echo "changed files: $changed_files"
 
-    run ./scripts/spell-check.sh $changed_files
+    if ! run ./scripts/spell-check.sh $changed_files
+    then
+        echo_error "Failure while running scripts/spell-check.sh"
+        return 1
+    fi
 
     if run git diff --word-diff --exit-code
     then
@@ -108,7 +112,7 @@ check_spelling() {
 
     echo_error "Spelling mistakes detected."
     echo "The log above ends with a word diff showing suggested fixes."
-    echo "Please adjust scripts/codespell-whitelist.txt or fix spelling."
+    echo "Please adjust scripts/codespell-ignorelist.txt or fix spelling."
 
     return 1;
 }
