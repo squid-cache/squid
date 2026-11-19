@@ -12,6 +12,7 @@
 #include "FadingCounter.h"
 #include "time/gadgets.h"
 
+#include <algorithm>
 #include <cmath>
 
 FadingCounter::FadingCounter(): horizon(-1), precision(10), delta(-1),
@@ -49,14 +50,20 @@ int FadingCounter::count(int howMany)
     if (horizon < 1e-3) // (e.g., zero)
         return howMany; // remember nothing
 
-    const double deltas = (current_dtime - lastTime) / delta;
-    if (deltas >= precision || current_dtime < lastTime) {
+    // Use the phase within a horizon to avoid converting large timestamps
+    // to integer slot numbers.
+    const auto phase = fmod(current_dtime, horizon);
+    const auto slotAt = [this](const double offset) {
+        return std::min(static_cast<int>(offset / delta), precision - 1);
+    };
+    const auto curSlot = slotAt(phase);
+    if (current_dtime - lastTime >= horizon || current_dtime < lastTime) {
         clear(); // forget all values
     } else {
-        // forget stale values, if any
-        // fmod() or "current_dtime/delta" will overflow int for small deltas
-        const int lastSlot = static_cast<int>(fmod(lastTime, horizon) / delta);
-        const int staleSlots = static_cast<int>(deltas);
+        // Expire each slot crossed, even when updates are less than delta apart.
+        const auto lastPhase = fmod(lastTime, horizon);
+        const auto lastSlot = slotAt(lastPhase);
+        const auto staleSlots = curSlot - lastSlot + (phase < lastPhase ? precision : 0);
         for (int i = 0, s = lastSlot + 1; i < staleSlots; ++i, ++s) {
             const int idx = s % precision;
             total -= counters[idx];
@@ -67,8 +74,7 @@ int FadingCounter::count(int howMany)
 
     // apply new information
     lastTime = current_dtime;
-    const int curSlot = static_cast<int>(fmod(lastTime, horizon) / delta);
-    counters[curSlot % precision] += howMany;
+    counters[curSlot] += howMany;
     total += howMany;
     Must(total >= 0);
 
