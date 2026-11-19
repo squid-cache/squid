@@ -9989,17 +9989,17 @@ TYPE: adaptation_access_type
 IFDEF: USE_ADAPTATION
 LOC: none
 DEFAULT: none
-DEFAULT_DOC: Allow, unless rules exist in squid.conf.
+DEFAULT_DOC: No adaptation service is selected.
 DOC_START
 	Sends an HTTP transaction to an ICAP or eCAP adaptation	service.
 
 	adaptation_access service_name allow|deny [!]aclname...
 	adaptation_access set_name     allow|deny [!]aclname...
+	adaptation_access chain_name   allow|deny [!]aclname...
 
-	At each supported vectoring point, the adaptation_access
-	statements are processed in the order they appear in this
-	configuration file. Statements pointing to the following services
-	are ignored (i.e., skipped without checking their ACL):
+	At each supported vectoring point, Squid considers the services
+	and groups in the order they first appear in adaptation_access
+	lines. Squid skips the following services without checking their ACLs:
 
 	    - services serving different vectoring points
 	    - "broken-but-bypassable" services
@@ -10010,13 +10010,14 @@ DOC_START
 	using the same rules, to find the first applicable one. See
 	adaptation_service_set for details.
 
-	If an access list is checked and there is a match, the
-	processing stops: For an "allow" rule, the corresponding
-	adaptation service is used for the transaction. For a "deny"
-	rule, no adaptation service is activated.
+	For each candidate service or group, Squid checks its access lines
+	in configuration order, using the same ACL matching rules as
+	http_access. If access is allowed, Squid selects that service or
+	group. If access is denied, Squid continues with the next candidate.
+	If none is selected, Squid skips adaptation at this vectoring point.
 
-	It is currently not possible to apply more than one adaptation
-	service at the same vectoring point to the same HTTP transaction.
+	To apply several services in sequence at the same vectoring point,
+	configure an adaptation_service_chain and use its name in adaptation_access.
 
         See also: icap_service and ecap_service
 
