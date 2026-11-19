@@ -1238,16 +1238,20 @@ FwdState::dispatch()
 
 #if USE_OPENSSL
     if (request->flags.sslPeek) {
-        // we were just asked to peek at the server, and we did that
-        CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
-                     ConnStateData::httpsPeeked, ConnStateData::PinnedIdleContext(serverConnection(), request));
-        unregister(serverConn); // async call owns it now
         flags.dont_retry = true; // we gave up forwarding control
-        // The entry may already be aborted: if the client side went away,
-        // ~Ssl::ServerBump quick-aborted it and only queued our Abort
-        // handler, which may still be behind this (earlier queued) callback.
-        if (entry->isAccepting())
+        if (entry->isAccepting()) {
+            // we were just asked to peek at the server, and we did that
+            CallJobHere1(17, 4, request->clientConnectionManager, ConnStateData,
+                         ConnStateData::httpsPeeked, ConnStateData::PinnedIdleContext(serverConnection(), request));
+            unregister(serverConn); // async call owns it now
             entry->abort();
+        } else {
+            // The client side went away while we were peeking: ~Ssl::ServerBump
+            // quick-aborted our entry and only queued our Abort handler, which
+            // may still be behind this (earlier queued) callback. Nobody will
+            // take serverConn, so do what that handler would have done.
+            closeServerConnection("store entry aborted while peeking");
+        }
         complete(); // destroys us
         return;
     }
