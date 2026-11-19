@@ -90,6 +90,7 @@ public:
     char *name;
 
     Format::Format format;
+    SBufList formatTokens; ///< configured format tokens, for configuration dumps
 
     wordlist *cmdline;
 
@@ -269,6 +270,8 @@ parse_externalAclHelper(external_acl ** list)
         if (*token != '%')
             break;
 
+        a->formatTokens.emplace_back(ConfigParser::LastTokenWasQuoted() ? ConfigParser::QuoteString(token) : token);
+
         *fmt = new Format::Token;
         // these tokens are whitespace delimited
         (*fmt)->space = true;
@@ -385,8 +388,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->negative_ttl != node->ttl)
             storeAppendPrintf(sentry, " negative_ttl=%d", node->negative_ttl);
 
-        if (node->grace)
-            storeAppendPrintf(sentry, " grace=%d", node->grace);
+        storeAppendPrintf(sentry, " grace=%d", node->grace);
 
         if (node->children.n_max != DEFAULT_EXTERNAL_ACL_CHILDREN)
             storeAppendPrintf(sentry, " children-max=%d", node->children.n_max);
@@ -400,13 +402,17 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->children.concurrency != 0)
             storeAppendPrintf(sentry, " concurrency=%d", node->children.concurrency);
 
+        if (!node->children.defaultQueueSize)
+            storeAppendPrintf(sentry, " queue-size=%u", node->children.queue_size);
+
         if (node->cache)
             storeAppendPrintf(sentry, " cache=%d", node->cache_size);
 
         if (node->quote == Format::LOG_QUOTE_SHELL)
             storeAppendPrintf(sentry, " protocol=2.5");
 
-        node->format.dump(sentry, nullptr, false);
+        for (const auto &formatToken : node->formatTokens)
+            sentry->appendf(" " SQUIDSBUFPH, SQUIDSBUFPRINT(formatToken));
 
         for (word = node->cmdline; word; word = word->next)
             storeAppendPrintf(sentry, " %s", word->key);

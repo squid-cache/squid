@@ -935,7 +935,8 @@ DOC_START
 
 	  grace=n	Percentage remaining of TTL where a refresh of a
 			cached entry should be initiated without needing to
-			wait for a new reply. (default is for no grace period)
+			wait for a new reply. The default is 1%. Set grace=0
+			to disable early refresh.
 
 	  cache=n	The maximum number of entries in the result cache. The
 			default limit is 262144 entries.  Each cache entry usually
