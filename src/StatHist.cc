@@ -102,61 +102,30 @@ statHistDeltaPctile(const StatHist & A, const StatHist & B, double pctile)
 double
 StatHist::deltaPctile(const StatHist & B, double pctile) const
 {
-    unsigned int i;
-    bins_type s1 = 0;
-    bins_type h = 0;
-    bins_type a = 0;
-    bins_type b = 0;
-    unsigned int I = 0;
-    unsigned int J = capacity_;
-    unsigned int K;
-    double f;
-
     assert(capacity_ == B.capacity_);
 
-    int *D = static_cast<int *>(xcalloc(capacity_, sizeof(int)));
-
-    for (i = 0; i < capacity_; ++i) {
-        D[i] = B.bins[i] - bins[i];
-        assert(D[i] >= 0);
+    bins_type total = 0;
+    for (unsigned int i = 0; i < capacity_; ++i) {
+        assert(bins[i] <= B.bins[i]);
+        total += B.bins[i] - bins[i];
     }
 
-    for (i = 0; i < capacity_; ++i)
-        s1 += D[i];
+    if (!total || !(pctile >= 0.0 && pctile <= 1.0))
+        return 0.0;
 
-    h = int(s1 * pctile);
+    bins_type seen = 0;
+    for (unsigned int i = 0; i < capacity_; ++i) {
+        const auto count = B.bins[i] - bins[i];
+        if (!count)
+            continue;
 
-    for (i = 0; i < capacity_; ++i) {
-        J = i;
-        b += D[J];
-
-        if (a <= h && h <= b)
-            break;
-
-        I = i;
-
-        a += D[I];
+        seen += count;
+        // At 100%, avoid rounding a nearly complete fraction up to one.
+        if (pctile == 1.0 ? seen == total : static_cast<double>(seen) / total >= pctile)
+            return val(i);
     }
 
-    xfree(D);
-
-    if (s1 == 0)
-        return 0.0;
-
-    if (a > h)
-        return 0.0;
-
-    if (a >= b)
-        return 0.0;
-
-    if (I >= J)
-        return 0.0;
-
-    f = (h - a) / (b - a);
-
-    K = (unsigned int) floor(f * (double) (J - I) + I);
-
-    return val(K);
+    return 0.0;
 }
 
 static void

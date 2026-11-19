@@ -18,6 +18,9 @@ class TestStatHist : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST(testStatHistBaseAssignment);
     CPPUNIT_TEST(testStatHistLog);
     CPPUNIT_TEST(testStatHistSum);
+    CPPUNIT_TEST(testSparsePercentiles);
+    CPPUNIT_TEST(testRepeatedSamples);
+    CPPUNIT_TEST(testMixedPercentiles);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -26,6 +29,9 @@ protected:
     void testStatHistBaseAssignment();
     void testStatHistLog();
     void testStatHistSum();
+    void testSparsePercentiles();
+    void testRepeatedSamples();
+    void testMixedPercentiles();
 };
 CPPUNIT_TEST_SUITE_REGISTRATION( TestStatHist );
 
@@ -118,6 +124,55 @@ TestStatHist::testStatHistSum()
     ts3.count(30);
     CPPUNIT_ASSERT(ts3 == ts1);
 
+}
+
+void
+TestStatHist::testSparsePercentiles()
+{
+    StatHist older;
+    older.enumInit(FIVE);
+    older.count(TWO); // an older observation outside the sampled interval
+    auto newer = older;
+    CPPUNIT_ASSERT_EQUAL(0.0, statHistDeltaMedian(older, newer));
+    newer.count(FOUR);
+    CPPUNIT_ASSERT_EQUAL(4.0, statHistDeltaMedian(older, newer));
+    newer.count(FIVE);
+    CPPUNIT_ASSERT_EQUAL(4.0, statHistDeltaPctile(older, newer, 0.25));
+    CPPUNIT_ASSERT_EQUAL(5.0, statHistDeltaPctile(older, newer, 1.0));
+
+    StatHist times;
+    times.logInit(4, 0, 15); // bins centred at 0, 1, 3 and 7
+    auto later = times;
+    later.count(3);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0, statHistDeltaMedian(times, later), 1e-8);
+}
+
+void
+TestStatHist::testRepeatedSamples()
+{
+    StatHist older;
+    older.enumInit(FIVE);
+    auto newer = older;
+    newer.count(FOUR);
+    newer.count(FOUR);
+    CPPUNIT_ASSERT_EQUAL(4.0, statHistDeltaMedian(older, newer));
+}
+
+void
+TestStatHist::testMixedPercentiles()
+{
+    StatHist older;
+    older.enumInit(FIVE);
+    auto newer = older;
+    newer.count(ONE);
+    newer.count(FIVE);
+    newer.count(FIVE);
+    CPPUNIT_ASSERT_EQUAL(1.0, statHistDeltaPctile(older, newer, 0));
+    CPPUNIT_ASSERT_EQUAL(5.0, statHistDeltaMedian(older, newer));
+    CPPUNIT_ASSERT_EQUAL(5.0, statHistDeltaPctile(older, newer, 0.95));
+    CPPUNIT_ASSERT_EQUAL(5.0, statHistDeltaPctile(older, newer, 1));
+    newer.count(ONE);
+    CPPUNIT_ASSERT_EQUAL(1.0, statHistDeltaMedian(older, newer)); // exactly half the sample
 }
 
 int

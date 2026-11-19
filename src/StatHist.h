@@ -45,9 +45,8 @@ public:
 
     StatHist &operator=(const StatHist &);
 
-    /** Calculate the percentile for value pctile for the difference between
-     *  this and the supplied histogram.
-     */
+    /// Representative of the first occupied bin whose cumulative fraction
+    /// of new samples reaches pctile (0 to 1). Returns zero for empty intervals.
     double deltaPctile(const StatHist &B, double pctile) const;
 
     /** obtain the output-transformed value from the specified bin
