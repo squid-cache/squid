@@ -70,6 +70,8 @@ void TestConfigParser::testParseQuoted()
     // SingleToken
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("SingleToken", "SingleToken"));
 
+    CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"A\\rB\\nC\\tD\"", "A\rB\nC\tD"));
+
     // This is a quoted "string" by me
     CPPUNIT_ASSERT_EQUAL(true, doParseQuotedTest("\"This is a quoted \\\"string\\\" by me\"",
                          "This is a quoted \"string\" by me"));
