@@ -1026,7 +1026,9 @@ FwdState::connectedToPeer(Security::EncryptorAnswer &answer)
         // ConnStateData about our tunnel or otherwise unifying tunnel
         // establishment [side effects].
         flags.dont_retry = true; // TunnelStateData took forwarding control
-        entry->abort();
+        // the entry may already be aborted; see the sslPeek case in dispatch()
+        if (entry->isAccepting())
+            entry->abort();
         complete(); // destroys us
         return;
     } else if (!Comm::IsConnOpen(answer.conn) || fd_table[answer.conn->fd].closing()) {
@@ -1241,7 +1243,11 @@ FwdState::dispatch()
                      ConnStateData::httpsPeeked, ConnStateData::PinnedIdleContext(serverConnection(), request));
         unregister(serverConn); // async call owns it now
         flags.dont_retry = true; // we gave up forwarding control
-        entry->abort();
+        // The entry may already be aborted: if the client side went away,
+        // ~Ssl::ServerBump quick-aborted it and only queued our Abort
+        // handler, which may still be behind this (earlier queued) callback.
+        if (entry->isAccepting())
+            entry->abort();
         complete(); // destroys us
         return;
     }
