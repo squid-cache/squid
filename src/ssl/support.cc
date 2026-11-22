@@ -267,7 +267,7 @@ ParseSubjectAltName(const GENERAL_NAME &san)
         Assure(san.d.dNSName);
         // GEN_DNS is an IA5STRING. IA5STRING is a subset of ASCII that does not
         // need to be converted to UTF-8 (or some such) before we parse it.
-        const SBuf buffer(reinterpret_cast<const char *>(ASN1_STRING_get0_data(san.d.dNSName)), ASN1_STRING_length(san.d.dNSName));
+        const auto buffer = Ssl::AsnToSBuf(*san.d.dNSName);
         return AnyP::Host::ParseWildDomainName(buffer);
     }
 

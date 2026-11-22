@@ -513,6 +513,12 @@ mimicExtensions(Security::CertPointer & cert, Security::CertPointer const &mimic
     return added;
 }
 
+SBuf
+Ssl::AsnToSBuf(const ASN1_STRING &buffer)
+{
+    return SBuf(reinterpret_cast<const char *>(ASN1_STRING_get0_data(&buffer)), ASN1_STRING_length(&buffer));
+}
+
 /// OpenSSL ASN1_STRING_to_UTF8() wrapper
 static std::optional<SBuf>
 ParseAsUtf8(const ASN1_STRING &asnBuffer)
