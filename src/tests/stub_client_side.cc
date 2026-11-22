@@ -33,6 +33,8 @@ bool ConnStateData::handleReadData() STUB_RETVAL(false)
 bool ConnStateData::handleRequestBodyData() STUB_RETVAL(false)
 void ConnStateData::pinBusyConnection(const Comm::ConnectionPointer &, const HttpRequest::Pointer &) STUB
 void ConnStateData::notePinnedConnectionBecameIdle(PinnedIdleContext) STUB
+Comm::ConnectionPointer ConnStateData::PinnedIdleContext::takeConnection() STUB_RETVAL(nullptr)
+ConnStateData::PinnedIdleContext::ConnectionOwner::~ConnectionOwner() STUB
 void ConnStateData::unpinConnection(const bool) STUB
 Comm::ConnectionPointer ConnStateData::BorrowPinnedConnection(HttpRequest *, const AccessLogEntryPointer &) STUB_RETVAL(nullptr)
 void ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &) STUB

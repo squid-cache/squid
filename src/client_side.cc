@@ -3101,7 +3101,7 @@ ConnStateData::httpsPeeked(PinnedIdleContext pic)
     Must(sslServerBump->request == pic.request);
     Must(pipeline.empty() || pipeline.front()->http == nullptr || pipeline.front()->http->request == pic.request.getRaw());
 
-    if (Comm::IsConnOpen(pic.connection)) {
+    if (Comm::IsConnOpen(pic.connection())) {
         notePinnedConnectionBecameIdle(pic);
         debugs(33, 5, "bumped HTTPS server: " << tlsConnectHostOrIp);
     } else
@@ -3710,9 +3710,9 @@ ConnStateData::pinBusyConnection(const Comm::ConnectionPointer &pinServer, const
 void
 ConnStateData::notePinnedConnectionBecameIdle(PinnedIdleContext pic)
 {
-    Must(pic.connection);
+    Must(pic.connection());
     Must(pic.request);
-    pinConnection(pic.connection, *pic.request);
+    pinConnection(pic.takeConnection(), *pic.request);
 
     // monitor pinned server connection for remote-end closures.
     startPinnedConnectionMonitoring();
@@ -4032,10 +4032,28 @@ ConnStateData::notes()
     return theNotes;
 }
 
+/* ConnStateData::PinnedIdleContext */
+
+Comm::ConnectionPointer
+ConnStateData::PinnedIdleContext::takeConnection()
+{
+    const auto conn = owner_->connection;
+    owner_->connection = nullptr;
+    return conn;
+}
+
+ConnStateData::PinnedIdleContext::ConnectionOwner::~ConnectionOwner()
+{
+    if (Comm::IsConnOpen(connection)) {
+        debugs(33, 3, "closing untaken " << connection);
+        connection->close();
+    }
+}
+
 std::ostream &
 operator <<(std::ostream &os, const ConnStateData::PinnedIdleContext &pic)
 {
-    return os << pic.connection << ", request=" << pic.request;
+    return os << pic.connection() << ", request=" << pic.request;
 }
 
 std::ostream &
