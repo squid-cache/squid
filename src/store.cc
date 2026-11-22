@@ -1076,17 +1076,19 @@ StoreEntry::complete()
 void
 StoreEntry::abort()
 {
+    debugs(20, 6, *this);
+    if (EBIT_TEST(flags, ENTRY_ABORTED))
+        return; // already aborted
+    EBIT_SET(flags, ENTRY_ABORTED);
+
     ++statCounter.aborted_requests;
     assert(store_status == STORE_PENDING);
     assert(mem_obj != nullptr);
-    debugs(20, 6, "storeAbort: " << getMD5Text());
 
     lock("StoreEntry::abort");         /* lock while aborting */
     negativeCache();
 
     releaseRequest();
-
-    EBIT_SET(flags, ENTRY_ABORTED);
 
     // allow the Store clients to be told about the problem
     EBIT_CLR(flags, ENTRY_FWD_HDR_WAIT);
