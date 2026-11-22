@@ -182,10 +182,30 @@ public:
     class PinnedIdleContext
     {
     public:
-        PinnedIdleContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req): connection(conn), request(req) {}
+        PinnedIdleContext(const Comm::ConnectionPointer &conn, const HttpRequest::Pointer &req): request(req), owner_(new ConnectionOwner(conn)) {}
 
-        Comm::ConnectionPointer connection; ///< to-server connection to be pinned
+        /// to-server connection to be pinned (or nil)
+        const Comm::ConnectionPointer &connection() const { return owner_->connection; }
+
+        /// gives to-server connection to the new owner
+        Comm::ConnectionPointer takeConnection();
+
         HttpRequest::Pointer request; ///< to-server request that initiated serverConnection
+
+    private:
+        /// Closes the to-server connection that nobody took. Shared by all
+        /// context copies, so that the connection is also closed when the
+        /// async call carrying the context is not delivered.
+        class ConnectionOwner: public RefCountable
+        {
+        public:
+            explicit ConnectionOwner(const Comm::ConnectionPointer &conn): connection(conn) {}
+            ~ConnectionOwner() override;
+
+            Comm::ConnectionPointer connection; ///< to-server connection (or nil)
+        };
+
+        RefCount<ConnectionOwner> owner_;
     };
 
     /// Called when a pinned connection becomes available for forwarding the next request.
