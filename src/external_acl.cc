@@ -388,7 +388,8 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->negative_ttl != node->ttl)
             storeAppendPrintf(sentry, " negative_ttl=%d", node->negative_ttl);
 
-        storeAppendPrintf(sentry, " grace=%d", node->grace);
+        if (node->grace != 1 /* default */)
+            storeAppendPrintf(sentry, " grace=%d", node->grace);
 
         if (node->children.n_max != DEFAULT_EXTERNAL_ACL_CHILDREN)
             storeAppendPrintf(sentry, " children-max=%d", node->children.n_max);
