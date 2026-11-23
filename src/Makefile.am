@@ -761,18 +761,6 @@ tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 
 TESTS += $(check_PROGRAMS)
 
-## Tests of SquidMath.h
-check_PROGRAMS += tests/testMath
-tests_testMath_SOURCES = \
-	tests/testMath.cc
-nodist_tests_testMath_SOURCES = \
-	SquidMath.h
-tests_testMath_LDADD = \
-	$(LIBCPPUNIT_LIBS) \
-	$(COMPAT_LIB) \
-	$(XTRA_LIBS)
-tests_testMath_LDFLAGS = $(LIBADD_DL)
-
 ## Tests of FadingCounter
 check_PROGRAMS += tests/testFadingCounter
 tests_testFadingCounter_SOURCES = \
@@ -789,6 +777,18 @@ tests_testFadingCounter_LDADD = \
 	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testFadingCounter_LDFLAGS = $(LIBADD_DL)
+
+## Tests of SquidMath.h
+check_PROGRAMS += tests/testMath
+tests_testMath_SOURCES = \
+	tests/testMath.cc
+nodist_tests_testMath_SOURCES = \
+	SquidMath.h
+tests_testMath_LDADD = \
+	$(LIBCPPUNIT_LIBS) \
+	$(COMPAT_LIB) \
+	$(XTRA_LIBS)
+tests_testMath_LDFLAGS = $(LIBADD_DL)
 
 ## Tests of RandomUuid.h
 check_PROGRAMS += tests/testRandomUuid
