@@ -9989,7 +9989,7 @@ TYPE: adaptation_access_type
 IFDEF: USE_ADAPTATION
 LOC: none
 DEFAULT: none
-DEFAULT_DOC: No adaptation service is selected.
+DEFAULT_DOC: No adaptation services are used.
 DOC_START
 	Sends an HTTP transaction to an ICAP or eCAP adaptation	service.
 
@@ -10012,9 +10012,11 @@ DOC_START
 
 	For each candidate service or group, Squid checks its access lines
 	in configuration order, using the same ACL matching rules as
-	http_access. If access is allowed, Squid selects that service or
-	group. If access is denied, Squid continues with the next candidate.
-	If none is selected, Squid skips adaptation at this vectoring point.
+	http_access. If no explicit rule matches, Squid uses the opposite
+	of the last action for that service or group. If access is allowed,
+	Squid selects that service or group. If access is denied, Squid
+	continues with the next candidate. If none is selected, Squid skips
+	adaptation at this vectoring point.
 
 	To apply several services in sequence at the same vectoring point,
 	configure an adaptation_service_chain and use its name in adaptation_access.
