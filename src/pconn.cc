@@ -75,7 +75,7 @@ PconnPool::dumpHash(std::ostream &yaml) const
     for (auto *walker = hash_next(hid); walker; walker = hash_next(hid)) {
         yaml << title <<
              "    \"" << static_cast<char *>(walker->key) << "\": " <<
-             static_cast<IdleConnList *>(walker)->count() <<
+             static_cast<Comm::IdleConnList *>(walker)->count() <<
              "\n";
     }
 }
@@ -107,7 +107,7 @@ PconnPool::PconnPool(const char *aDescr, const CbcPointer<PeerPoolMgr> &aMgr):
 static void
 DeleteIdleConnList(void *hashItem)
 {
-    delete static_cast<IdleConnList*>(hashItem);
+    delete static_cast<Comm::IdleConnList *>(hashItem);
 }
 
 PconnPool::~PconnPool()
@@ -133,10 +133,10 @@ PconnPool::push(const Comm::ConnectionPointer &conn, const char *domain)
     // TODO: also close used pconns if we exceed peer max-conn limit
 
     const char *aKey = key(conn, domain);
-    IdleConnList *list = (IdleConnList *) hash_lookup(table, aKey);
+    auto *list = static_cast<Comm::IdleConnList *>(hash_lookup(table, aKey));
 
-    if (list == nullptr) {
-        list = new IdleConnList(aKey, this);
+    if (!list) {
+        list = new Comm::IdleConnList(aKey, this);
         debugs(48, 3, "new IdleConnList for {" << hashKeyStr(list) << "}" );
         hash_join(table, list);
     } else {
@@ -179,8 +179,8 @@ PconnPool::popStored(const Comm::ConnectionPointer &dest, const char *domain, co
 {
     const char * aKey = key(dest, domain);
 
-    IdleConnList *list = (IdleConnList *)hash_lookup(table, aKey);
-    if (list == nullptr) {
+    auto *list = static_cast<Comm::IdleConnList *>(hash_lookup(table, aKey));
+    if (!list) {
         debugs(48, 3, "lookup for key {" << aKey << "} failed.");
         // failure notifications resume standby conn creation after fdUsageHigh
         notifyManager("pop lookup failure");
@@ -230,12 +230,12 @@ PconnPool::closeN(int n)
         }
 
         // may delete current
-        static_cast<IdleConnList*>(current)->closeN(1);
+        static_cast<Comm::IdleConnList *>(current)->closeN(1);
     }
 }
 
 void
-PconnPool::unlinkList(IdleConnList *list)
+PconnPool::unlinkList(Comm::IdleConnList *list)
 {
     theCount -= list->count();
     assert(theCount >= 0);

@@ -19,9 +19,9 @@
 
 #define PCONN_FDS_SZ    8   /* pconn set size, increase for better memcache hit rate */
 
-CBDATA_CLASS_INIT(IdleConnList);
+CBDATA_NAMESPACED_CLASS_INIT(Comm, IdleConnList);
 
-IdleConnList::IdleConnList(const char *aKey, PconnPool *thePool) :
+Comm::IdleConnList::IdleConnList(const char *aKey, PconnPool *thePool) :
     capacity_(PCONN_FDS_SZ),
     size_(0),
     parent_(thePool)
@@ -30,14 +30,14 @@ IdleConnList::IdleConnList(const char *aKey, PconnPool *thePool) :
     key = xstrdup(aKey);
     next = nullptr;
 
-    theList_ = new Comm::ConnectionPointer[capacity_];
+    theList_ = new ConnectionPointer[capacity_];
 
     registerRunner();
 
 // TODO: re-attach to MemPools. WAS: theList = (?? *)pconn_fds_pool->alloc();
 }
 
-IdleConnList::~IdleConnList()
+Comm::IdleConnList::~IdleConnList()
 {
     if (parent_)
         parent_->unlinkList(this);
@@ -58,7 +58,7 @@ IdleConnList::~IdleConnList()
  * \retval >=0  The connection array index
  */
 int
-IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
+Comm::IdleConnList::findIndexOf(const ConnectionPointer &conn) const
 {
     for (auto right = size_; right > 0; --right) {
         const auto index = right - 1;
@@ -77,7 +77,7 @@ IdleConnList::findIndexOf(const Comm::ConnectionPointer &conn) const
  * \retval false The index is not an in-use entry.
  */
 bool
-IdleConnList::removeAt(size_t index)
+Comm::IdleConnList::removeAt(size_t index)
 {
     if (index >= size_)
         return false;
@@ -101,7 +101,7 @@ IdleConnList::removeAt(size_t index)
 
 // almost a duplicate of removeFD. But drops multiple entries.
 void
-IdleConnList::closeN(const size_t n)
+Comm::IdleConnList::closeN(const size_t n)
 {
     if (n < 1) {
         debugs(48, 2, "Nothing to do.");
@@ -109,7 +109,7 @@ IdleConnList::closeN(const size_t n)
     } else if (n >= size_) {
         debugs(48, 2, "Closing all entries.");
         while (size_ > 0) {
-            const Comm::ConnectionPointer conn = theList_[--size_];
+            const auto conn = theList_[--size_];
             theList_[size_] = nullptr;
             clearHandlers(conn);
             conn->close();
@@ -122,7 +122,7 @@ IdleConnList::closeN(const size_t n)
         size_t index;
         // ensure the first N entries are closed
         for (index = 0; index < n; ++index) {
-            const Comm::ConnectionPointer conn = theList_[index];
+            const auto conn = theList_[index];
             theList_[index] = nullptr;
             clearHandlers(conn);
             conn->close();
@@ -148,7 +148,7 @@ IdleConnList::closeN(const size_t n)
 }
 
 void
-IdleConnList::clearHandlers(const Comm::ConnectionPointer &conn)
+Comm::IdleConnList::clearHandlers(const ConnectionPointer &conn)
 {
     debugs(48, 3, "removing close handler for " << conn);
     comm_read_cancel(conn->fd, IdleConnList::Read, this);
@@ -156,13 +156,13 @@ IdleConnList::clearHandlers(const Comm::ConnectionPointer &conn)
 }
 
 void
-IdleConnList::push(const Comm::ConnectionPointer &conn)
+Comm::IdleConnList::push(const ConnectionPointer &conn)
 {
     if (size_ == capacity_) {
         debugs(48, 3, "growing idle Connection array");
         capacity_ <<= 1;
-        const Comm::ConnectionPointer *oldList = theList_;
-        theList_ = new Comm::ConnectionPointer[capacity_];
+        const auto *oldList = theList_;
+        theList_ = new ConnectionPointer[capacity_];
         for (size_t index = 0; index < size_; ++index)
             theList_[index] = oldList[index];
 
@@ -185,12 +185,12 @@ IdleConnList::push(const Comm::ConnectionPointer &conn)
 /// Determine whether an entry in the idle list is available for use.
 /// Returns false if the entry is unset, closed or closing.
 bool
-IdleConnList::isAvailable(int i) const
+Comm::IdleConnList::isAvailable(int i) const
 {
-    const Comm::ConnectionPointer &conn = theList_[i];
+    const auto &conn = theList_[i];
 
     // connection already closed. useless.
-    if (!Comm::IsConnOpen(conn))
+    if (!IsConnOpen(conn))
         return false;
 
     // our connection early-read/close handler is scheduled to run already. unsafe
@@ -201,7 +201,7 @@ IdleConnList::isAvailable(int i) const
 }
 
 Comm::ConnectionPointer
-IdleConnList::pop()
+Comm::IdleConnList::pop()
 {
     for (auto right = size_; right > 0; --right) {
         const auto i = right - 1;
@@ -220,14 +220,14 @@ IdleConnList::pop()
             continue;
 
         // finally, a match. pop and return it.
-        Comm::ConnectionPointer result = theList_[i];
+        auto result = theList_[i];
         clearHandlers(result);
         /* may delete this */
         removeAt(i);
         return result;
     }
 
-    return Comm::ConnectionPointer();
+    return ConnectionPointer();
 }
 
 /*
@@ -239,7 +239,7 @@ IdleConnList::pop()
  * quite a bit of CPU. Just keep it in mind.
  */
 Comm::ConnectionPointer
-IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
+Comm::IdleConnList::findUseable(const ConnectionPointer &aKey)
 {
     assert(size_);
 
@@ -272,19 +272,19 @@ IdleConnList::findUseable(const Comm::ConnectionPointer &aKey)
             continue;
 
         // finally, a match. pop and return it.
-        Comm::ConnectionPointer result = theList_[i];
+        auto result = theList_[i];
         clearHandlers(result);
         /* may delete this */
         removeAt(i);
         return result;
     }
 
-    return Comm::ConnectionPointer();
+    return ConnectionPointer();
 }
 
 /* might delete list */
 void
-IdleConnList::findAndClose(const Comm::ConnectionPointer &conn)
+Comm::IdleConnList::findAndClose(const ConnectionPointer &conn)
 {
     const int index = findIndexOf(conn);
     if (index >= 0) {
@@ -298,32 +298,32 @@ IdleConnList::findAndClose(const Comm::ConnectionPointer &conn)
 }
 
 void
-IdleConnList::Read(const Comm::ConnectionPointer &conn, char *, size_t len, Comm::Flag flag, int, void *data)
+Comm::IdleConnList::Read(const ConnectionPointer &conn, char *, size_t len, Flag flag, int, void *data)
 {
     debugs(48, 3, len << " bytes from " << conn);
 
-    if (flag == Comm::ERR_CLOSING) {
+    if (flag == ERR_CLOSING) {
         debugs(48, 3, "Comm::ERR_CLOSING from " << conn);
         /* Bail out on Comm::ERR_CLOSING - may happen when shutdown aborts our idle FD */
         return;
     }
 
-    IdleConnList *list = (IdleConnList *) data;
+    auto *list = static_cast<IdleConnList *>(data);
     /* may delete list/data */
     list->findAndClose(conn);
 }
 
 void
-IdleConnList::Timeout(const CommTimeoutCbParams &io)
+Comm::IdleConnList::Timeout(const CommTimeoutCbParams &io)
 {
     debugs(48, 3, io.conn);
-    IdleConnList *list = static_cast<IdleConnList *>(io.data);
+    auto *list = static_cast<IdleConnList *>(io.data);
     /* may delete list/data */
     list->findAndClose(io.conn);
 }
 
 void
-IdleConnList::endingShutdown()
+Comm::IdleConnList::endingShutdown()
 {
     closeN(size_);
 }

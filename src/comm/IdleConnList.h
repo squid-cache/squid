@@ -17,6 +17,9 @@
 
 class PconnPool;
 
+namespace Comm
+{
+
 #define PCONN_HIST_SZ (1<<16)
 
 /**
@@ -84,5 +87,7 @@ private:
 
     char fakeReadBuf_[4096]; // TODO: kill magic number.
 };
+
+} // namespace Comm
 
 #endif /* SQUID_SRC_COMM_IDLECONNLIST_H */

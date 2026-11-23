@@ -24,8 +24,6 @@
 class PconnPool;
 class PeerPoolMgr;
 class StoreEntry;
-class IdleConnLimit;
-class IdleConnList;
 
 /** \ingroup PConnAPI
  * Manages idle persistent connections to a caller-defined set of
@@ -59,7 +57,7 @@ public:
     Comm::ConnectionPointer pop(const Comm::ConnectionPointer &dest, const char *domain, bool keepOpen);
     void count(int uses);
     void dump(std::ostream &) const;
-    void unlinkList(IdleConnList *list);
+    void unlinkList(Comm::IdleConnList *);
     void noteUses(int uses);
     /// closes any n connections, regardless of their destination
     void closeN(int n);
