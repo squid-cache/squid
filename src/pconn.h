@@ -10,8 +10,8 @@
 #define SQUID_SRC_PCONN_H
 
 #include "base/CbcPointer.h"
-#include "base/RunnersRegistry.h"
-#include "mgr/forward.h"
+#include "comm/IdleConnList.h"
+#include "hash.h"
 
 #include <set>
 #include <iosfwd>
@@ -23,87 +23,7 @@
 
 class PconnPool;
 class PeerPoolMgr;
-
-#include "cbdata.h"
-#include "hash.h"
-/* for IOCB */
-#include "comm.h"
-
-/// \ingroup PConnAPI
-#define PCONN_HIST_SZ (1<<16)
-
-/** \ingroup PConnAPI
- * A list of connections currently open to a particular destination end-point.
- */
-class IdleConnList: public hash_link, private IndependentRunner
-{
-    CBDATA_CLASS(IdleConnList);
-
-public:
-    IdleConnList(const char *key, PconnPool *parent);
-    ~IdleConnList() override;
-
-    /// Pass control of the connection to the idle list.
-    void push(const Comm::ConnectionPointer &conn);
-
-    /// get first conn which is not pending read fd.
-    Comm::ConnectionPointer pop();
-
-    /** Search the list for a connection which matches the 'key' details
-     * and pop it off the list.
-     * The list is created based on remote IP:port hash. This further filters
-     * the choices based on specific local-end details requested.
-     * If nothing usable is found the a nil pointer is returned.
-     */
-    Comm::ConnectionPointer findUseable(const Comm::ConnectionPointer &key);
-
-    void clearHandlers(const Comm::ConnectionPointer &conn);
-
-    // TODO: Upgrade to return size_t
-    int count() const { return size_; }
-
-    void closeN(size_t count);
-
-    // IndependentRunner API
-    void endingShutdown() override;
-private:
-    bool isAvailable(int i) const;
-    bool removeAt(size_t index);
-    int findIndexOf(const Comm::ConnectionPointer &conn) const;
-    void findAndClose(const Comm::ConnectionPointer &conn);
-    static IOCB Read;
-    static CTCB Timeout;
-
-private:
-    /** List of connections we are holding.
-     * Sorted as FIFO list for most efficient speeds on pop() and findUsable()
-     * The worst-case pop() and scans occur on timeout and link closure events
-     * where timing is less critical. Occasional slow additions are okay.
-     */
-    Comm::ConnectionPointer *theList_;
-
-    /// Number of entries theList can currently hold without re-allocating (capacity).
-    size_t capacity_;
-    ///< Number of in-use entries in theList
-    size_t size_;
-
-    /** The pool containing this sub-list.
-     * The parent performs all stats accounting, and
-     * will delete us when it dies. It persists for the
-     * full duration of our existence.
-     */
-    PconnPool *parent_;
-
-    char fakeReadBuf_[4096]; // TODO: kill magic number.
-};
-
-#include "ip/forward.h"
-
 class StoreEntry;
-class IdleConnLimit;
-
-/* for hash_table */
-#include "hash.h"
 
 /** \ingroup PConnAPI
  * Manages idle persistent connections to a caller-defined set of
@@ -137,7 +57,7 @@ public:
     Comm::ConnectionPointer pop(const Comm::ConnectionPointer &dest, const char *domain, bool keepOpen);
     void count(int uses);
     void dump(std::ostream &) const;
-    void unlinkList(IdleConnList *list);
+    void unlinkList(Comm::IdleConnList *);
     void noteUses(int uses);
     /// closes any n connections, regardless of their destination
     void closeN(int n);

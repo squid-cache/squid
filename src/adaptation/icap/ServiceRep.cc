@@ -17,6 +17,7 @@
 #include "adaptation/icap/ServiceRep.h"
 #include "base/TextException.h"
 #include "comm/Connection.h"
+#include "comm/IdleConnList.h"
 #include "compat/netdb.h"
 #include "ConfigParser.h"
 #include "debug/Stream.h"
@@ -45,7 +46,7 @@ Adaptation::Icap::ServiceRep::ServiceRep(const ServiceConfigPointer &svcCfg):
     isDetached(false)
 {
     setMaxConnections();
-    theIdleConns = new IdleConnList("ICAP Service", nullptr);
+    theIdleConns = new Comm::IdleConnList("ICAP Service", nullptr);
 }
 
 Adaptation::Icap::ServiceRep::~ServiceRep()

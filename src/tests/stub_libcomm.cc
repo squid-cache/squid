@@ -43,6 +43,14 @@ const char * Comm::ConnOpener::getHost() const STUB_RETVAL(nullptr)
 #include "comm/forward.h"
 bool Comm::IsConnOpen(const Comm::ConnectionPointer &) STUB_RETVAL(false)
 
+#include "comm/IdleConnList.h"
+Comm::IdleConnList::IdleConnList(const char *, PconnPool *) STUB
+Comm::IdleConnList::~IdleConnList() STUB
+void Comm::IdleConnList::push(const ConnectionPointer &) STUB
+Comm::ConnectionPointer Comm::IdleConnList::findUseable(const ConnectionPointer &) STUB_RETVAL(ConnectionPointer())
+void Comm::IdleConnList::clearHandlers(const ConnectionPointer &) STUB
+void Comm::IdleConnList::endingShutdown() STUB
+
 #include "comm/IoCallback.h"
 void Comm::IoCallback::setCallback(iocb_type, AsyncCall::Pointer &, char *, FREE *, int) STUB
 void Comm::IoCallback::selectOrQueueWrite() STUB

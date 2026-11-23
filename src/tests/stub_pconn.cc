@@ -11,17 +11,11 @@
  */
 #include "squid.h"
 #include "comm/Connection.h"
-#include "pconn.h"
 
 #define STUB_API "pconn.cc"
 #include "tests/STUB.h"
 
-IdleConnList::IdleConnList(const char *, PconnPool *) STUB
-IdleConnList::~IdleConnList() STUB
-void IdleConnList::push(const Comm::ConnectionPointer &) STUB
-Comm::ConnectionPointer IdleConnList::findUseable(const Comm::ConnectionPointer &) STUB_RETVAL(Comm::ConnectionPointer())
-void IdleConnList::clearHandlers(const Comm::ConnectionPointer &) STUB
-void IdleConnList::endingShutdown() STUB
+#include "pconn.h"
 PconnPool::PconnPool(const char *, const CbcPointer<PeerPoolMgr>&) STUB
 PconnPool::~PconnPool() STUB
 void PconnPool::moduleInit() STUB
@@ -30,7 +24,7 @@ Comm::ConnectionPointer PconnPool::pop(const Comm::ConnectionPointer &, const ch
 void PconnPool::count(int) STUB
 void PconnPool::noteUses(int) STUB
 void PconnPool::dump(std::ostream&) const STUB
-void PconnPool::unlinkList(IdleConnList *) STUB
+void PconnPool::unlinkList(Comm::IdleConnList *) STUB
 PconnModule * PconnModule::GetInstance() STUB_RETVAL(nullptr)
 void PconnModule::DumpWrapper(StoreEntry *) STUB
 PconnModule::PconnModule() STUB
