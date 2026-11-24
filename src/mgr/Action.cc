@@ -125,9 +125,7 @@ Mgr::Action::fillEntry(StoreEntry* entry, bool writeHttpHeader)
         HttpReply *rep = new HttpReply;
         rep->setHeaders(Http::scOkay, nullptr, contentType(), -1, squid_curtime, squid_curtime);
 
-        const auto &origin = command().params.httpOrigin;
-        const auto originOrNil = origin.size() ? origin.termedBuf() : nullptr;
-        CacheManager::PutCommonResponseHeaders(*rep, originOrNil);
+        CacheManager::PutCommonResponseHeaders(*rep);
 
         entry->replaceHttpReply(rep);
     }

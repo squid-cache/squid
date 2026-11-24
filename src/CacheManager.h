@@ -52,8 +52,7 @@ public:
 
     /// Add HTTP response headers specific/common to all cache manager replies,
     /// including cache manager errors and Action reports.
-    /// \param httpOrigin the value of Origin header in the trigger HTTP request (or nil)
-    static void PutCommonResponseHeaders(HttpReply &, const char *httpOrigin);
+    static void PutCommonResponseHeaders(HttpReply &);
 
 protected:
     CacheManager() {} ///< use Instance() instead

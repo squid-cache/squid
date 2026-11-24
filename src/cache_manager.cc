@@ -301,8 +301,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         rep->header.putAuth("Basic", actionName);
 #endif
 
-        const auto originOrNil = request->header.getStr(Http::HdrType::ORIGIN);
-        PutCommonResponseHeaders(*rep, originOrNil);
+        PutCommonResponseHeaders(*rep);
 
         /* store the reply */
         entry->replaceHttpReply(rep);
@@ -312,10 +311,6 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         entry->complete();
 
         return;
-    }
-
-    if (request->header.has(Http::HdrType::ORIGIN)) {
-        cmd->params.httpOrigin = request->header.getStr(Http::HdrType::ORIGIN);
     }
 
     debugs(16, 2, "CacheManager: " <<
@@ -331,8 +326,7 @@ CacheManager::start(const Comm::ConnectionPointer &client, HttpRequest *request,
         if (strncmp(rep->body.content(),"Internal Error:", 15) == 0)
             rep->sline.set(Http::ProtocolVersion(1,1), Http::scNotFound);
 
-        const auto originOrNil = request->header.getStr(Http::HdrType::ORIGIN);
-        PutCommonResponseHeaders(*rep, originOrNil);
+        PutCommonResponseHeaders(*rep);
 
         entry->replaceHttpReply(rep);
         entry->complete();
@@ -398,17 +392,8 @@ CacheManager::PasswdGet(Mgr::ActionPasswordList * a, const char *action)
 }
 
 void
-CacheManager::PutCommonResponseHeaders(HttpReply &response, const char *httpOrigin)
+CacheManager::PutCommonResponseHeaders(HttpReply &response)
 {
-    // Allow cachemgr and other XHR scripts access to our version string
-    if (httpOrigin) {
-        response.header.putExt("Access-Control-Allow-Origin", httpOrigin);
-#if HAVE_AUTH_MODULE_BASIC
-        response.header.putExt("Access-Control-Allow-Credentials", "true");
-#endif
-        response.header.putExt("Access-Control-Expose-Headers", "Server");
-    }
-
     HttpHdrCc cc;
     // this is honored by more caches but allows pointless revalidation;
     // revalidation will always fail because we do not support it (yet?)
