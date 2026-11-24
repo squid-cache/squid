@@ -385,7 +385,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->negative_ttl != node->ttl)
             storeAppendPrintf(sentry, " negative_ttl=%d", node->negative_ttl);
 
-        if (node->grace)
+        if (node->grace != 1 /* default */)
             storeAppendPrintf(sentry, " grace=%d", node->grace);
 
         if (node->children.n_max != DEFAULT_EXTERNAL_ACL_CHILDREN)
@@ -400,12 +400,16 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->children.concurrency != 0)
             storeAppendPrintf(sentry, " concurrency=%d", node->children.concurrency);
 
+        if (!node->children.defaultQueueSize)
+            storeAppendPrintf(sentry, " queue-size=%u", node->children.queue_size);
+
         if (node->cache)
             storeAppendPrintf(sentry, " cache=%d", node->cache_size);
 
         if (node->quote == Format::LOG_QUOTE_SHELL)
             storeAppendPrintf(sentry, " protocol=2.5");
 
+        sentry->append(" ", 1);
         node->format.dump(sentry, nullptr, false);
 
         for (word = node->cmdline; word; word = word->next)
