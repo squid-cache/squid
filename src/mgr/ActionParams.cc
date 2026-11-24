@@ -27,7 +27,6 @@ Mgr::ActionParams::ActionParams(const Ipc::TypedMsgHdr &msg)
     httpMethod.HttpRequestMethodXXX(method.termedBuf());
 
     msg.getPod(httpFlags);
-    msg.getString(httpOrigin);
 
     msg.getString(actionName);
     msg.getString(userName);
@@ -42,7 +41,6 @@ Mgr::ActionParams::pack(Ipc::TypedMsgHdr &msg) const
     auto foo = SBufToString(httpMethod.image());
     msg.putString(foo);
     msg.putPod(httpFlags);
-    msg.putString(httpOrigin);
 
     msg.putString(actionName);
     msg.putString(userName);

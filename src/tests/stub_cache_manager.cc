@@ -22,5 +22,5 @@ void Mgr::RegisterAction(char const *, char const *, OBJH *, Protected, Atomic, 
 void Mgr::RegisterAction(char const *, char const *, ClassActionCreationHandler *, Protected, Atomic, Format) {}
 
 Mgr::Action::Pointer CacheManager::createRequestedAction(const Mgr::ActionParams &) STUB_RETVAL(nullptr)
-void CacheManager::PutCommonResponseHeaders(HttpReply &, const char *) STUB
+void CacheManager::PutCommonResponseHeaders(HttpReply &) STUB
 

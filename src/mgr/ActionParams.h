@@ -33,7 +33,6 @@ public:
     String httpUri; ///< HTTP request URI
     HttpRequestMethod httpMethod; ///< HTTP request method
     RequestFlags httpFlags; ///< HTTP request flags
-    String httpOrigin;       ///< HTTP Origin: header (if any)
 
     /* action parameters extracted from the client HTTP request */
     String actionName; ///< action name (and credentials realm)
