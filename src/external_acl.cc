@@ -90,7 +90,6 @@ public:
     char *name;
 
     Format::Format format;
-    SBufList formatTokens; ///< configured format tokens, for configuration dumps
 
     wordlist *cmdline;
 
@@ -270,8 +269,6 @@ parse_externalAclHelper(external_acl ** list)
         if (*token != '%')
             break;
 
-        a->formatTokens.emplace_back(ConfigParser::LastTokenWasQuoted() ? ConfigParser::QuoteString(token) : token);
-
         *fmt = new Format::Token;
         // these tokens are whitespace delimited
         (*fmt)->space = true;
@@ -412,8 +409,8 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->quote == Format::LOG_QUOTE_SHELL)
             storeAppendPrintf(sentry, " protocol=2.5");
 
-        for (const auto &formatToken : node->formatTokens)
-            sentry->appendf(" " SQUIDSBUFPH, SQUIDSBUFPRINT(formatToken));
+        sentry->append(" ", 1);
+        node->format.dump(sentry, nullptr, false);
 
         for (word = node->cmdline; word; word = word->next)
             storeAppendPrintf(sentry, " %s", word->key);

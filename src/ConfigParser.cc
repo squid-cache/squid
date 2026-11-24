@@ -553,23 +553,9 @@ ConfigParser::QuoteString(const String &var)
     quotedStr.clean();
     quotedStr.append('"');
     for (; *s != '\0'; ++s) {
-        switch (*s) {
-        case '\r':
-            quotedStr.append("\\r");
-            break;
-        case '\n':
-            quotedStr.append("\\n");
-            break;
-        case '\t':
-            quotedStr.append("\\t");
-            break;
-        case '"':
-        case '\\':
+        if (*s == '"' || *s == '\\')
             quotedStr.append('\\');
-            [[fallthrough]];
-        default:
-            quotedStr.append(*s);
-        }
+        quotedStr.append(*s);
     }
     quotedStr.append('"');
     return quotedStr.termedBuf();
