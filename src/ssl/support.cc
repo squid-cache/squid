@@ -984,8 +984,11 @@ sslGetUserCertificatePEM(SSL *ssl)
 {
     assert(ssl);
 
-    if (const auto cert = SSL_get_peer_certificate(ssl))
-        return Ssl::GetX509PEM(cert);
+    // TODO: Use SSL_get0_peer_certificate() after requiring OpenSSL v3.0.0
+    // (and remove SSL_get_peer_certificate() calls deprecated in that version).
+    const Security::CertPointer cert(SSL_get_peer_certificate(ssl));
+    if (cert)
+        return Ssl::GetX509PEM(cert.get());
 
     return SBuf();
 }
