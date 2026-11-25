@@ -13,10 +13,10 @@
 #include "store_key_md5.h"
 #include "tools.h"
 
-Ipc::MemMap::MemMap(const char *const aPath) :
+Ipc::MemMap::MemMap(const char *const aPath, const char *const machineId) :
     cleaner(nullptr),
     path(aPath),
-    shared(shm_old(Shared)(aPath))
+    shared(shm_old(Shared)(aPath, machineId))
 {
     assert(shared->limit > 0); // we should not be created otherwise
     debugs(54, 5, "attached map [" << path << "] created: " <<
@@ -24,18 +24,18 @@ Ipc::MemMap::MemMap(const char *const aPath) :
 }
 
 Ipc::MemMap::Owner *
-Ipc::MemMap::Init(const char *const path, const int limit, const size_t extrasSize)
+Ipc::MemMap::Init(const char *const path, const char *const machineId, const int limit, const size_t extrasSize)
 {
     assert(limit > 0); // we should not be created otherwise
-    Owner *const owner = shm_new(Shared)(path, limit, extrasSize);
+    Owner *const owner = shm_new(Shared)(path, machineId, limit, extrasSize);
     debugs(54, 5, "new map [" << path << "] created: " << limit);
     return owner;
 }
 
 Ipc::MemMap::Owner *
-Ipc::MemMap::Init(const char *const path, const int limit)
+Ipc::MemMap::Init(const char *const path, const char *const machineId, const int limit)
 {
-    return Init(path, limit, 0);
+    return Init(path, machineId, limit, 0);
 }
 
 Ipc::MemMap::Slot *
