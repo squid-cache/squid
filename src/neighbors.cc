@@ -1012,8 +1012,8 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
         if (p == nullptr) {
             neighborIgnoreNonPeer(from, opcode);
         } else if (ntype == PEER_SIBLING) {
-            debug_trap("neighborsUdpAck: Found non-ICP cache as SIBLING\n");
-            debug_trap("neighborsUdpAck: non-ICP neighbors must be a PARENT\n");
+            debugs(12, DBG_IMPORTANT, "ERROR: Found a non-ICP SIBLING cache_peer: " << *p <<
+                   Debug::Extra << "hint: A non-ICP neighbor must be a PARENT");
         } else {
             mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
         }
@@ -1038,7 +1038,11 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address 
             }
         }
     } else if (opcode == ICP_MISS_NOFETCH) {
-        mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
+        if (p) {
+            mem->ping_reply_callback(p, ntype, AnyP::PROTO_ICP, header, mem->ircb_data);
+        } else {
+            neighborIgnoreNonPeer(from, opcode);
+        }
     } else {
         debugs(15, DBG_CRITICAL, "ERROR: neighborsUdpAck: Unexpected ICP reply: " << opcode_d);
     }

@@ -51,7 +51,7 @@
 
 /* flags a SSL connection can be configured with */
 #define SSL_FLAG_NO_DEFAULT_CA      (1<<0)
-#define SSL_FLAG_DELAYED_AUTH       (1<<1)
+// this flag value is available:    (1<<1)
 #define SSL_FLAG_DONT_VERIFY_PEER   (1<<2)
 #define SSL_FLAG_DONT_VERIFY_DOMAIN (1<<3)
 #define SSL_FLAG_NO_SESSION_REUSE   (1<<4)

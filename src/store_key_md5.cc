@@ -86,7 +86,7 @@ storeKeyPrivate()
         pid_t pid;
         int32_t kid;
     } key = { 0, getpid(), KidIdentifier };
-    assert(sizeof(key) == SQUID_MD5_DIGEST_LENGTH);
+    static_assert(sizeof(key) == SQUID_MD5_DIGEST_LENGTH);
     ++key.count;
     return reinterpret_cast<cache_key*>(&key);
 }

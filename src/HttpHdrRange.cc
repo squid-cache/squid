@@ -17,6 +17,8 @@
 #include "Store.h"
 #include "StrList.h"
 
+#include <limits>
+
 /*
  *    Currently only byte ranges are supported
  *
@@ -93,6 +95,12 @@ HttpHdrRangeSpec::parseInit(const char *field, int flen)
                 // RFC 2616 s14.35.1 MUST: last-byte-pos >= first-byte-pos
                 if (last_pos < offset) {
                     debugs(64, 2, "invalid (last-byte-pos < first-byte-pos) range-spec near: " << field);
+                    return false;
+                }
+
+                // prevent `last_pos + 1` overflows
+                if (last_pos == std::numeric_limits<decltype(last_pos)>::max()) {
+                    debugs(64, 2, "unsupported (last-byte-pos too large) range-spec near: " << field);
                     return false;
                 }
 

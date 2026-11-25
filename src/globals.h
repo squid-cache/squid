@@ -37,7 +37,7 @@ extern int NDnsServersAlloc;    /* 0 */
 extern int RESERVED_FD;
 extern int Squid_MaxFD;     /* SQUID_MAXFD */
 extern int opt_reuseaddr;   /* 1 */
-extern int neighbors_do_private_keys;   /* 1 */
+inline constexpr int neighbors_do_private_keys = 1; // TODO: Remove this diff reducer.
 extern int opt_catch_signals;   /* 1 */
 extern int opt_foreground;    /* 0 */
 extern int opt_foreground_rebuild;  /* 0 */

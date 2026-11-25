@@ -97,7 +97,12 @@ AnyP::Uri::Decode(const SBuf &buf)
         if (tok.skip('%')) {
             const auto rawBytesAfterPercent = tok.remaining();
             int64_t hex1 = 0, hex2 = 0;
-            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1)) {
+            // The last part of the condition below rejects syntactically valid
+            // %00 triplets. RFC 3986 arguably permits such special treatment in
+            // Squid: 'the "%00" percent-encoding (NUL) may require special
+            // handling and should be rejected if the application is not
+            // expecting to receive raw data within a component'.
+            if (tok.int64(hex1, 16, false, 1) && tok.int64(hex2, 16, false, 1) && (hex1 || hex2)) {
                 output.append(static_cast<char>((hex1 << 4) | hex2));
             } else {
                 // see TestUri::testEncoding() for invalid pct-encoding sequence examples
@@ -1063,7 +1068,6 @@ AnyP::Uri::cleanup(const char *uri)
             choppedUri = xstrndup(uri, pos + 1);
         cleanedUri = xstrndup(rfc1738_do_escape(choppedUri ? choppedUri : uri,
                                                 RFC1738_ESCAPE_UNESCAPED), MAX_URL);
-        cleanedUri[pos] = '\0';
         xfree(choppedUri);
         break;
     }

@@ -15,6 +15,8 @@
 #include "HttpHdrContRange.h"
 #include "HttpHeaderTools.h"
 
+#include <limits>
+
 /*
  *    Currently only byte ranges are supported
  *
@@ -83,6 +85,12 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
 
     if (last_pos < spec->offset) {
         debugs(68, 2, "invalid (negative last-byte-pos) resp-range-spec near: '" << field << "'");
+        return 0;
+    }
+
+    // prevent `last_pos + 1` overflows
+    if (last_pos == std::numeric_limits<decltype(last_pos)>::max()) {
+        debugs(68, 2, "unsupported (last-byte-pos too large) resp-range-spec near: '" << field << "'");
         return 0;
     }
 

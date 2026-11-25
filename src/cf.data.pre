@@ -1257,19 +1257,36 @@ ENDIF
 	acl aclname url_regex [-i] ^http:// ...
 	  # POSIX extended regex matching on whole URL [fast]
 	  #
-	  # If request URL contains only valid pct-encoded triplets (RFC 3986),
-	  # all of them are decoded before matching (e.g., `%25` triplet is
-	  # replaced with a single `%` character). If request URL contains at
-	  # least one `%` character that does not start a valid pct-encoded
-	  # triplet (e.g., `%%`, `%X`, or `%2Y`), then the URL is not decoded at
-	  # all (i.e. the raw request URL is used for matching).
-	  #
-	  # If a request URL is decoded as described above, then all request URL
-	  # characters starting with the decoded `%00` pct-encoded triplet (if
-	  # any) are ignored during matching. There is currently no way to match
-	  # that triplet itself in a correctly percent-encoded URL.
+	  # If request URL contains only valid pct-encoded triplets (RFC 3986)
+	  # other than %00, then all of them are decoded before matching (e.g.,
+	  # `%25` triplet is replaced with a single `%` character). If request URL
+	  # contains at least one `%00` triplet or at least one `%` character that
+	  # does not start a valid pct-encoded triplet (e.g., `%%`, `%X`, or `%2Y`),
+	  # then the URL is not decoded at all (i.e. the raw request URL is used for
+	  # matching).
 	  #
 	  # ACL parameters are not decoded.
+	  #
+	  # The following examples use `%66` encoding of `f`, `%25` encoding of `%`,
+	  # and an invalid `%HH` triplet:
+	  #
+	  # * `url_regex foo` matches    `http://example.com/foo/`
+	  # * `url_regex foo` matches    `http://example.com/%66oo/`
+	  # * `url_regex foo` mismatches `http://example.com/%66oo/%HH`
+	  # * `url_regex %66` mismatches `http://example.com/%66oo/`
+	  # * `url_regex %66` matches    `http://example.com/%66oo/%HH`
+	  # * `url_regex %HH` matches    `http://example.com/%25HH`
+	  #
+	  # The last example demonstrates that it is not possible to use url_regex
+	  # for a reliable detection of requests with URLs that Squid does not
+	  # decode: While `url_regex %HH` does match some of those requests, it
+	  # also matches a successfully decoded URL in that last example.
+	  #
+	  # When the server returns prohibited content for the URL that Squid does
+	  # not decode (e.g., when the server ignores some `?f=foo.exe,q=%HH` query
+	  # parameters), it may be impractical to ban access to some server content
+	  # while allowing access to the same server in other cases. See
+	  # urlpath_regex ACL for more details.
 
 	acl aclname urllogin [-i] [^a-zA-Z0-9] ...
 	  # POSIX extended regex matching on URL login field [fast]
@@ -1281,6 +1298,14 @@ ENDIF
 
 	acl aclname urlpath_regex [-i] \.gif$ ...
 	  # POSIX extended regex matching on URL path [fast]
+	  #
+	  # Unlike url_regex, this ACL does not decode RFC 3986 pct-encoded triplets
+	  # before checking whether the URL path matches the configured regex.
+	  #
+	  # Since servers usually decode request URLs, it may be impractical to use
+	  # this non-decoding ACL to ban access to some server content while
+	  # allowing access to other URLs on the same server because there are `2^n`
+	  # different ways to encode an `n`-letter keyword.
 
 	acl aclname port 80 70 21 0-1024 ...
 	  # destination TCP port (or port range) of the request [fast]
@@ -1525,8 +1550,16 @@ ENDIF
 	  # Matches transaction's initiator [fast]
 	  #
 	  # Supported initiators are:
-	  #  certificate-fetching: matches transactions fetching
-	  #     a missing intermediate TLS certificate
+	  #
+	  #  certificate-fetching: Matches internal transactions fetching a missing
+	  #     intermediate TLS certificate. These transactions have a
+	  #     Squid-generated request for a URL extracted from the Authority
+	  #     Information Access X.509 certificate extension (AIA; RFC 5280).
+	  #     These transactions are not associated with client-to-Squid
+	  #     connections but go through the usual post-parsing request processing
+	  #     steps, including `http_access` controls and `cache_peer` selection.
+	  #     Squid has no built-in AIA-specific access or forwarding rules.
+	  #
 	  #  cache-digest: matches transactions fetching Cache Digests
 	  #     from a cache_peer
 	  #  htcp: matches HTCP requests from peers
@@ -1940,10 +1973,23 @@ LOC: Config.accessList.http
 DEFAULT_IF_NONE: deny all
 DEFAULT_DOC: Deny, unless rules exist in squid.conf.
 DOC_START
-	Allowing or Denying access based on defined access lists
+	Controls HTTP and FTP requests access to this Squid instance.
 
-	To allow or deny a message received on an HTTP, HTTPS, or FTP port:
 	http_access allow|deny [!]aclname ...
+
+	This directive applies to parsed requests received on an `http_port`,
+	`https_port`, or `ftp_port`, fake HTTP CONNECT requests representing
+	intercepted TLS connections (see `ssl_bump` directive, where available), and
+	internally-generated X.509 certificate-fetching requests (look for "AIA" in
+	`transaction_initiator` ACL documentation).
+
+	This directive does not apply to requests received from a REQMOD adaptation
+	service. Use `adapted_http_access` directive to control those requests.
+
+	This directive does not apply to internally-generated Cache Digests and
+	NetDB `cache_peer` requests. Those requests are deemed allowed when enabled
+	by the corresponding `cache_peer` configuration (they are enabled by
+	default; see `no-digest` and `no-netdb-exchange` options).
 
 	NOTE on default values:
 
@@ -2495,10 +2541,6 @@ DOC_START
 				 this option is not set.
 
 	   sslflags=	Various flags modifying the use of SSL:
-			    DELAYED_AUTH
-				Don't request client certificates
-				immediately, but wait until acl processing
-				requires a certificate (not yet implemented).
 			    CONDITIONAL_AUTH
 				Request a client certificate during the TLS
 				handshake, but ignore certificate absence in
@@ -6039,7 +6081,14 @@ DOC_START
 
 	  OK [status=30N] url="..."
 
-		Redirect the client to a URL supplied in the 'url' parameter.
+		Redirect the client to the specified URL. After decoding and validating
+		the `url` parameter value as described further below, Squid uses the
+		decoded value as a Location header field value in a Squid-generated 3xx
+		HTTP response (see RFC 9110 Section 10.2.2).
+
+		Decoded URL value must satisfy `URI-reference` format (see RFC 3986
+		Section 2.1).
+
 		Optional 'status' specifies the status code to send to the
 		client in Squid's HTTP redirect response. It must be one of
 		the standard HTTP redirect status codes: 301, 302, 303, 307,
@@ -6048,7 +6097,8 @@ DOC_START
 	  OK rewrite-url="..."
 
 		Replace the current request URL with the one supplied in the
-		'rewrite-url' parameter. Squid fetches the resource specified
+		'rewrite-url' parameter, after decoding and validating that parameter
+		value as described further below. Squid fetches the resource specified
 		by the new URL and forwards the received response (or its
 		cached copy) to the client.
 
@@ -6061,8 +6111,6 @@ DOC_START
 		Location headers and embedded URLs after the helper rewrites
 		the request URL.
 
-		If Squid cannot parse the URL value returned by the helper, it logs a
-		critical cache.log ERROR message and uses the original request URL.
 		Supported URL format depends on the request method. For example,
 		CONNECT request URLs must use `host:port` form, while GET URLs start
 		with a `scheme:` prefix (e.g., `https://example.com/`).
@@ -6089,6 +6137,33 @@ DOC_START
 		requests on the same client connection. A helper may update
 		the TAG during subsequent requests by returning a new kv-pair.
 
+	URL decoding and validation:
+
+	This section describes initial handling common to `url` and `rewrite-url`
+	helper response parameters. After decoding the received `key=value`
+	parameter value as usual (for the details of that general helper parameter
+	decoding algorithm, see `external_acl_type` documentation; look for
+	"escaping" and "double quotes"), Squid expects to see a percent-encoded URI
+	(see RFC 3986 Section 2.1). This means that sending a URL using a
+	percent-encoded token value format usually requires percent-encoding twice.
+	See examples further below.
+
+	If the decoded parameter value (i.e. the expected percent-encoded URI value
+	mentioned in the above paragraph) fails Squid validation (e.g., it contains
+	an ASCII new line character), Squid logs a level-0 ERROR message to
+	cache.log, keeps the client request intact, and proceeds as if the helper
+	sent an `OK` response without any `url` and `rewrite-url` parameters.
+
+	Here are a few examples of raw helper responses before decoding. The two
+	valid ones lead to Squid sending an HTTP 302 response with the following
+	header field: `Location: https://example.com/trailing%20newline%0A`.
+
+	  * `OK url="https://example.com/trailing newline\n"` -- bare SP and LF
+	  * `OK url="https://example.com/trailing%20newline%0A"` -- valid
+	  * `OK  url=https://example.com/trailing%20newline%0A` -- bare SP and LF
+	  * `OK  url=https://example.com/trailing%2520newline%250A"` -- valid
+
+	Concurrency support:
 
 	Helper messages contain the channel-ID part if and only if the
 	url_rewrite_children directive specifies positive concurrency. As a
@@ -8981,11 +9056,15 @@ DOC_START
 	Alternatively you can tell Squid to reset the TCP connection
 	by specifying TCP_RESET.
 
-	Or you can specify an error URL or URL pattern. The browsers will
+	Or you can specify an error URL pattern. The client will
 	get redirected to the specified URL after formatting tags have
 	been replaced. Redirect will be done with 302 or 307 according to
 	HTTP/1.1 specs. A different 3xx code may be specified by prefixing
 	the URL. e.g. 303:http://example.com/
+
+	After performing URL pattern substitutions, Squid expects a percent-encoded
+	URI (see RFC 3986 Section 2.1), suitable for use as an HTTP Location header
+	value (see RFC 9110 Section 10.2.2).
 
 	URL FORMAT TAGS:
 		%a	- username (if available. Password NOT included)
@@ -9009,6 +9088,17 @@ DOC_START
 		%w	- Admin email from squid.conf
 		%x	- Error name
 		%%	- Literal percent (%) code
+
+	When substituting the above single-letter format tags in a URL pattern,
+	Squid percent-encodes individual substitution values. Squid does not encode
+	the non-tag portions of the URL pattern. Squid currently does not validate
+	the post-substitutions value against HTTP Location response header syntax
+	rules (see RFC 9110 Section 10.2.2), and, hence, does not warn about syntax
+	violations when using that result (as is) for that header value.
+
+	If a URL pattern contains a `%` character not meant to be interpreted as a
+	part of a format tag name, replace it with `%%`. For example, use `%%20` to
+	specify a percent-encoded ASCII space in a deny_info URL pattern.
 
 DOC_END
 
