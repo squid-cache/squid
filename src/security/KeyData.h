@@ -11,7 +11,7 @@
 
 #include "anyp/forward.h"
 #include "sbuf/SBuf.h"
-#include "security/forward.h"
+#include "security/Certificate.h"
 
 namespace Security
 {
@@ -37,6 +37,7 @@ public:
 private:
     bool loadCertificates();
     bool loadX509PrivateKeyFromFile();
+    void loadX509ChainFromFile(CertFileRawPointer &);
 };
 
 } // namespace Security
