@@ -867,6 +867,14 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
      * correct values - 400/401/407
      */
 
+    // Our fixHeader() surrounds raw username and realm values with quotes when
+    // creating an HTTP header. Digest::UserRequest::startHelperLookup() does
+    // the same when creating a helper request line.
+    // TODO: Encode valid values when sending instead of rejecting them here?
+    const auto acceptableForSending = [](const char * const rawValue) {
+        return !strchr(rawValue, '"') && !strchr(rawValue, '\n');
+    };
+
     /* 2069 requirements */
 
     // return value.
@@ -883,7 +891,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
      * " can not be allowed in usernames until * the digest helper protocol
      * have been redone
      */
-    if (strchr(username, '"')) {
+    if (!acceptableForSending(username)) {
         debugs(29, 2, "Unacceptable username '" << username << "'");
         rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
@@ -898,11 +906,7 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         return rv;
     }
 
-    // Our fixHeader() surrounds raw realm value with quotes when creating an
-    // HTTP header value. Digest::UserRequest::startHelperLookup() does the same
-    // when creating a helper request. See also: "Unacceptable username" check.
-    // TODO: Encode sent values in all of those contexts instead of rejecting?
-    if (strchr(digest_request->realm, '"')) {
+    if (!acceptableForSending(digest_request->realm)) {
         debugs(29, 2, "Unacceptable realm '" << digest_request->realm << "'");
         rv = authDigestLogUsername(username, digest_request, aRequestRealm);
         safe_free(username);
