@@ -898,6 +898,17 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         return rv;
     }
 
+    // Our fixHeader() surrounds raw realm value with quotes when creating an
+    // HTTP header value. Digest::UserRequest::startHelperLookup() does the same
+    // when creating a helper request. See also: "Unacceptable username" check.
+    // TODO: Encode sent values in all of those contexts instead of rejecting?
+    if (strchr(digest_request->realm, '"')) {
+        debugs(29, 2, "Unacceptable realm '" << digest_request->realm << "'");
+        rv = authDigestLogUsername(username, digest_request, aRequestRealm);
+        safe_free(username);
+        return rv;
+    }
+
     /* and a nonce? */
     if (!digest_request->noncehex || digest_request->noncehex[0] == '\0') {
         debugs(29, 2, "Empty or not present nonce");
