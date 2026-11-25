@@ -108,13 +108,13 @@ removeUnnecessaryWildcards(char * t)
 }
 
 static void
-compileRE(std::list<RegexPattern> &curlist, const SBuf &RE, int flags)
+compileRE(std::list<RegexPattern> &curlist, const SBuf &RE, const std::regex::flag_type flags)
 {
     curlist.emplace_back(RE, flags);
 }
 
 static void
-compileREs(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
+compileREs(std::list<RegexPattern> &curlist, const SBufList &RE, const std::regex::flag_type flags)
 {
     assert(!RE.empty());
     SBuf regexp;
@@ -129,7 +129,7 @@ compileREs(std::list<RegexPattern> &curlist, const SBufList &RE, int flags)
  * called only once per ACL.
  */
 static void
-compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const int flagsAtLineStart)
+compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const std::regex::flag_type flagsAtLineStart)
 {
     std::list<RegexPattern> newlist;
     SBufList accumulatedRE;
@@ -140,7 +140,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const 
         static const SBuf minus_i("-i");
         static const SBuf plus_i("+i");
         if (configurationLineWord == minus_i) {
-            if (flags & REG_ICASE) {
+            if (flags & std::regex::icase) {
                 /* optimisation of  -i ... -i */
                 debugs(28, 2, "optimisation of -i ... -i" );
             } else {
@@ -150,11 +150,11 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const 
                     accumulatedRE.clear();
                     reSize = 0;
                 }
-                flags |= REG_ICASE;
+                flags |= std::regex::icase;
             }
             continue;
         } else if (configurationLineWord == plus_i) {
-            if ((flags & REG_ICASE) == 0) {
+            if ((flags & std::regex::icase) == 0) {
                 /* optimisation of  +i ... +i */
                 debugs(28, 2, "optimisation of +i ... +i");
             } else {
@@ -164,7 +164,7 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const 
                     accumulatedRE.clear();
                     reSize = 0;
                 }
-                flags &= ~REG_ICASE;
+                flags &= ~std::regex::icase;
             }
             continue;
         }
@@ -201,16 +201,16 @@ compileOptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const 
 }
 
 static void
-compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const int flagsAtLineStart)
+compileUnoptimisedREs(std::list<RegexPattern> &curlist, const SBufList &sl, const std::regex::flag_type flagsAtLineStart)
 {
     auto flags = flagsAtLineStart;
 
     static const SBuf minus_i("-i"), plus_i("+i");
     for (const auto &configurationLineWord: sl) {
         if (configurationLineWord == minus_i) {
-            flags |= REG_ICASE;
+            flags |= std::regex::icase;
         } else if (configurationLineWord == plus_i) {
-            flags &= ~REG_ICASE;
+            flags &= ~std::regex::icase;
         } else {
             compileRE(curlist, configurationLineWord, flags);
         }
@@ -222,9 +222,9 @@ ACLRegexData::parse()
 {
     debugs(28, 2, "new Regex line or file");
 
-    int flagsAtLineStart = REG_EXTENDED | REG_NOSUB;
+    auto flagsAtLineStart = std::regex::extended;
     if (CaseInsensitive_)
-        flagsAtLineStart |= REG_ICASE;
+        flagsAtLineStart |= std::regex::icase;
 
     SBufList sl;
     while (char *t = ConfigParser::RegexStrtokFile()) {
