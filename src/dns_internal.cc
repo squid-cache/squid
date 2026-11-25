@@ -211,20 +211,21 @@ public:
     void endingShutdown() override;
 };
 
+/// list of zones (domain suffix) to search in when looking up an
+/// unqualified hostname to find its Fully-Qualified Domain Name (FQDN)
+static auto &
+SearchPath()
+{
+    static const auto searchPath = new std::vector<SBuf>();
+    return *searchPath;
+}
+
 } // namespace Dns
 
 DefineRunnerRegistratorIn(Dns, ConfigRr);
 
-struct _sp {
-    char domain[NS_MAXDNAME];
-    int queries;
-};
-
 static std::vector<ns> nameservers;
-static sp *searchpath = nullptr;
 static int nns_mdns_count = 0;
-static int npc = 0;
-static int npc_alloc = 0;
 static int ndots = 1;
 static dlink_list lru_list;
 static int event_queued = 0;
@@ -254,13 +255,11 @@ static int max_shared_edns = RFC1035_DEFAULT_PACKET_SZ;
 static OBJH idnsStats;
 static void idnsAddNameserver(const char *buf);
 static void idnsAddMDNSNameservers();
-static void idnsAddPathComponent(const char *buf);
-static void idnsFreeSearchpath(void);
 static bool idnsParseNameservers(void);
 static bool idnsParseResolvConf(void);
 #if _SQUID_WINDOWS_
 static bool idnsParseWIN32Registry(void);
-static void idnsParseWIN32SearchList(const char *);
+static void idnsParseWIN32SearchList(const SBuf &);
 #endif
 static void idnsStartQuery(idns_query * q, IDNSCB * callback, void *data);
 static void idnsSendQuery(idns_query * q);
@@ -349,42 +348,6 @@ idnsAddNameserver(const char *buf)
     debugs(78, 3, "Added nameserver #" << nameservers.size()-1 << " (" << A << ")");
 }
 
-static void
-idnsAddPathComponent(const char *buf)
-{
-    if (npc == npc_alloc) {
-        int oldalloc = npc_alloc;
-        sp *oldptr = searchpath;
-
-        if (0 == npc_alloc)
-            npc_alloc = 2;
-        else
-            npc_alloc <<= 1;
-
-        searchpath = (sp *)xcalloc(npc_alloc, sizeof(*searchpath));
-
-        if (oldptr && oldalloc)
-            memcpy(searchpath, oldptr, oldalloc * sizeof(*searchpath));
-
-        if (oldptr)
-            safe_free(oldptr);
-    }
-
-    assert(npc < npc_alloc);
-    strncpy(searchpath[npc].domain, buf, sizeof(searchpath[npc].domain)-1);
-    searchpath[npc].domain[sizeof(searchpath[npc].domain)-1] = '\0';
-    Tolower(searchpath[npc].domain);
-    debugs(78, 3, "idnsAddPathComponent: Added domain #" << npc << ": " << searchpath[npc].domain);
-    ++npc;
-}
-
-static void
-idnsFreeSearchpath(void)
-{
-    safe_free(searchpath);
-    npc = npc_alloc = 0;
-}
-
 static bool
 idnsParseNameservers(void)
 {
@@ -395,6 +358,26 @@ idnsParseNameservers(void)
         result = true;
     }
     return result;
+}
+
+static void
+AddSearchPathFromHostname()
+{
+    if (!Dns::SearchPath().empty())
+        return;
+
+    SBuf name(getMyHostname());
+    if (!name.isEmpty()) {
+        const auto dotPos = name.find('.');
+        if (dotPos != SBuf::npos) {
+            name.chop(dotPos+1);
+            name.toLower();
+            debugs(78, DBG_IMPORTANT, "Adding domain " << name << " from hostname");
+            Dns::SearchPath().push_back(name);
+        }
+    }
+
+    // TODO: use '.local' as last resort?
 }
 
 static bool
@@ -412,6 +395,7 @@ idnsParseResolvConf(void)
 
     char buf[RESOLV_BUFSZ];
     const char *t = nullptr;
+    SBuf name;
     while (fgets(buf, RESOLV_BUFSZ, fp)) {
         t = strtok(buf, w_space);
 
@@ -428,26 +412,21 @@ idnsParseResolvConf(void)
             idnsAddNameserver(t);
             result = true;
         } else if (strcmp(t, "domain") == 0) {
-            idnsFreeSearchpath();
-            t = strtok(nullptr, w_space);
+            Dns::SearchPath().clear();
+            name = strtok(nullptr, w_space);
+            if (!name.isEmpty()) {
+                name.toLower();
+                debugs(78, DBG_IMPORTANT, "Adding domain " << name << " from " << _PATH_RESCONF);
+                Dns::SearchPath().push_back(name);
+            }
 
-            if (nullptr == t)
-                continue;
-
-            debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from " << _PATH_RESCONF);
-
-            idnsAddPathComponent(t);
         } else if (strcmp(t, "search") == 0) {
-            idnsFreeSearchpath();
-            while (nullptr != t) {
-                t = strtok(nullptr, w_space);
-
-                if (nullptr == t)
-                    continue;
-
-                debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from " << _PATH_RESCONF);
-
-                idnsAddPathComponent(t);
+            Dns::SearchPath().clear();
+            while ((t = strtok(nullptr, w_space))) {
+                name = t;
+                name.toLower();
+                debugs(78, DBG_IMPORTANT, "Adding domain " << name << " from " << _PATH_RESCONF);
+                Dns::SearchPath().push_back(name);
             }
         } else if (strcmp(t, "options") == 0) {
             while (nullptr != t) {
@@ -467,11 +446,8 @@ idnsParseResolvConf(void)
             }
         }
     }
-    if (npc == 0 && (t = getMyHostname())) {
-        t = strchr(t, '.');
-        if (t)
-            idnsAddPathComponent(t+1);
-    }
+
+    AddSearchPathFromHostname();
 
     fclose(fp);
 #endif
@@ -480,10 +456,8 @@ idnsParseResolvConf(void)
 
 #if _SQUID_WINDOWS_
 static void
-idnsParseWIN32SearchList(const char * Separator)
+idnsParseWIN32SearchList(const SBuf &Separator)
 {
-    char *t;
-    char *token;
     HKEY hndKey;
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
@@ -493,34 +467,39 @@ idnsParseWIN32SearchList(const char * Separator)
         Result = RegQueryValueEx(hndKey, "Domain", nullptr, &Type, nullptr, &Size);
 
         if (Result == ERROR_SUCCESS && Size) {
-            t = (char *) xmalloc(Size);
+            SBuf name;
+            const auto *t = name.rawAppendStart(Size);
             RegQueryValueEx(hndKey, "Domain", nullptr, &Type, (LPBYTE) t, &Size);
-            debugs(78, DBG_IMPORTANT, "Adding domain " << t << " from Registry");
-            idnsAddPathComponent(t);
-            xfree(t);
+            name.rawAppendFinish(t, Size);
+            name.toLower();
+            debugs(78, DBG_IMPORTANT, "Adding domain " << name << " from Registry");
+            Dns::SearchPath().push_back(name);
         }
         Result = RegQueryValueEx(hndKey, "SearchList", nullptr, &Type, nullptr, &Size);
 
         if (Result == ERROR_SUCCESS && Size) {
-            t = (char *) xmalloc(Size);
+            SBuf buf;
+            const auto *t = buf.rawAppendStart(Size);
             RegQueryValueEx(hndKey, "SearchList", nullptr, &Type, (LPBYTE) t, &Size);
-            token = strtok(t, Separator);
+            buf.rawAppendFinish(t, Size);
 
-            while (token) {
-                idnsAddPathComponent(token);
-                debugs(78, DBG_IMPORTANT, "Adding domain " << token << " from Registry");
-                token = strtok(nullptr, Separator);
+            // TODO: maybe use Tokenizer, cleanup the Windows logic first.
+            auto pos = buf.find(Separator);
+            while (pos != SBuf::npos) {
+                const auto name = buf.substr(0, pos);
+                name.toLower();
+                debugs(78, DBG_IMPORTANT, "Adding domain " << name << " from Registry");
+                Dns::SearchPath().push_back(name);
+
+                buf.chop(pos+Separator.length());
+                auto pos = buf.find(Separator);
             }
-            xfree(t);
         }
 
         RegCloseKey(hndKey);
     }
-    if (npc == 0 && (t = (char *) getMyHostname())) {
-        t = strchr(t, '.');
-        if (t)
-            idnsAddPathComponent(t + 1);
-    }
+
+    AddSearchPathFromHostname();
 }
 
 static bool
@@ -575,7 +554,7 @@ idnsParseWIN32Registry(void)
             RegCloseKey(hndKey);
         }
 
-        idnsParseWIN32SearchList(" ");
+        idnsParseWIN32SearchList(SBuf(" "));
 
         break;
 
@@ -654,7 +633,7 @@ idnsParseWIN32Registry(void)
             RegCloseKey(hndKey);
         }
 
-        idnsParseWIN32SearchList(", ");
+        idnsParseWIN32SearchList(SBuf(", "));
 
         break;
 
@@ -760,11 +739,11 @@ idnsStats(StoreEntry * sentry)
         storeAppendPrintf(sentry, " : %s\n",Rcodes[j]);
     }
 
-    if (npc) {
+    if (!Dns::SearchPath().empty()) {
         storeAppendPrintf(sentry, "\nSearch list:\n");
 
-        for (i=0; i < npc; ++i)
-            storeAppendPrintf(sentry, "%s\n", searchpath[i].domain);
+        for (const auto &name : Dns::SearchPath())
+            storeAppendPrintf(sentry, SQUIDSBUFPH "\n", SQUIDSBUFPRINT(name));
 
         storeAppendPrintf(sentry, "\n");
     }
@@ -1267,9 +1246,9 @@ idnsGrokReply(const char *buf, size_t sz, int /*from_ns*/)
 
             debugs(78, 3, "idnsGrokReply: Query result: NXDOMAIN - " << q->name );
 
-            if (q->domain < npc) {
+            if (q->domain < Dns::SearchPath().size()) {
                 strcat(q->name, ".");
-                strcat(q->name, searchpath[q->domain].domain);
+                strcat(q->name, Dns::SearchPath()[q->domain].c_str());
                 debugs(78, 3, "idnsGrokReply: searchpath used for " << q->name);
                 ++ q->domain;
             } else {
@@ -1666,7 +1645,7 @@ idnsShutdownAndFreeState(const char *reason)
 
     // XXX: vcs are not closed/freed yet and may try to access nameservers[]
     nameservers.clear();
-    idnsFreeSearchpath();
+    Dns::SearchPath().clear();
 }
 
 void
@@ -1772,7 +1751,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
         if (name[i] == '.')
             ++nd;
 
-    if (Config.onoff.res_defnames && npc > 0 && name[nameLength-1] != '.') {
+    if (Config.onoff.res_defnames && !Dns::SearchPath().empty() && name[nameLength-1] != '.') {
         q->do_searchpath = 1;
     } else {
         q->do_searchpath = 0;
@@ -1784,7 +1763,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
     if (q->do_searchpath && nd < ndots) {
         q->domain = 0;
         strcat(q->name, ".");
-        strcat(q->name, searchpath[q->domain].domain);
+        strcat(q->name, Dns::SearchPath()[q->domain].c_str());
         debugs(78, 3, "idnsALookup: searchpath used for " << q->name);
     }
 
