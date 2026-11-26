@@ -870,7 +870,8 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
     // Our fixHeader() surrounds raw username and realm values with quotes when
     // creating an HTTP header. Digest::UserRequest::startHelperLookup() does
     // the same when creating a helper request line.
-    // TODO: Encode valid values when sending instead of rejecting them here?
+    // TODO: Encode valid values when sending instead of rejecting them here,
+    // despite the need to change the digest helper protocol?
     const auto acceptableForSending = [](const char * const rawValue) {
         return !strchr(rawValue, '"') && !strchr(rawValue, '\n');
     };
@@ -887,10 +888,6 @@ Auth::Digest::Config::decode(char const *proxy_auth, const HttpRequest *request,
         return rv;
     }
 
-    /* Sanity check of the username.
-     * " can not be allowed in usernames until * the digest helper protocol
-     * have been redone
-     */
     if (!acceptableForSending(username)) {
         debugs(29, 2, "Unacceptable username '" << username << "'");
         rv = authDigestLogUsername(username, digest_request, aRequestRealm);
