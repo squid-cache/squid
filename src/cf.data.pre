@@ -3368,7 +3368,8 @@ DOC_START
 		error usually implies that the server cannot be trusted
 		and the connection may be insecure.
 
-	See also: sslproxy_flags and DONT_VERIFY_PEER.
+	See also: DONT_VERIFY_PEER flag in tls_outgoing_options, cache_peer, and
+	other directives that configure Squid-server communication.
 DOC_END
 
 NAME: sslproxy_cert_sign
