@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Squid-5\n"
+"Project-Id-Version: Squid-7\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-20 00:51+1300\n"
-"PO-Revision-Date: 2023-02-15 15:45+0100\n"
+"PO-Revision-Date: 2026-11-28 16:48+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@lists.squid-cache.org>\n"
 "Language: ka\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.2.2\n"
+"X-Generator: Poedit 3.10\n"
 
 #: templates/ERR_SECURE_CONNECT_FAIL%2Bhtml.body.div.div.blockquote.p:31-1
 msgid "%D"
@@ -153,6 +153,8 @@ msgid ""
 "A non-recoverable internal failure or configuration problem prevents this "
 "request from being completed."
 msgstr ""
+"აღუდგენადი შიდა ჩავარდნა ან კონფიგურაციის პრობლემა ხელს უშლის ამ მთხოვნის "
+"შესრულებას."
 
 #: templates/ERR_ACCESS_DENIED%2Bhtml.body.div.blockquote.p:24-1
 msgid "Access Denied."
@@ -193,18 +195,22 @@ msgid ""
 "An Internet connection needed to access this domains origin servers may be "
 "down."
 msgstr ""
+"ინტერნეტკავშირი, რომელიც საჭიროა ამ დომენების წყარო სერვერებთან წვდომისთვის, "
+"შეიძლება, გათიშულია."
 
 #: templates/ERR_READ_ERROR%2Bhtml.body.div.p:29-1
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
 msgstr ""
+"ქსელიდან მონაცემების კითხვისას აღმოჩენილია შეცდომა. გაიმეორეთ თქვენი "
+"მოთხოვნა."
 
 #: templates/ERR_WRITE_ERROR%2Bhtml.body.div.p:29-1
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
-msgstr ""
+msgstr "ქსელში ჩაწერისას აღმოჩენილია შეცდომა. გაიმეორეთ თქვენი მოთხოვნა."
 
 #: templates/error-details.txt+X509_V_ERR_APPLICATION_VERIFICATION.descr:225
 msgid "Application verification failure"
@@ -215,14 +221,16 @@ msgid ""
 "At least one precondition specified by the HTTP client in the request header "
 "has failed."
 msgstr ""
+"HTTP კლიენტის მიერ მოთხოვნის თავსართში მითითებული, სულ ცოტა, ერთი წინასწარი "
+"პირობა ჩავარდა."
 
 #: templates/error-details.txt+X509_V_ERR_AKID_ISSUER_SERIAL_MISMATCH.descr:133
 msgid "Authority and issuer serial number mismatch"
-msgstr ""
+msgstr "ავტორიტეტისა და გამომცემლის სერიული ნომრები არ ემთხვევა"
 
 #: templates/error-details.txt+X509_V_ERR_AKID_SKID_MISMATCH.descr:129
 msgid "Authority and subject key identifier mismatch"
-msgstr ""
+msgstr "ავტორიტეტისა და თემის გასაღების იდენტიფიკატორები არ ემთხვევა"
 
 #: templates/error-details.txt+X509_V_ERR_CRL_HAS_EXPIRED.descr:57
 msgid "CRL has expired"
@@ -241,25 +249,21 @@ msgid "CRL signature failure"
 msgstr "CRL ხელმოწერის შეცდომა"
 
 #: templates/ERR_CACHE_ACCESS_DENIED%2Bhtml.body.div.blockquote.p:24-1
-#, fuzzy
 msgctxt "./templates/ERR_CACHE_ACCESS_DENIED+error.p:1-0"
 msgid "Cache Access Denied."
 msgstr "კეშთან წვდომა აკრძალულია."
 
 #: templates/ERR_CACHE_ACCESS_DENIED%2Bhtml.body.div.h2:16-1
-#, fuzzy
 msgctxt "./templates/ERR_CACHE_ACCESS_DENIED+titles.h2:2-0"
 msgid "Cache Access Denied."
 msgstr "კეშთან წვდომა აკრძალულია."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED%2Bhtml.body.div.blockquote.p:24-1
-#, fuzzy
 msgctxt "./templates/ERR_CACHE_MGR_ACCESS_DENIED+error.p:1-0"
 msgid "Cache Manager Access Denied."
 msgstr "კეშის მმართველთან წვდომა აკრძალულია."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED%2Bhtml.body.div.h2:16-1
-#, fuzzy
 msgctxt "./templates/ERR_CACHE_MGR_ACCESS_DENIED+titles.h2:2-0"
 msgid "Cache Manager Access Denied."
 msgstr "კეშის მმართველთან წვდომა აკრძალულია."
@@ -310,7 +314,7 @@ msgstr "მიერთების საარსებო დრო ამო
 
 #: templates/ERR_CONNECT_FAIL%2Bhtml.body.div.blockquote.p:24-1
 msgid "Connection to %I failed."
-msgstr "%I-თან დაკავირება ვერ მოხერხდა."
+msgstr "%I-სთან დაკავშირება ჩავარდა."
 
 #: templates/ERR_INVALID_REQ%2Bhtml.body.div.ul.li.p:33-5
 msgid "Content-Length missing for POST or PUT requests."
@@ -318,7 +322,7 @@ msgstr "PUT/POST მოთხოვნაში Content-Length მითით�
 
 #: templates/error-details.txt+X509_V_ERR_DIFFERENT_CRL_SCOPE.descr:185
 msgid "Different CRL scope"
-msgstr ""
+msgstr "CRL-ის სხვა შუალედი"
 
 #: templates/ERR_DIR_LISTING%2Bhtml.body.div.h4:20-1
 msgid "Directory Content:"
@@ -388,7 +392,7 @@ msgstr "შეცდომა: კეშის სამართავ ინ�
 
 #: templates/ERR_FTP_PUT_ERROR%2Bhtml.head.title:5-1
 msgid "ERROR: FTP upload failed"
-msgstr "შეცდომა: FTP-ით ატვირთვა ვერ მოხერხდა"
+msgstr "შეცდომა: FTP-ით ატვირთვა ჩავარდა"
 
 #: templates/ERR_ACCESS_DENIED%2Bhtml.head.title:5-1
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.head.title:5-1
@@ -448,18 +452,16 @@ msgid "FTP is Disabled"
 msgstr "FTP გათიშულია"
 
 #: templates/error-details.txt+SQUID_TLS_ERR_ACCEPT.descr:5
-#, fuzzy
 msgid "Failed to accept a secure connection"
-msgstr "%I-თან უსაფრთხო კავშირის დამყარება ვერ მოხერხდა"
+msgstr "უსაფრთხო კავშირის მიღება ჩავარდა"
 
 #: templates/error-details.txt+SQUID_TLS_ERR_CONNECT.descr:9
-#, fuzzy
 msgid "Failed to establish a secure connection"
-msgstr "%I-თან უსაფრთხო კავშირის დამყარება ვერ მოხერხდა"
+msgstr "უსაფრთხო კავშირის დამყარება ჩავარდა"
 
 #: templates/ERR_SECURE_CONNECT_FAIL%2Bhtml.body.div.blockquote.p:24-1
 msgid "Failed to establish a secure connection to %I"
-msgstr "%I-თან უსაფრთხო კავშირის დამყარება ვერ მოხერხდა"
+msgstr "%I-თან უსაფრთხო კავშირის დამყარება ჩავარდა"
 
 #: templates/ERR_FTP_PUT_CREATED%2Bhtml.body.div.h2:16-1
 msgid "File created"
@@ -471,37 +473,34 @@ msgstr "ფაილი განახლდა"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div:27-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div:27-1
-#, fuzzy
 msgid "For Firefox browsers go to:"
-msgstr "Firefox-სთვის გადადით: <ul>"
+msgstr "Firefox-სთვის გადადით:"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div:35-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div:35-1
-#, fuzzy
 msgid "For Internet Explorer browsers go to:"
-msgstr "Internet Explorer-სთვის გადადით: <ul>"
+msgstr "Internet Explorer-სთვის გადადით:"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div:43-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div:43-1
-#, fuzzy
 msgid "For Opera browsers go to:"
-msgstr "Opera-სთვის გადადით: <ul>"
+msgstr "Opera-სთვის გადადით:"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_LAST_UPDATE_FIELD.descr:69
 msgid "Format error in CRL's lastUpdate field"
-msgstr ""
+msgstr "ფორმატის შეცდომა CRL-ის ველში lastUpdate"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CRL_NEXT_UPDATE_FIELD.descr:73
 msgid "Format error in CRL's nextUpdate field"
-msgstr ""
+msgstr "ფორმატის შეცდომა CRL-ის ველში nextUpdate"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD.descr:65
 msgid "Format error in certificate's notAfter field"
-msgstr ""
+msgstr "ფორმატის შეცდომა სერტიფიკატის ველში notAfter"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.descr:61
 msgid "Format error in certificate's notBefore field"
-msgstr ""
+msgstr "ფორმატის შეცდომა სერტიფიკატის ველში notBefore"
 
 #: templates/ERR_FORWARDING_DENIED%2Bhtml.body.div.blockquote.p:24-1
 msgid "Forwarding Denied."
@@ -509,7 +508,7 @@ msgstr "გადაგზავნა უარყოფილია."
 
 #: templates/ERR_GATEWAY_FAILURE%2Bhtml.body.div.blockquote.p:24-1
 msgid "Gateway Proxy Failure"
-msgstr ""
+msgstr "მარშრუტიზატორი პროქსის ჩავარდნა"
 
 #: templates/ERR_ACCESS_DENIED%2Bhtml.body.div.p:35-1
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.body.div.p:36-1
@@ -560,10 +559,11 @@ msgstr "დაგენერირების დრო: %T, სერვი�
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
+"HTTP/1.1 <q>მოველოდი:</q> თვისების მოთხოვნა HTTP/1.0 პროგრამიდან ხდება."
 
 #: templates/ERR_URN_RESOLVE%2Bhtml.body.div.p:27-1
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr ""
+msgstr "ნუ ელოდებით ბევრს URN-ებიდან %T-ზე :-)"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.p:25-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.p:25-1
@@ -596,22 +596,19 @@ msgstr "ჰოსტის სახელი დაუშვებელ სი
 
 #: templates/ERR_INVALID_URL%2Bhtml.body.div.ul.li.p:33-5
 msgid "Illegal double-escape in the URL-Path"
-msgstr ""
+msgstr "არასწორი ორმაგი სპეცსიმბოლო URL-Path-ში"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div.ul.li:31-1
-#, fuzzy
 msgctxt "./templates/ERR_AGENT_CONFIGURE+firefox.ul.li:4-0"
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr "HTTP პროქსის ველში ჩაწერეთ პროქსის სახელი %h და პორტი %b."
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div.ul.li:39-1
-#, fuzzy
 msgctxt "./templates/ERR_AGENT_CONFIGURE+microsoft.ul.li:4-0"
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr "HTTP პროქსის ველში ჩაწერეთ პროქსის სახელი %h და პორტი %b."
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div.ul.li:47-1
-#, fuzzy
 msgctxt "./templates/ERR_AGENT_CONFIGURE+opera.ul.li:4-0"
 msgid "In the HTTP proxy box type the proxy name %h and port %b."
 msgstr "HTTP პროქსის ველში ჩაწერეთ პროქსის სახელი %h და პორტი %b."
@@ -694,7 +691,7 @@ msgstr "წინასწარი პირობა არ შესრულ
 
 #: templates/error-details.txt+X509_V_ERR_UNNESTED_RESOURCE.descr:193
 msgid "RFC 3779 resource not subset of parent's resources"
-msgstr ""
+msgstr "RFC 3779 რესურსი მშობლის რესურსების ქვენაკრები არაა"
 
 #: templates/ERR_READ_ERROR%2Bhtml.body.div.blockquote.p:24-1
 msgid "Read Error"
@@ -712,6 +709,7 @@ msgstr "მოთხოვნა ძალიან დიდია."
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.detail:89
 msgid "SSL Certificate error: certificate issuer (CA) not known: %ssl_ca_name"
 msgstr ""
+"SSL სერტიფიკატის შეცდომა: სერტიფიკატის გამომცემი (CA) უცნობია: %ssl_ca_name"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_HAS_EXPIRED.detail:49
 msgid "SSL Certificate expired on: %ssl_notafter"
@@ -722,16 +720,19 @@ msgid ""
 "SSL Certificate has invalid expiration date (the 'not after' field): "
 "%ssl_subject"
 msgstr ""
+"SSL სერტიფიკატის ვადის ამოწურვის თარიღი არასწორია (ველი 'not after'): "
+"%ssl_subject"
 
 #: templates/error-details.txt+X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD.detail:61
 msgid ""
 "SSL Certificate has invalid start date (the 'not before' field): %ssl_subject"
 msgstr ""
+"SSL სერტიფიკატის ვარგისიანობის დასაწყისის თარიღი არასწორია (ველი 'not "
+"before'): %ssl_subject"
 
 #: templates/error-details.txt+X509_V_ERR_CERT_NOT_YET_VALID.detail:45
-#, fuzzy
 msgid "SSL Certificate is not valid before: %ssl_notbefore"
-msgstr "SSL სერტიფიკატის ვადა გავიდა: %ssl_notafter"
+msgstr "SSL სერტიფიკატი ვარგისი არაა თარიღამდე: %ssl_notafter"
 
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div.ul.li:31-1
 msgid "Select Auto-detect proxy settings for this network"
@@ -747,19 +748,19 @@ msgstr "აირჩიეთ ავტომატური პროქსი�
 
 #: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.descr:81
 msgid "Self signed certificate"
-msgstr ""
+msgstr "თვითხელმოწერილი სერტიფიკატი"
 
 #: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.descr:85
 msgid "Self signed certificate in certificate chain"
-msgstr ""
+msgstr "თვითხელმოწერილი სერტიფიკატი სერტიფიკატების ჯაჭვში"
 
 #: templates/error-details.txt+X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN.detail:85
 msgid "Self-signed SSL Certificate in chain: %ssl_subject"
-msgstr ""
+msgstr "თვითხელმოწერილი სერტიფიკატი ჯაჭვში: %ssl_subject"
 
 #: templates/error-details.txt+X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT.detail:81
 msgid "Self-signed SSL Certificate: %ssl_subject"
-msgstr ""
+msgstr "თვითხელმოწერილი SSL სერტიფიკატი: %ssl_subject"
 
 #: templates/ERR_SOCKET_FAILURE%2Bhtml.body.div.blockquote.p:24-1
 msgid "Socket Failure"
@@ -782,12 +783,16 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
+"ამჟამად თქვენ არ გაქვთ უფლება, გამოითხოვოთ %U ამ კეშის მმართველიდან, სანამ "
+"ავთენტიკაციას არ გაივლით."
 
 #: templates/ERR_CACHE_ACCESS_DENIED%2Bhtml.body.div.p:27-1
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
+"ამჟამად თქვენ არ გაქვთ უფლება, გამოითხოვოთ %U ამ კეშიდან, სანამ "
+"ავთენტიკაციას არ გაივლით."
 
 #: templates/ERR_ZERO_SIZE_OBJECT%2Bhtml.body.div.p:27-1
 msgid "Squid did not receive any data for this request."
@@ -796,24 +801,31 @@ msgstr "Squid-ს ამ მოთხოვნისთვის მონაც
 #: templates/ERR_UNSUP_REQ%2Bhtml.body.div.p:27-1
 msgid "Squid does not support all request methods for all access protocols."
 msgstr ""
+"Squid-ს ყველა წვდომის პროტოკოლისთვის ყველა მოთხოვნის მეთოდის მხარდაჭერა არ "
+"აქვს."
 
 #: templates/ERR_PROTOCOL_UNKNOWN%2Bhtml.body.div.p:27-1
 msgid ""
 "Squid does not support some access protocols. For example, the SSH protocol "
 "is currently not supported."
 msgstr ""
+"Squid-ს ყველა წვდომის პროტოკოლის მხარდაჭერა არ აქვს. მაგალითად, პროტოკოლი "
+"SSH, ამჟამად, მხარდაჭერილი არაა."
 
 #: templates/ERR_LIFETIME_EXP%2Bhtml.body.div.p:27-1
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
+"Squid-მა შეწყვიტა მოთხოვნა, რადგან ის აჭარბებს კავშირის მაქს. სიცოცხლის დროს."
 
 #: templates/ERR_SOCKET_FAILURE%2Bhtml.body.div.p:29-1
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
+"Squid-მა, სავარაუდოდ დიდი დატვირთვის გამო TCP სოკეტი ვერ შექმნა. სცადეთ "
+"თქვენი მოთხოვნა კიდევ ერთხელ."
 
 #: templates/ERR_FTP_FAILURE%2Bhtml.body.div.p:23-1
 #: templates/ERR_FTP_FORBIDDEN%2Bhtml.body.div.p:23-1
@@ -825,7 +837,7 @@ msgstr "Squid-მა გააგზავნა შემდეგი FTP ბ�
 
 #: templates/error-details.txt+X509_V_ERR_SUBJECT_ISSUER_MISMATCH.descr:125
 msgid "Subject issuer mismatch"
-msgstr ""
+msgstr "თემის გამომცემელი არ ემთხვევა"
 
 #: templates/ERR_DNS_FAIL%2Bhtml.body.div.p:27-1
 msgid "The DNS server returned:"
@@ -838,12 +850,17 @@ msgstr "ESI-ის დამმუშავებელმა დააბრუ
 #: templates/ERR_FTP_UNAVAILABLE%2Bhtml.body.div.p:21-1
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
+"FTP სერვერი დაკავებული მეტისმეტად დაკავებული იყო, რომ მოეწოდებინა URL: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP%2Bhtml.body.div.p:27-1
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
+"HTTP პასუხი შეტყობინება, რომელიც მიღებულია სერვერიდან, რომელსაც "
+"დავუკავშირდით, გაუგებარია, ან არასწორადაა ჩამოყალიბებული. დაუკავშირდით "
+"საიტის ოპერატორს."
 
 #: templates/ERR_ICAP_FAILURE%2Bhtml.body.div.ul.li.p:33-5
 msgid "The ICAP server is not reachable."
@@ -854,11 +871,14 @@ msgid ""
 "The administrator may not allow this cache to make direct connections to "
 "origin servers."
 msgstr ""
+"შეიძლება, ადმინისტრატორი უფლებას არ აძლევს ამ კეშს, წყარო სერვერებთან "
+"პირდაპირი კავშირი დაამყაროს."
 
 #: templates/ERR_CONFLICT_HOST%2Bhtml.body.div.ul.li:31-1
 msgid ""
 "The domain may have moved very recently. Trying again will resolve that."
 msgstr ""
+"ეს დომენი, შეიძლება, ახლახან გადაიტანეს. კიდევ ცდა ამ პრობლემას გადაჭრის."
 
 #: templates/ERR_FTP_NOT_FOUND%2Bhtml.body.div.p:21-1
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -896,13 +916,13 @@ msgstr "მოთხოვნილი ბმულია გამოთხო�
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URL-ის გამოთხოვისას აღმოჩენილია შემდეგი შეცდომა: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE%2Bhtml.body.div.p:21-1
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URN-ის გამოთხოვისას აღმოჩენილია შემდეგი შეცდომა: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL%2Bhtml.body.div.p:29-1
 msgid "The remote host or network may be down. Please try the request again."
@@ -973,12 +993,16 @@ msgid ""
 "The website may require you to use a local country-based version. Using your "
 "ISP provided DNS server(s) should resolve that."
 msgstr ""
+"შეიძლება, ვებსაიტი ითხოვს, რომ გამოიყენოთ ლოკალური, ქვეყნისთვის განკუთვნილი "
+"სერვისი. თქვენი ISP-ის DNS სერვერების გამოყენება, წესით, ამას გადაწყვეტს."
 
 #: templates/ERR_NO_RELAY%2Bhtml.body.div.p:27-1
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
+"ამ კეშისთვის WAIS გადაგზავნის ჰოსტი აღწერილი არაა! ერთი კარგად უღრიალეთ "
+"ადმინისტრატორს."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.body.div.p:28-1
 #: templates/ERR_TOO_BIG%2Bhtml.body.div.p:29-1
@@ -987,10 +1011,14 @@ msgid ""
 "operates this cache. Please contact them directly if you feel this is an "
 "error."
 msgstr ""
+"ეს ლიმიტები დაყენებულია ინტერნეტპროვაიდერის მიერ, რომლებიც ამ კეშის "
+"ოპერატორია. თუ გგონიათ, რომ ეს შეცდომაა, დაუკავშირდით მათ პირდაპირ."
 
 #: templates/ERR_UNSUP_HTTPVERSION%2Bhtml.body.div.p:27-1
 msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
+"Squid-ის ამ ვერსიას არ აქვს HTTP-ის ვერსიის მხარდაჭერა, რომლის გამოყენებასაც "
+"ცდილობთ."
 
 #: templates/ERR_FTP_DISABLED%2Bhtml.body.div.p:27-1
 msgid "This cache does not support FTP."
@@ -1001,6 +1029,8 @@ msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
 msgstr ""
+"ეს კეში ამჟამად ითიშება და არ შეუძლია თქვენი მოთხოვნის შესრულება. სცადეთ "
+"თქვენი მოთხოვნა მალე, თავიდან."
 
 #: templates/ERR_FORWARDING_DENIED%2Bhtml.body.div.p:27-1
 msgid ""
@@ -1008,12 +1038,18 @@ msgid ""
 "sibling relationship. Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
+"ეს კეში თქვენს მოთხოვნას არ გადააგზავნის, რადგან ის ცდილობს, ერთი დონის "
+"ურთიერთობა დაამყაროს. როგორც ჩანს კლიენტი %i-სთან არის კეში, რომლის "
+"კონფიგურაციაც არასწორია."
 
 #: templates/ERR_GATEWAY_FAILURE%2Bhtml.body.div.p:29-1
 msgid ""
 "This may be due to limits established by the Internet Service Provider who "
 "operates this cache. Please contact them directly for more information."
 msgstr ""
+"ეს, შეიძლება, ხდებოდეს შეზღუდვების გამო, რომელიც დააყენა თქვენმა ინტერნეტ-"
+"პროვაიდერმა, რომელიც ამ კეშის ოპერატორია. მეტი ინფორმაციისთვის დაუკავშირდით "
+"მათ პირდაპირ."
 
 #: templates/ERR_ICAP_FAILURE%2Bhtml.body.div.p:29-1
 msgid "This means that some aspect of the ICAP communication failed."
@@ -1024,24 +1060,32 @@ msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"ეს ნიშნავს, რომ FTP სერვერს არ აქვს უფლება ან ადგილი, ფაილი დაიმახსოვროს. "
+"შეამოწმეთ ბილიკი, წვდომები, ადგილი დისკზე და კიდევ სცადეთ."
 
 #: templates/ERR_DNS_FAIL%2Bhtml.body.div.p:32-1
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
+"ეს ნიშნავს, რომ კეშმა ვერ ამოხსნა URL-ში მითითებული ჰოსტის სახელი. შეამოწმეთ "
+"მისამართის სისწორე."
 
 #: templates/ERR_ESI%2Bhtml.body.div.p:32-1
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
+"ეს ნიშნავს, რომ სუროგატმა ESI შაბლონი ვერ დაამუშავა. მისწერეთ ამ შეცდომის "
+"შესახებ ვებმასტერს."
 
 #: templates/ERR_CONFLICT_HOST%2Bhtml.body.div.p:27-1
 msgid ""
 "This means the domain name you are trying to access apparently no longer "
 "exists on the machine you are requesting it from."
 msgstr ""
+"ეს ნიშნავს, რომ როგორც ჩანს, დომენის სახელი, რომელთანაც წვდომას ცდილობთ, "
+"აღარ არსებობს მანქანაზე, საიდანაც მას ითხოვთ."
 
 #: templates/ERR_PRECONDITION_FAILED%2Bhtml.body.div.p:27-1
 msgid "This means:"
@@ -1053,6 +1097,9 @@ msgid ""
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
+"ეს, შეიძლება, გამოწვეული იყოს FTP-ის URL-ით აბსოლუტური ბილიკით (რომელიც არ "
+"ჯდება RFC 1738 სტანდარტში). თუ მიზეზი ესაა, მაშინ ფაილის პოვნა შეგიძლიათ "
+"მისამართზე <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL%2Bhtml.body.div.p:35-1
 msgid ""
@@ -1061,22 +1108,31 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
+"ეს პროქსი და დაშორებული ჰოსტი ვერ შეთანხმდნენ, ამ მოთხოვნისთვის გამოიყენონ "
+"უსაფრთხოების პარამეტრები, რომლებიც ორივესთვის მისაღებია. შესაძლოა, დაშორებულ "
+"ჰოსტს არ აქვს დაცული კავშირების მხარდაჭერა, ან პროქსის არ მოსწონს ჰოსტის "
+"უსაფრთხოების ავტორიზაციის დეტალები."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.body.div.p:27-1
 msgid ""
 "This proxy limits your time online with a quota. Your time budget is now "
 "empty but will be refilled when the configured time period starts again."
 msgstr ""
+"ეს პროქსი თქვენს ინტერნეტში გატარებულ დროს კვოტით ზღუდავს. თქვენი დროის "
+"ბიუჯეტი ახლა ცარიელია, მაგრამ ის თავიდან შეივსება, როცა მორგებული დროის "
+"პერიოდი თავიდან დაიწყება."
 
 #: templates/ERR_CANNOT_FORWARD%2Bhtml.body.div.p:27-1
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches."
 msgstr ""
+"ამ მოთხოვნის საწყის სერვერთან ან რომელიმე მშობელ კეშთან გადაგზავნა "
+"შეუძლებელია."
 
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.body.div.blockquote.p:24-1
 msgid "Time Quota Exceeded."
-msgstr ""
+msgstr "დროის კვოტა გადაცილებულია."
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.div.ul.li:38-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.div.ul.li:38-1
@@ -1107,11 +1163,11 @@ msgstr "URI ჰოსტის კონფლიქტი"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.detail:33
 msgid "Unable to decode issuer (CA) public key: %ssl_ca_name"
-msgstr ""
+msgstr "გამომცემლის (CA) საჯარო გასაღების დეკოდირება შეუძლებელია: %ssl_ca_name"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECODE_ISSUER_PUBLIC_KEY.descr:33
 msgid "Unable to decode issuer public key"
-msgstr ""
+msgstr "გამომცემლის საჯარო გასაღების დეკოდირება შეუძლებელია"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_DECRYPT_CRL_SIGNATURE.descr:29
 msgid "Unable to decrypt CRL's signature"
@@ -1123,7 +1179,7 @@ msgstr "სერტიფიკატის ხელმოწერის გ�
 
 #: templates/ERR_DNS_FAIL%2Bhtml.body.div.blockquote.p:24-1
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr ""
+msgstr "ჰოსტის სახელიდან <q>%H</q> IP მისამართის დადგენა შეუძლებელია"
 
 #: templates/ERR_CANNOT_FORWARD%2Bhtml.body.div.blockquote.p:24-1
 msgid "Unable to forward this request at this time."
@@ -1139,20 +1195,18 @@ msgstr "გამომცემლის სერტიფიკატის �
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY.descr:89
 msgid "Unable to get local issuer certificate"
-msgstr ""
+msgstr "ლოკალური გამომცემლის სერტიფიკატის მიღება შეუძლებელია"
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_VERIFY_LEAF_SIGNATURE.descr:93
 msgid "Unable to verify the first certificate"
 msgstr "პირველი სერტიფიკატის გადამოწმება შეუძლებელია"
 
 #: templates/ERR_UNSUP_HTTPVERSION%2Bhtml.body.div.blockquote.p:24-1
-#, fuzzy
 msgctxt "./templates/ERR_UNSUP_HTTPVERSION+error.p:1-0"
 msgid "Unsupported HTTP version"
 msgstr "HTTP-ის მხარდაუჭერელი ვერსია"
 
 #: templates/ERR_UNSUP_HTTPVERSION%2Bhtml.body.div.h2:16-1
-#, fuzzy
 msgctxt "./templates/ERR_UNSUP_HTTPVERSION+titles.h2:2-0"
 msgid "Unsupported HTTP version"
 msgstr "HTTP-ის მხარდაუჭერელი ვერსია"
@@ -1178,6 +1232,8 @@ msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
+"კეშში სწორი დოკუმენტი აღმოჩენილი არაა და მითითებულია დირექტივა <q>only-if-"
+"cached</q>."
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.head.title:5-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.head.title:5-1
@@ -1185,13 +1241,11 @@ msgid "Web Browser Configuration"
 msgstr "ბრაუზერის კონფიგურაცია"
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.h2:16-1
-#, fuzzy
 msgctxt "./templates/ERR_AGENT_CONFIGURE+titles.h2:2-0"
 msgid "Web Browser Configuration"
 msgstr "ბრაუზერის კონფიგურაცია"
 
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.h2:16-1
-#, fuzzy
 msgctxt "./templates/ERR_AGENT_WPAD+titles.h2:2-0"
 msgid "Web Browser Configuration"
 msgstr "ბრაუზერის კონფიგურაცია"
@@ -1206,12 +1260,16 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
+"თქვენ გააგზავნეთ მოთხოვნა კეშის კონტროლის დირექტორივით <q>only-if-cached</"
+"q>. დოკუმენტი კეშში აღმოჩენილი არაა <em>ან</em> ის ითხოვს გადამოწმებას, "
+"რომელიც აკრძალულია დირექტივით <q>only-if-cached</q>."
 
 #: templates/ERR_AGENT_CONFIGURE%2Bhtml.body.div.blockquote.p:22-1
 #: templates/ERR_AGENT_WPAD%2Bhtml.body.div.blockquote.p:22-1
 msgid ""
 "Your Web Browser configuration needs to be corrected to use this network."
 msgstr ""
+"ამ ქსელის გამოყენებისთვის საჭიროა თქვენი ბრაუზერის კონფიგურაციის შესწორება."
 
 #: templates/ERR_ACCESS_DENIED%2Bhtml.body.div.p:29-1
 #: templates/ERR_ACL_TIME_QUOTA_EXCEEDED%2Bhtml.body.div.p:30-1
@@ -1255,10 +1313,12 @@ msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
+"საჭიროების შემთხვევაში, შეიძლება, თქვენმა სისტემურმა ადმინისტრატორმა მეტი "
+"დეტალები მოგაწოდოთ პრობლემის ზუსტი ბუნების შესახებ."
 
 #: templates/ERR_ESI%2Bhtml.body.div.p:34-1
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "თქვენი ვებმასტერია <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT%2Bhtml.body.div.blockquote.p:24-1
 msgid "Zero Sized Reply"
@@ -1266,19 +1326,19 @@ msgstr "ნულოვანი სიგრძის პასუხი"
 
 #: templates/error-details.txt+X509_V_ERR_EXCLUDED_VIOLATION.descr:201
 msgid "excluded subtree violation"
-msgstr ""
+msgstr "ამოღებული ქვეხის დარღვევა"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_NON_CA.descr:157
 msgid "invalid non-CA certificate (has CA markings)"
-msgstr ""
+msgstr "არასწორი არა-CA სერტიფიკატი (აქვს CA-ის ნიშნები)"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_EXTENSION.descr:173
 msgid "invalid or inconsistent certificate extension"
-msgstr ""
+msgstr "სერტიფიკატის არასწორი ან არამდგრადი გაფართოება"
 
 #: templates/error-details.txt+X509_V_ERR_INVALID_POLICY_EXTENSION.descr:177
 msgid "invalid or inconsistent certificate policy extension"
-msgstr ""
+msgstr "სერტიფიკატის არასწორი არ არამდგრადი პოლიტიკის გაფართოება"
 
 #: templates/error-details.txt+X509_V_ERR_KEYUSAGE_NO_CRL_SIGN.descr:149
 msgid "key usage does not include CRL signing"
@@ -1290,19 +1350,19 @@ msgstr "გასაღების გამოყენება ციფრ�
 
 #: templates/error-details.txt+X509_V_ERR_SUBTREE_MINMAX.descr:205
 msgid "name constraints minimum and maximum not supported"
-msgstr ""
+msgstr "სახელის შეზღუდვები minimum და maximum მხარდაჭერილი არაა"
 
 #: templates/error-details.txt+X509_V_ERR_NO_EXPLICIT_POLICY.descr:181
 msgid "no explicit policy"
-msgstr ""
+msgstr "აშკარა პოლიტიკის გარეშე"
 
 #: templates/error-details.txt+X509_V_ERR_PERMITTED_VIOLATION.descr:197
 msgid "permitted subtree violation"
-msgstr ""
+msgstr "დაშვებული ქვეხის დარღვევა"
 
 #: templates/error-details.txt+X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED.descr:169
 msgid "proxy certificates not allowed, please set the appropriate flag"
-msgstr ""
+msgstr "პროქსის სერტიფიკატები დაშვებული არაა. დააყენეთ შესაბამისი ალამი"
 
 #: templates/error-details.txt+X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED.descr:161
 msgid "proxy path length constraint exceeded"
@@ -1310,7 +1370,7 @@ msgstr "გადაჭარბებულია პროქსის ბი�
 
 #: templates/error-details.txt+X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER.descr:141
 msgid "unable to get CRL issuer certificate"
-msgstr ""
+msgstr "CRL-ის გამომცემლის სერტიფიკატის მიღება შეუძლებელია"
 
 #: templates/error-details.txt+X509_V_ERR_UNHANDLED_CRITICAL_CRL_EXTENSION.descr:153
 msgid "unhandled critical CRL extension"
@@ -1331,12 +1391,3 @@ msgstr "სახელის შეზღუდვის სინტაქს�
 #: templates/error-details.txt+X509_V_ERR_UNSUPPORTED_NAME_SYNTAX.descr:217
 msgid "unsupported or invalid name syntax"
 msgstr "სახელის სინტაქსი მხარდაუჭერელია ან არასწორია"
-
-#~ msgid ""
-#~ "Copyright (C) 1996-2017 The Squid Software Foundation and contributors"
-#~ msgstr ""
-#~ "Copyright (C) 1996-2017 The Squid Software Foundation და შემწირველები, "
-#~ "ყველა უფლება დაცულია"
-
-#~ msgid "Handshake with SSL server failed"
-#~ msgstr "SSL სერვერთან მიმოცვლის დაწყების შეცდომა"
